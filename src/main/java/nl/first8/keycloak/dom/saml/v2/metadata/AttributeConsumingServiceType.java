@@ -8,11 +8,21 @@ import java.util.Collections;
 import java.util.List;
 
 public class AttributeConsumingServiceType  {
+
+    protected static List<AttributeConsumingService> attributeConsumingServices ;
+
     protected List<LocalizedNameType> serviceName = new ArrayList();
     protected List<LocalizedNameType> serviceDescription = new ArrayList();
     protected List<AttributeType> requestedAttribute = new ArrayList();
     protected int index;
     protected Boolean isDefault;
+
+    public static List<AttributeConsumingService> getAttributeConsumingServices() {
+        return attributeConsumingServices;
+    }
+    public static void setAttributeConsumingServices( List<AttributeConsumingService> attributeConsumingServices) {
+        AttributeConsumingServiceType.attributeConsumingServices = attributeConsumingServices;
+    }
 
     public AttributeConsumingServiceType(int index) {
         this.isDefault = Boolean.FALSE;

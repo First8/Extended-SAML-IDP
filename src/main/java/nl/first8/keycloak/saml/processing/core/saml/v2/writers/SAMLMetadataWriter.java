@@ -316,7 +316,7 @@ public class SAMLMetadataWriter extends BaseWriter {
                 JBossSAMLURIConstants.METADATA_NSURI.get());
 
         if (attributeConsumer.isIsDefault() != null)
-           StaxUtil.writeAttribute(writer, JBossSAMLConstants.ISDEFAULT.get(), "" + attributeConsumer.isIsDefault());
+            StaxUtil.writeAttribute(writer, JBossSAMLConstants.ISDEFAULT.get(), "" + attributeConsumer.isIsDefault());
 
         StaxUtil.writeAttribute(writer, JBossSAMLConstants.INDEX.get(), "" + attributeConsumer.getIndex());
 

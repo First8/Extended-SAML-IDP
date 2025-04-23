@@ -1,5 +1,5 @@
 edit.addEventListener('click', () => {
-
+    handleAttributeServices();
     keycloak.updateToken(300).then((bool) => {
         if (bool) {
             newAccessToken = keycloak.token;
@@ -24,6 +24,7 @@ edit.addEventListener('click', () => {
             var nameIdPolicy = nameIdPolicy_input.value;
             var nameIdPolicy1 = `urn:oasis:names:tc:SAML:2.0:nameid-format:${nameIdPolicy}`;
             var alias = alias_input.value;
+            var UseMetadataDescriptorURL=document.getElementById("UseMetadataDescriptorURL")
             var data = {
                 "alias": alias,
                 "displayName": Display_Name_input.value,
@@ -82,6 +83,12 @@ edit.addEventListener('click', () => {
                     "metadataValidUntilUnit": Metadata_expires_in_input.value,
                     "metadataValidUntilPeriod": metadataValidUntilPeriod_input.value,
                     "linkedProviders": Linked_Providers_input.value,
+                    "sendIdTokenOnLogout":id_token_hint.value,
+                    "sendClientIdOnLogout":client_id_in_logout_requests.value,
+                    "metadataDescriptorUrl":samlEntityDescriptor_input.value,
+                    "useMetadataDescriptorUrl":UseMetadataDescriptorURL.value,
+                    "attributeConsumingServiceMetadata":attributeServicesArray.length > 0 ? JSON.stringify(attributeServicesArray) : undefined
+
                 }
             };
 
@@ -103,6 +110,17 @@ edit.addEventListener('click', () => {
                 handleValidInput(Single_Logout_Service_URL_input, errorMessage_URL_logout,"");
             }
 
+            if (UseMetadataDescriptorURL.checked) {
+                if (!samlEntityDescriptor_input.value ||!samlEntityDescriptor_input.value.startsWith("https://")) {
+                    handleInvalidInput(samlEntityDescriptor_input, samlEntityDescriptor_errorMessage_URL, "Enter a valid URL!");
+                    isValid = false;
+                }
+                else
+                { handleValidInput(samlEntityDescriptor_input, samlEntityDescriptor_errorMessage_URL,"");
+                }
+
+
+            }
 
             if (!isValid) {
                 return;
@@ -128,96 +146,96 @@ edit.addEventListener('click', () => {
 
 
             var selectedrealm = localStorage.getItem('selectedRealm');
-            if(alias_input.value){
-                // Sending a GET request to check if the plugin exists
-                fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${newAccessToken}`,
-                    },
-                })
+           if(alias_input.value){
+            // Sending a GET request to check if the plugin exists
+            fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${newAccessToken}`,
+                },
+            })
 
-                    // Handling the response of the GET request
-                    .then(async checkPluginResponse => {
-                        if (checkPluginResponse.ok) {
-                            var pluginData = await checkPluginResponse.json();
-                            const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Authorization': `Bearer ${newAccessToken}`,
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(data),
-                                }
+                // Handling the response of the GET request
+                .then(async checkPluginResponse => {
+                    if (checkPluginResponse.ok) {
+                        var pluginData = await checkPluginResponse.json();
+                        const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${newAccessToken}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data),
+                        }
 
-                            );
+                        );
+                        localStorage.setItem('pluginData', JSON.stringify(data));
+
+
+
+                        // Checking the response status for success
+                        if (updatePluginResponse.status === 204 || updatePluginResponse.status === 201) {
+                            console.log("Plugin updated successfully.");
+                            alert("Plugin updated successfully.");
+                            getAllPlugins(newAccessToken,selectedrealm);
                             localStorage.setItem('pluginData', JSON.stringify(data));
 
 
-
-                            // Checking the response status for success
-                            if (updatePluginResponse.status === 204 || updatePluginResponse.status === 201) {
-                                console.log("Plugin updated successfully.");
-                                alert("Plugin updated successfully.");
-                                getAllPlugins(newAccessToken,selectedrealm);
-                                localStorage.setItem('pluginData', JSON.stringify(data));
-
-
-                            } else {
-                                console.error(`Failed to update/add the plugin. Response: ${updatePluginResponse.statusText}`);
-                                console.error("Error Details:", await updatePluginResponse.json());
-                                alert("Failed to update the plugin")
-                            }
-                        } else if (checkPluginResponse.status === 404) {
-                            // If the status is 404, the plugin does not exist, so send a POST request
-                            return fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${newAccessToken}`,
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(data),
-                            })
-                                .then(response => {
-                                    if (response.ok) {
-                                        alert("Plugin added successfully.");
-
-                                        localStorage.setItem('pluginData', JSON.stringify(data));
-
-                                    } else {
-                                        console.error('Failed to add plugin:', response.status, response.statusText);
-                                        alert("Failed to add plugin");
-                                    }
-                                })
-                                .catch(error => {
-
-                                    console.error('Network error or failed to send request:', error);
-                                });
-
-
                         } else {
-                            // If there is another status, an error occurred
-
-                            console.error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
-                            alert("Failed to retrieve the plugin");
-                            throw new Error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
+                            console.error(`Failed to update/add the plugin. Response: ${updatePluginResponse.statusText}`);
+                            console.error("Error Details:", await updatePluginResponse.json());
+                            alert("Failed to update the plugin")
                         }
-                    })
+                    } else if (checkPluginResponse.status === 404) {
+                        // If the status is 404, the plugin does not exist, so send a POST request
+                        return fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${newAccessToken}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data),
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    alert("Plugin added successfully.");
 
-                    // Handling the response of the POST request (if executed)
-                    .then(response => {
-                        // ... (Additional code that was commented out)
-                    })
-                    .catch(error => {
-                        // ... (Additional code that was commented out)
-                    });
-            }else
-            {console.error('alias_input does not exist')}
+                                    localStorage.setItem('pluginData', JSON.stringify(data));
+
+                                } else {
+                                    console.error('Failed to add plugin:', response.status, response.statusText);
+                                    alert("Failed to add plugin");
+                                }
+                            })
+                            .catch(error => {
+
+                                console.error('Network error or failed to send request:', error);
+                            });
+
+
+                    } else {
+                        // If there is another status, an error occurred
+
+                        console.error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
+                        alert("Failed to retrieve the plugin");
+                        throw new Error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
+                    }
+                })
+
+                // Handling the response of the POST request (if executed)
+                .then(response => {
+                    // ... (Additional code that was commented out)
+                })
+                .catch(error => {
+                    // ... (Additional code that was commented out)
+                });
+        }else
+        {console.error('alias_input does not exist')}
 
             // Setting a form element value to an empty string
 
         } else {
-            console.error("Token is not updated");
+            console.log("Token is not updated");
         }
     });
 });

@@ -105,15 +105,15 @@ CMD [\
 - Add a new client for the "master" Realm and Any Other Realm You Wish to Log In Through.
 - Set the "Client ID" to "saml-extended".
 - Configure other settings as needed:
-    - Client Authentication: Off
-    - Authorization: Off
-    - Valid Redirect URIs: `{keycloak-server}/realms/master/samlconfig/pages/*`
-    - Valid Post Logout Redirect URIs: `{keycloak-server}/realms/master/samlconfig/pages/realm`
-    - Web Origins: `*`
+  - Client Authentication: Off
+  - Authorization: Off
+  - Valid Redirect URIs: `{keycloak-server}/realms/master/samlconfig/pages/*`
+  - Valid Post Logout Redirect URIs: `{keycloak-server}/realms/master/samlconfig/pages/realm`
+  - Web Origins: `*`
 - Click "Save".
-    - Front channel logout: on
-    - Front-channel logout URL: `{keycloak-server}/realms/master/samlconfig/pages/realm`
-    - Backchannel logout session required: on
+  - Front channel logout: on
+  - Front-channel logout URL: `{keycloak-server}/realms/master/samlconfig/pages/realm`
+  - Backchannel logout session required: on
 - Click "Save".
 
 ### Add Saml Theme to Keycloak(optional)

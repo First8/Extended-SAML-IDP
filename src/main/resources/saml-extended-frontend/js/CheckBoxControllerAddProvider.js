@@ -141,7 +141,16 @@ storeToken.addEventListener("change", function () {
     handleCheckboxValue(storeToken);
 
 });
+const id_token_hint=document.getElementById("id_token_hint");
+    id_token_hint.addEventListener("change", function () {
+        handleCheckboxValue(id_token_hint);
 
+    });
+   const client_id_in_logout_requests=document.getElementById("client_id_in_logout_requests")
+    client_id_in_logout_requests.addEventListener("change", function () {
+        handleCheckboxValue(client_id_in_logout_requests);
+
+    });
 
 const storedTokensReadable = document.getElementById("storedTokensReadable");
 storedTokensReadable.addEventListener("change", function () {

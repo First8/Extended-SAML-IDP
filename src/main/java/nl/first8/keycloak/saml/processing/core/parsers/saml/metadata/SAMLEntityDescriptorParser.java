@@ -51,54 +51,54 @@ public class SAMLEntityDescriptorParser  extends AbstractStaxSamlMetadataParser<
                 break;
 
             case IDP_SSO_DESCRIPTOR:
-                {
-                    IDPSSODescriptorType idpSSO = SAMLIDPSSODescriptorParser.getInstance().parse(xmlEventReader);
+            {
+                IDPSSODescriptorType idpSSO = SAMLIDPSSODescriptorParser.getInstance().parse(xmlEventReader);
 
-                    EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(idpSSO);
-                    EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
-                    target.addChoiceType(edtChoice);
-                }
-                break;
+                EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(idpSSO);
+                EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
+                target.addChoiceType(edtChoice);
+            }
+            break;
 
             case SP_SSO_DESCRIPTOR:
-                {
-                    SPSSODescriptorType spSSO = SAMLSPSSODescriptorParser.getInstance().parse(xmlEventReader);
+            {
+                SPSSODescriptorType spSSO = SAMLSPSSODescriptorParser.getInstance().parse(xmlEventReader);
 
-                    EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(spSSO);
-                    EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
-                    target.addChoiceType(edtChoice);
-                }
-                break;
+                EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(spSSO);
+                EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
+                target.addChoiceType(edtChoice);
+            }
+            break;
 
             case ATTRIBUTE_AUTHORITY_DESCRIPTOR:
-                {
-                    AttributeAuthorityDescriptorType attrAuthority = SAMLAttributeAuthorityDescriptorParser.getInstance().parse(xmlEventReader);
+            {
+                AttributeAuthorityDescriptorType attrAuthority = SAMLAttributeAuthorityDescriptorParser.getInstance().parse(xmlEventReader);
 
-                    EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(attrAuthority);
-                    EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
-                    target.addChoiceType(edtChoice);
-                }
-                break;
+                EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(attrAuthority);
+                EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
+                target.addChoiceType(edtChoice);
+            }
+            break;
 
             case AUTHN_AUTHORITY_DESCRIPTOR:
-                {
-                    AuthnAuthorityDescriptorType authAuthority = SAMLAuthnAuthorityDescriptorParser.getInstance().parse(xmlEventReader);
+            {
+                AuthnAuthorityDescriptorType authAuthority = SAMLAuthnAuthorityDescriptorParser.getInstance().parse(xmlEventReader);
 
-                    EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(authAuthority);
-                    EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
-                    target.addChoiceType(edtChoice);
-                }
-                break;
+                EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(authAuthority);
+                EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
+                target.addChoiceType(edtChoice);
+            }
+            break;
 
             case PDP_DESCRIPTOR:
-                {
-                    PDPDescriptorType pdpDescriptor = SAMLPDPDescriptorParser.getInstance().parse(xmlEventReader);
+            {
+                PDPDescriptorType pdpDescriptor = SAMLPDPDescriptorParser.getInstance().parse(xmlEventReader);
 
-                    EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(pdpDescriptor);
-                    EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
-                    target.addChoiceType(edtChoice);
-                }
-                break;
+                EntityDescriptorType.EDTDescriptorChoiceType edtDescChoice = new EntityDescriptorType.EDTDescriptorChoiceType(pdpDescriptor);
+                EntityDescriptorType.EDTChoiceType edtChoice = EntityDescriptorType.EDTChoiceType.oneValue(edtDescChoice);
+                target.addChoiceType(edtChoice);
+            }
+            break;
             case ROLE_DESCRIPTOR:
             case AFFILIATION_DESCRIPTOR:
             case ADDITIONAL_METADATA_LOCATION:

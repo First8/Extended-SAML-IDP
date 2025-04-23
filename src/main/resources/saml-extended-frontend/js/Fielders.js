@@ -1,7 +1,6 @@
 const redirectUriInput = document.getElementById("redirectUri");
 const alias_input = document.getElementById("alias");
 const add = document.getElementById("submit");
-const samlEntityDescriptor = document.getElementById("samlEntityDescriptor");
 const import_data = document.getElementById("import");
 const edit = document.getElementById("edit");
 const Display_Name_input = document.getElementById("displayName");
@@ -37,12 +36,14 @@ var resultsContainer = document.getElementById('resultsContainer');
 var errorMessage = document.getElementById("errorMessage");
 var errorMessage_URL = document.getElementById("errorMessage_URL");
 var errorMessage_URL_logout = document.getElementById("errorMessage_URL_logout");
-var errorMessage_URL_logout = document.getElementById("errorMessage_URL_logout");
+var  samlEntityDescriptor_errorMessage_URL=document.getElementById("samlEntityDescriptor_errorMessage_URL")
 var Realms=document.getElementById("Realms");
 var encryption_algorithm=document.getElementById("encryption_algorithm");
+var client_id_in_logout_requests_input=document.getElementById("client_id_in_logout_requests");
+var samlEntityDescriptor_input=document.getElementById("samlEntityDescriptor");
 var storedData;
-var samlEntityDescriptor_input=document.getElementById("samlEntityDescriptor")
-var  samlEntityDescriptor_errorMessage_URL=document.getElementById("samlEntityDescriptor_errorMessage_URL")
+var UseMetadataDescriptorURL=document.getElementById("UseMetadataDescriptorURL")
+
 
 function handleCheckboxValue(checkbox) {
     if (checkbox.checked) {

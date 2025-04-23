@@ -4,6 +4,7 @@ import nl.first8.keycloak.broker.saml.SAMLEndpoint;
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
+import nl.first8.keycloak.dom.saml.v2.assertion.XacmlResourceType;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.ConfigConstants;
 import org.keycloak.broker.saml.mappers.AbstractAttributeToRoleMapper;
@@ -20,6 +21,7 @@ public class AdvancedAttributeToRoleMapper extends AbstractAttributeToRoleMapper
 
     public static final String PROVIDER_ID = "saml-extended-advanced-role-idp-mapper";
     public static final String ATTRIBUTE_PROPERTY_NAME = "attributes";
+    public static final String ATTRIBUTE_XACML_CONTEXT = "attribute.xacml-context";
     public static final String ARE_ATTRIBUTE_VALUES_REGEX_PROPERTY_NAME = "are.attribute.values.regex";
 
     private static final Set<IdentityProviderSyncMode> IDENTITY_PROVIDER_SYNC_MODES = new HashSet<>(Arrays.asList(IdentityProviderSyncMode.values()));
@@ -59,6 +61,14 @@ public class AdvancedAttributeToRoleMapper extends AbstractAttributeToRoleMapper
                 + " To reference a client role the syntax is clientname.clientrole, i.e. myclient.myrole");
         roleProperty.setType(ProviderConfigProperty.ROLE_TYPE);
         configProperties.add(roleProperty);
+
+        ProviderConfigProperty xacmlResourceProperty = new ProviderConfigProperty();
+        xacmlResourceProperty.setName(ATTRIBUTE_XACML_CONTEXT);
+        xacmlResourceProperty.setLabel("Use XamlResource attributes");
+        xacmlResourceProperty.setHelpText("Gets the attributes from the <xacml-context:Resource> instead of the <saml2:AttributeStatement> tag");
+        xacmlResourceProperty.setType(ProviderConfigProperty.BOOLEAN_TYPE);
+        configProperties.add(xacmlResourceProperty);
+
     }
 
     @Override
@@ -103,20 +113,25 @@ public class AdvancedAttributeToRoleMapper extends AbstractAttributeToRoleMapper
 
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
         Set<AttributeStatementType> attributeAssertions = assertion.getAttributeStatements();
-        if (attributeAssertions == null) {
+        if (attributeAssertions == null && !Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
+            return false;
+        }
+
+        Set<XacmlResourceType> xacmlAssertionResources = assertion.getXacmlResources();
+        if (xacmlAssertionResources == null && Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
             return false;
         }
 
         for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
             String attributeKey = entry.getKey();
             for (String value : entry.getValue()) {
-                List<Object> attributeValues = attributeAssertions.stream()
-                        .flatMap(statements -> statements.getAttributes().stream())
-                        .filter(choiceType -> attributeKey.equals(choiceType.getAttribute().getName())
-                        || attributeKey.equals(choiceType.getAttribute().getFriendlyName()))
-                        // Several statements with same name are treated like one with several values
-                        .flatMap(choiceType -> choiceType.getAttribute().getAttributeValue().stream())
-                        .collect(Collectors.toList());
+                List<Object> attributeValues;
+                if(Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
+                    attributeValues = appliesXacmlResource(xacmlAssertionResources, attributeKey);
+                }
+                else{
+                    attributeValues = appliesAttributeStatement(attributeAssertions, attributeKey);
+                }
 
                 boolean attributeValueMatch = areAttributeValuesRegexes ? valueMatchesRegex(value, attributeValues) : attributeValues.contains(value);
                 if (!attributeValueMatch) {
@@ -126,5 +141,26 @@ public class AdvancedAttributeToRoleMapper extends AbstractAttributeToRoleMapper
         }
 
         return true;
+    }
+
+    private List<Object> appliesAttributeStatement(Set<AttributeStatementType> attributeAssertions, String attributeKey) {
+        return attributeAssertions.stream()
+                .flatMap(statements -> statements.getAttributes().stream()
+                        .map(choice -> choice.getAttribute()))
+                .filter(attribute -> attributeKey.equals(attribute.getName())
+                        || attributeKey.equals(attribute.getFriendlyName()))
+                // Several statements with same name are treated like one with several values
+                .flatMap(attribute -> attribute.getAttributeValue().stream())
+                .collect(Collectors.toList());
+    }
+
+    private List<Object> appliesXacmlResource(Set<XacmlResourceType> xacmlResourceTypes, String attributeKey) {
+        return xacmlResourceTypes.stream()
+                .flatMap(resourceType -> resourceType.getAttributes().stream())
+                .filter(attribute -> attributeKey.equals(attribute.getName())
+                        || attributeKey.equals(attribute.getFriendlyName()))
+                // Several statements with same name are treated like one with several values
+                .flatMap(attribute -> attribute.getAttributeValue().stream())
+                .collect(Collectors.toList());
     }
 }

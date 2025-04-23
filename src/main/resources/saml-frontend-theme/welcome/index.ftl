@@ -92,7 +92,7 @@ ${adminUserCreationMessage}.
                         <input id="passwordConfirmation" name="passwordConfirmation" type="password" />
                     </p>
                     <input id="stateChecker" name="stateChecker" type="hidden" value="${stateChecker}" />
-                    <button id="create-button" type="submit" class="btn btn-primary">Create</button>
+                    <button id="create-button" type="button" class="btn btn-primary">Create</button>
                 </form>
             </#if>
             <div class="welcome-primary-link">

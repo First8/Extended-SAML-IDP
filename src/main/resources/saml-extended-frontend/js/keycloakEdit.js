@@ -63,11 +63,9 @@ keycloak
                 } else {
                     selectElement_firstLoginFlow.add(optionElement1);
                 }
-
-
             });
 
-          if (pluginData.postBrokerLoginFlowAlias) {
+            if (pluginData.postBrokerLoginFlowAlias) {
             updateField('postLoginFlow', pluginData.postBrokerLoginFlowAlias);
 
           }

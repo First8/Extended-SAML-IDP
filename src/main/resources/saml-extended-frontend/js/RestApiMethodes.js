@@ -32,7 +32,29 @@ window.clearPluginList = clearPluginList;
 
 // Function to get the selected realm from sessionStorage
 
+function handleAttributeServices() {
+    attributeServicesArray = [];
+    var forms = document.querySelectorAll('.attribute-consuming-service');
+    forms.forEach(function(form) {
+        addAttributeService(form);
+    });
 
+    fetch('/realms/master/samlconfig/pages/data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(attributeServicesArray)
+    })
+        .then(response => response.json())
+        .then(data => {
+            localStorage.setItem('attributeServicesArray', JSON.stringify(attributeServicesArray));
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+window.handleAttributeServices=handleAttributeServices;
 
 function getAllRealms(accessToken) {
     keycloak.updateToken(300).then((bool) => {
@@ -89,7 +111,6 @@ function updateSelectedRealm() {
         select_realms.value = selectedrealm;
         select_realms.dispatchEvent(new Event('change'));
     } else {
-        console.error("selectedrealm undefined");
     }
 }
 
@@ -227,6 +248,7 @@ function getPluginDetails(alias, accessToken) {
 
         keycloak.updateToken(300).then((bool) => {
             if (bool) {
+                console.log("Token is updated");
                 var accessToken = keycloak.token;
                 var selectedrealm = localStorage.getItem('selectedRealm');
                 fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {

@@ -115,7 +115,7 @@ public class SAML2AuthnRequestBuilder implements SamlProtocolExtensionsAwareBuil
 
         // Only emit the RequestedAuthnContext element if at least a ClassRef or a DeclRef is present
         if (!requestedAuthnContext.getAuthnContextClassRef().isEmpty() ||
-            !requestedAuthnContext.getAuthnContextDeclRef().isEmpty())
+                !requestedAuthnContext.getAuthnContextDeclRef().isEmpty())
             this.authnRequestType.setRequestedAuthnContext(requestedAuthnContext);
 
         return this;

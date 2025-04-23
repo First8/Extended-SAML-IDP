@@ -8,7 +8,6 @@ import org.keycloak.dom.xmlsec.w3.xmldsig.DSAKeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.KeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.RSAKeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.SignatureType;
-import org.keycloak.rotation.KeyLocator;
 import org.keycloak.saml.common.PicketLinkLogger;
 import org.keycloak.saml.common.PicketLinkLoggerFactory;
 import org.keycloak.saml.common.constants.WSTrustConstants;
@@ -51,6 +50,8 @@ import javax.xml.crypto.KeySelector;
 import javax.xml.crypto.KeySelectorException;
 import javax.xml.crypto.KeySelectorResult;
 import javax.xml.crypto.XMLCryptoContext;
+import javax.xml.crypto.dom.DOMStructure;
+import org.keycloak.rotation.KeyLocator;
 import org.keycloak.saml.common.util.SecurityActions;
 
 public class XMLSignatureUtil {
@@ -747,5 +748,10 @@ public class XMLSignatureUtil {
         }
 
         return keyInfoFactory.newKeyInfo(items);
+    }
+
+    public static KeyInfo createKeyInfo(Element keyInfo) throws MarshalException {
+        KeyInfoFactory keyInfoFactory = fac.getKeyInfoFactory();
+        return keyInfoFactory.unmarshalKeyInfo(new DOMStructure(keyInfo));
     }
 }

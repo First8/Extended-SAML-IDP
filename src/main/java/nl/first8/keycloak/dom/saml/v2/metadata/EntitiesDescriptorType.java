@@ -18,6 +18,7 @@ public class EntitiesDescriptorType {
     protected String id;
     protected String name;
 
+
     public EntitiesDescriptorType() {
     }
 

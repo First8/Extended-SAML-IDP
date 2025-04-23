@@ -1,6 +1,6 @@
 
 
-
+document.addEventListener('DOMContentLoaded', function() {
 storedData = localStorage.getItem('pluginData');
 var pluginData = JSON.parse(storedData);
 backchannel.value = pluginData.config.backchannelSupported ? pluginData.config.backchannelSupported : false;
@@ -101,6 +101,18 @@ storedTokensReadable.addEventListener("change", function () {
 
 });
 
+    const id_token_hint=document.getElementById("id_token_hint");
+    id_token_hint.value = pluginData.config.sendIdTokenOnLogout ? pluginData.config.sendIdTokenOnLogout : false;
+    id_token_hint.addEventListener("change", function () {
+        handleCheckboxValue(id_token_hint);
+    });
+
+const client_id_in_logout_requests=document.getElementById("client_id_in_logout_requests")
+client_id_in_logout_requests.value = pluginData.config.sendClientIdOnLogout ? pluginData.config.sendClientIdOnLogout : false;
+client_id_in_logout_requests.addEventListener("change", function () {
+    handleCheckboxValue(client_id_in_logout_requests);
+
+});
 
 const trustEmail = document.getElementById("trustEmail");
 trustEmail.value = pluginData.trustEmail ? pluginData.trustEmail : false;
@@ -233,23 +245,48 @@ document.addEventListener("DOMContentLoaded", function () {
 
 var validateSignatures = document.getElementById("validateSignatures");
 var additionalField1 = document.getElementById("ValidatingX509Certificates");
+var saml_EntityDescriptor=document.getElementById("saml_EntityDescriptor")
+var Use_Metadata_Descriptor_URL=document.getElementById("Use_Metadata_Descriptor_URL")
 validateSignatures.value = pluginData.config.validateSignature ? pluginData.config.validateSignature : false;
+    var validateSignatures = document.getElementById("validateSignatures");
+    var additionalField1 = document.getElementById("ValidatingX509Certificates");
+    var saml_EntityDescriptor = document.getElementById("saml_EntityDescriptor");
+    var Use_Metadata_Descriptor_URL = document.getElementById("Use_Metadata_Descriptor_URL");
+        validateSignatures.checked = pluginData.config.validateSignature ? pluginData.config.validateSignature : false;
+        validateSignatures.addEventListener("change", function () {
+            if (validateSignatures.checked) {
+                validateSignatures.value = true;
+                additionalField1.removeAttribute("disabled");
+                saml_EntityDescriptor.style.display = 'block';
+                Use_Metadata_Descriptor_URL.style.display = 'block';
+            } else {
+                additionalField1.setAttribute("disabled", "true");
+                additionalField1.value = '';
+                saml_EntityDescriptor.style.display = 'none';
+                Use_Metadata_Descriptor_URL.style.display = 'none';
+                validateSignatures.value = false;
+            }
+        });
 
+        validateSignatures.dispatchEvent(new Event("change"));
 
-validateSignatures.addEventListener("change", function () {
-    if (validateSignatures.checked) {
-        validateSignatures.value = true;
-        additionalField1.removeAttribute("disabled");
+    var UseMetadataDescriptorURL = document.getElementById("UseMetadataDescriptorURL");
+    var Validating_X509_Certificates=document.getElementById("Validating_X509_Certificates");
+    UseMetadataDescriptorURL.checked = pluginData.config.useMetadataDescriptorUrl ? pluginData.config.useMetadataDescriptorUrl : false;
+    UseMetadataDescriptorURL.addEventListener("change", function () {
+            if (UseMetadataDescriptorURL.checked) {
+                UseMetadataDescriptorURL.value = true;
+                Validating_X509_Certificates.style.display='none'
+            }
+            else {
+                UseMetadataDescriptorURL.value = false;
+                Validating_X509_Certificates.style.display='block'
+                ;
+            }
+        }
 
+    );
 
-    }
-    else {
-        validateSignatures.value = false;
-        additionalField1.setAttribute("disabled", "true");
-        additionalField1.value = '';
-        ;
-    }
-});
 
 var Artifact_Resolution = document.getElementById("Artifact_Resolution");
 Artifact_Resolution.value = pluginData.config.artifactResolution ? pluginData.config.artifactResolution : false;
@@ -327,4 +364,5 @@ principalType_input.addEventListener('change', function () {
         principalAttribute_input.setAttribute("disabled", "true");
 
     }
+}) ;
 });

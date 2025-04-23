@@ -108,6 +108,7 @@
             border-radius: 0px;
             cursor: pointer;
             margin-top: auto;
+            margin-bottom: 10px;
 
         }
 
@@ -280,6 +281,23 @@
         .selector {
             margin-left: 10px;
         }
+        .attribute-consuming-service {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .attribute-consuming-service label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .attribute-consuming-service input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #f0f0f0;
+            border-radius: 0px;
+            border-bottom-color: #8a8d90;
+
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/keycloak-js@16.1.0/dist/keycloak.js"></script>
 </head>
@@ -289,6 +307,7 @@
     </div>
     <img src="../../samlconfig/images/list.png" id="List" class="logout">
     <img src="../../samlconfig/images/logout.png" id="logout" class="logout">
+
 
 </header>
 
@@ -353,13 +372,13 @@
         </h5>
 
         <input type="text" class="readonly" name="alias" id="alias" readonly>
-
+        <form  action="">
         <h5>Display Name
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('Friendly name for Identity Providers')">
         </h5>
-        <input type="text" class="input_text" name="displayName" id="displayName">
-
+        <input type="text" class="input_text" name="displayName" id="displayName" required/>
+        </form>
         <h5>Display Order
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('Number defining the order of the providers in GUI (for example, on the Login page). The lowest number will be applied first.')">
@@ -383,8 +402,9 @@
             var pluginAlias = localStorage.getItem('pluginalias');
             var link = document.getElementById('metadataLink');
 
-            document.getElementById('metadataLink').href = `${serverUrl}/realms/${selectedRealm}/broker/${pluginAlias}/endpoint/descriptor`;
-        </script>
+            document.getElementById('metadataLink').onclick = function(event) {
+                event.preventDefault();
+                window.open(`${serverUrl}/realms/${selectedRealm}/broker/${pluginAlias}/endpoint/descriptor`, '_blank');}        </script>
         </section>
         <h2 id="SAMLSettings">SAML settings</h2>
 
@@ -423,6 +443,25 @@
 
         <label class="switch">
             <input type="checkbox" name="Backchannel" value="false" id="backchannel">
+            <span class="slider round"></span>
+        </label>
+        <h5> Send 'id_token_hint' in logout requests
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('If the \'id_token_hint\' parameter should be sent in logout requests.')">
+        </h5>
+
+        <label class="switch">
+            <input type="checkbox" name="Send 'id_token_hint' in logout requests" value="false" id="id_token_hint">
+            <span class="slider round"></span>
+        </label>
+
+        <h5>   Send 'client_id' in logout requests
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('If the \'client_id\' parameter should be sent in logout requests.')">
+        </h5>
+
+        <label class="switch">
+            <input type="checkbox" name="Send 'client_id' in logout requests" value="false" id="client_id_in_logout_requests">
             <span class="slider round"></span>
         </label>
 
@@ -580,16 +619,37 @@
                 onclick="alert('Enable/disable signature validation of external IDP signatures.')">
         </h5>
         <label class="switch">
-            <input type="checkbox" name="validateSignatures" value="false" id="validateSignatures">
+            <input type="checkbox" name="validateSignatures" value="false" id="validateSignatures" >
             <span class="slider round"></span>
         </label>
+        <div id="saml_EntityDescriptor">
+        <h5>Metadata descriptor URL
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('External URL where Identity Provider publishes the metadata information needed by the client (certificates, keys, other URLs,...)..')">
+        </h5>
+           <span class="error-message" id="samlEntityDescriptor_errorMessage_URL"></span>
+        <input type="url" class="input_text" name="samlEntityDescriptor" id="samlEntityDescriptor" required>
 
+
+        </div>
+        <div id="Use_Metadata_Descriptor_URL">
+        <h5>Use metadata descriptor URL
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('If the switch is on, the certificates to validate signatures will be downloaded and cached from the given *Metadata descriptor URL*. The *Reload keys* action can be used to refresh the certificates in the cache. If the switch is off, certificates from *Validating X509 certificates* option are used, they need to be manually updated when changed in the IDP.')">
+        </h5>
+        <label class="switch">
+            <input type="checkbox" name="UseMetadataDescriptorURL" value="false" id="UseMetadataDescriptorURL">
+            <span class="slider round"></span>
+        </label>
+        </div>
+        <div id="Validating_X509_Certificates">
         <h5>Validating X509 certificates
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('The certificate in PEM format that must be used to check for signatures. Multiple certificates can be entered, separated by comma (,).')">
         </h5>
         <input type="text" class="input_text" id="ValidatingX509Certificates" name="ValidatingX509Certificates"
             disabled>
+        </div>
         <h5>Sign Service Provider Metadata
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('Enable/disable signature of the provider SAML metadata.')">
@@ -896,10 +956,77 @@
             <input type="checkbox" name="Mutual_TLS" id="Mutual_TLS" value="false">
             <span class="slider round"></span>
         </label>
-        <div><button class="btn" type="submit" id="edit">Save</button>
+        <h2>Edit Attribute Consuming Service</h2>
+        <div id="attributeServices"></div>
+        <div><button onclick="addFields(event)" class="btn">Add Attribute Service</button>
         </div>
+        <script>
+
+            var attributeServicesArray = [];
+
+            function addFields(event) {
+                event.preventDefault();
+                var attributeServicesDiv = document.getElementById('attributeServices');
+                var newFieldsDiv = document.createElement('div');
+                newFieldsDiv.classList.add('attribute-consuming-service'); // Add class 'attribute-consuming-service'
+                newFieldsDiv.innerHTML = `
+            <label for="serviceName">Service Name:</label>
+            <input type="text" class="serviceName" placeholder="Enter Service Name">
+            <label for="friendlyName">Friendly Name:</label>
+            <input type="text" class="friendlyName" placeholder="Enter Friendly Name">
+            <label for="attributeName">Attribute Name:</label>
+            <input type="text" class="attributeName" placeholder="Enter Attribute Name">
+            <label for="attributeValue">Attribute Value:</label>
+            <input type="text" class="attributeValue" placeholder="Enter Attribute Value">
+            <button onclick="deleteForm(this.parentNode)" class="btn">Delete</button>
+        `;
+                attributeServicesDiv.appendChild(newFieldsDiv);
+            }
+
+
+            function deleteForm(form) {
+                form.remove(); // Remove the form element from the DOM
+                var index = form.dataset.index;
+
+                // Remove the form data from the array
+                attributeServicesArray = attributeServicesArray.filter(service => service.index !== parseInt(index));
+
+                // Update index for remaining forms
+                var forms = document.querySelectorAll('.attribute-consuming-service');
+                forms.forEach(function(form, idx) {
+                    form.dataset.index = idx;
+                });
+
+            }
+
+            function addAttributeService(form) {
+
+                var serviceName = form.querySelector('.serviceName').value.trim();
+                var attributeValue = form.querySelector('.attributeValue').value.trim();
+                var friendlyName = form.querySelector('.friendlyName').value.trim();
+                var attributeName=form.querySelector('.attributeName').value.trim();
+                if (serviceName !== "" && attributeValue !== "" && friendlyName !== "") {
+                    var index = Array.from(document.querySelectorAll('.attribute-consuming-service')).indexOf(form);
+                    if (index !== -1) {
+                        attributeServicesArray[index] = {
+                            serviceName: serviceName,
+                            attributeValue: attributeValue,
+                            friendlyName: friendlyName,
+                            attributeName:attributeName
+                        };
+                    }
+                } else {
+                    alert("Please enter valid values for Service Name, Attribute Value, and Friendly Name.");
+                }
+            }
+
+
+        </script>
+        <div><button class="btn" type="submit" id="edit">Save</button></div>
     </form>
 </div>
+
+
 <script src="../../samlconfig/js/Fielders"></script>
 <script src="../../samlconfig/js/inputValidation"></script>
 <script src="../../samlconfig/js/InfoUpdaterEdit"></script>

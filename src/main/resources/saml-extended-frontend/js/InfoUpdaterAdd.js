@@ -3,7 +3,6 @@ storedData = localStorage.getItem('pluginData');
         if (storedData) {
 
             var pluginData = JSON.parse(storedData);
-
             function toggleCheckbox(configKey, checkbox) {
 
                 if (pluginData.config && pluginData.config[configKey]) {
@@ -53,10 +52,10 @@ storedData = localStorage.getItem('pluginData');
             toggleCheckbox('artifactResolutionWithXmlHeader', Artifact_Resolution_with_XML_header)
             toggleCheckbox('mutualTls', Mutual_TLS)
             toggleCheckbox1('enabled', enabled)
-
-
-
+            toggleCheckbox('sendIdTokenOnLogout', id_token_hint)
+            toggleCheckbox('sendClientIdOnLogout', client_id_in_logout_requests)
             if (pluginData.config && pluginData.config.wantAuthnRequestsSigned) {
+
 
                 if (pluginData.config.wantAuthnRequestsSigned == "true") {
                     SignatureAlgorithm.removeAttribute("disabled");
@@ -72,21 +71,111 @@ storedData = localStorage.getItem('pluginData');
                 }
             }
 
-
+            var additionalField1 = document.getElementById("ValidatingX509Certificates");
             if (pluginData.config && pluginData.config.validateSignature) {
                 validateSignatures_value = pluginData.config.validateSignature;
 
-                if (pluginData.config.validateSignature == "true") {
+                if (pluginData.config.validateSignature === "true") {
                     additionalField1.removeAttribute("disabled");
                     validateSignatures.checked = true;
+
                     if (pluginData.config.signingCertificate) {
                         updateField('ValidatingX509Certificates', pluginData.config.signingCertificate);
                     }
+                    if (pluginData.config.metadataDescriptorUrl) {
+                        updateField('samlEntityDescriptor', pluginData.config.metadataDescriptorUrl);
+                    }
+
+                    var samlEntityDescriptorElement = document.getElementById('saml_EntityDescriptor');
+                    if (samlEntityDescriptorElement) {
+                        samlEntityDescriptorElement.style.display = 'block';
+                    }
+
+                    var useMetadataDescriptorUrlElement = document.getElementById('Use_Metadata_Descriptor_URL');
+                    if (useMetadataDescriptorUrlElement) {
+                        useMetadataDescriptorUrlElement.style.display = 'block';
+                    }
                 } else {
                     validateSignatures.checked = false;
-                    additionalField1.setAttribute("disabled", "true");
+                    additionalField1.setAttribute("disabled", "true")
 
+                    var samlEntityDescriptorElement = document.getElementById('saml_EntityDescriptor');
+                    if (samlEntityDescriptorElement) {
+                        samlEntityDescriptorElement.style.display = 'none';
+                    }
+
+                    var useMetadataDescriptorUrlElement = document.getElementById('Use_Metadata_Descriptor_URL');
+                    if (useMetadataDescriptorUrlElement) {
+                        useMetadataDescriptorUrlElement.style.display = 'none';
+                    }
                 }
+                validateSignatures.dispatchEvent(new Event("change"));
+            }
+
+
+
+
+            if (pluginData.config.attributeConsumingServiceMetadata) {
+                attributeServicesArray = JSON.parse(pluginData.config.attributeConsumingServiceMetadata);
+                renderAttributeServices();
+            }
+
+
+            function renderAttributeServices() {
+                var attributeServicesDiv = document.getElementById('attributeServices');
+                attributeServicesDiv.innerHTML = ''; // Clear previous content
+
+                attributeServicesArray.forEach(function(service, index) {
+                    var newFieldsDiv = document.createElement('div');
+                    newFieldsDiv.classList.add('attribute-consuming-service'); // Add class 'attribute-consuming-service'
+                    newFieldsDiv.dataset.index = index; // Set dataset index for form
+
+                    newFieldsDiv.innerHTML = `
+                <label for="serviceName">Service Name:</label>
+                <input type="text" class="serviceName" value="${service.serviceName}">
+                <label for="friendlyName">Friendly Name:</label>
+                <input type="text" class="friendlyName" value="${service.friendlyName}">
+                <label for="attributeName">Attribute Name:</label>
+                <input type="text" class="attributeName" value="${service.attributeName}">
+                <label for="attributeValue">Attribute Value:</label>
+                <input type="text" class="attributeValue" value="${service.attributeValue}">
+                <button onclick="deleteForm(this.parentNode)" class="btn">Delete</button>
+            `;
+                    attributeServicesDiv.appendChild(newFieldsDiv);
+                });
+            }
+            if(pluginData.config.attributeConsumingServiceMetadata) {
+            attributeServicesArray = JSON.parse(pluginData.config.attributeConsumingServiceMetadata);
+            fetch('/realms/master/samlconfig/pages/data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(attributeServicesArray)
+            })
+                .then(response => response.json())
+                .then(data => {
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });}
+
+            var Validating_X509_Certificates=document.getElementById("Validating_X509_Certificates");
+
+            if (pluginData.config && pluginData.config.useMetadataDescriptorUrl) {
+                useMetadataDescriptorUrl_value = pluginData.config.useMetadataDescriptorUrl;
+
+                if (pluginData.config.useMetadataDescriptorUrl == "true") {
+                    document.getElementById("UseMetadataDescriptorURL").checked = true;
+                    Validating_X509_Certificates.style.display='none'
+                    document.getElementById("samlEntityDescriptor").setAttribute("required", "true");
+
+                } else {
+                    document.getElementById("UseMetadataDescriptorURL").checked = false;
+                    Validating_X509_Certificates.style.display='block'
+                    document.getElementById("samlEntityDescriptor").removeAttribute("required");
+                }
+                validateSignatures.dispatchEvent(new Event("change"));
             }
 
 
@@ -143,6 +232,7 @@ storedData = localStorage.getItem('pluginData');
         if (pluginData.config.entityId) {
             updateField('spEntityId', pluginData.config.entityId)
         }
+
         if (pluginData.config.idpEntityId) {
             updateField('idpEntityId', pluginData.config.idpEntityId)
         }

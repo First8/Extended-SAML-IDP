@@ -44,7 +44,7 @@ class SPMetadataDescriptorBuilderTest {
                 .logoutEndpoints(List.of(URI.create("https://example.com/logout")))
                 .wantAuthnRequestsSigned(true)
                 .wantAssertionsSigned(true)
-                .wantAssertionsEncrypted(false)
+                .wantAssertionsEncrypted(true)
                 .nameIDPolicyFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
                 .signingCerts(List.of(new KeyDescriptorType()))
                 .encryptionCerts(List.of(new KeyDescriptorType()))
@@ -92,7 +92,7 @@ class SPMetadataDescriptorBuilderTest {
                 .getSpDescriptor();
 
         assertNotNull(spSSODescriptor);
-        assertTrue(spSSODescriptor.getKeyDescriptor().size() == 1);
+        assertTrue(spSSODescriptor.getKeyDescriptor().contains(keyDescriptor));
     }
 
     @Test

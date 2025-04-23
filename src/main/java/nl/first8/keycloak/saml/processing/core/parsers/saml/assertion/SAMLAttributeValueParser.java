@@ -132,7 +132,7 @@ public class SAMLAttributeValueParser implements StaxParser {
     }
 
     private static Map<String, String> addNamespaceWhenMissing(Deque<Map<String, String>> definedNamespaces, XMLEventWriter writer,
-            StartElement startElement) throws XMLStreamException {
+                                                               StartElement startElement) throws XMLStreamException {
 
         final Map<String, String> necessaryNamespaces = new HashMap<>();
         // Namespace in tag

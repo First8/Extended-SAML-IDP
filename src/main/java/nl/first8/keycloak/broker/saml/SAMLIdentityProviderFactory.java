@@ -6,7 +6,6 @@ import nl.first8.keycloak.saml.processing.core.parsers.saml.SAMLParser;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.broker.provider.AbstractIdentityProviderFactory;
-import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.metadata.*;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.KeycloakSession;
@@ -29,13 +28,10 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
     public static final String PROVIDER_ID = "saml-extended";
 
     private static final String PROVIDER_NAME = "SAML v2.0 - Extended";
-    private static final String MACEDIR_ENTITY_CATEGORY = "http://macedir.org/entity-category";
-    private static final String REFEDS_HIDE_FROM_DISCOVERY = "http://refeds.org/category/hide-from-discovery";
-
     private DestinationValidator destinationValidator;
 
     public SAMLIdentityProviderFactory() {
-        logger.info("Initialized Identity Provider Factory for "+getName());
+        logger.info("Initialized Identity Provider Factory for " + getName());
     }
 
     @Override
@@ -56,6 +52,7 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
     @Override
     public Map<String, String> parseConfig(KeycloakSession session, InputStream inputStream) {
         try {
+
             SAMLParser parser = SAMLParser.getInstance();
             logger.debugf("SAMLParser in use: %s", parser.getClass());
             Object parsedObject = parser.parse(inputStream);
@@ -74,13 +71,14 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
 
                 //Metadata documents can contain multiple Descriptors (See ADFS metadata documents) such as RoleDescriptor, SPSSODescriptor, IDPSSODescriptor.
                 //So we need to loop through to find the IDPSSODescriptor.
-                for(EntityDescriptorType.EDTChoiceType edtChoiceType : entityType.getChoiceType()) {
+                for (EntityDescriptorType.EDTChoiceType edtChoiceType : entityType.getChoiceType()) {
                     List<EntityDescriptorType.EDTDescriptorChoiceType> descriptors = edtChoiceType.getDescriptors();
 
-                    if(!descriptors.isEmpty() && descriptors.get(0).getIdpDescriptor() != null) {
+                    if (!descriptors.isEmpty() && descriptors.get(0).getIdpDescriptor() != null) {
                         idpDescriptor = descriptors.get(0).getIdpDescriptor();
                     }
                 }
+
 
                 if (idpDescriptor != null) {
                     SAMLIdentityProviderConfig samlIdentityProviderConfig = new SAMLIdentityProviderConfig();
@@ -94,7 +92,7 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                             singleSignOnServiceUrl = endpoint.getLocation().toString();
                             postBindingResponse = true;
                             break;
-                        } else if (endpoint.getBinding().toString().equals(JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.get())){
+                        } else if (endpoint.getBinding().toString().equals(JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.get())) {
                             singleSignOnServiceUrl = endpoint.getLocation().toString();
                         }
                     }
@@ -104,7 +102,7 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                             singleLogoutServiceUrl = endpoint.getLocation().toString();
                             postBindingLogout = true;
                             break;
-                        } else if (!postBindingResponse && endpoint.getBinding().toString().equals(JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.get())){
+                        } else if (!postBindingResponse && endpoint.getBinding().toString().equals(JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.get())) {
                             singleLogoutServiceUrl = endpoint.getLocation().toString();
                             break;
                         }
@@ -112,7 +110,7 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                     String artifactResolutionUrl = null;
                     for (IndexedEndpointType endpoint : idpDescriptor.getArtifactResolutionService()) {
                         artifactResolution = true;
-                        if(endpoint.getBinding().toString().equals(JBossSAMLURIConstants.SAML_SOAP_BINDING.get())) {
+                        if (endpoint.getBinding().toString().equals(JBossSAMLURIConstants.SAML_SOAP_BINDING.get())) {
                             soapArtifactResolution = true;
                         }
                         artifactResolutionUrl = endpoint.getLocation().toString();
@@ -132,9 +130,9 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                     samlIdentityProviderConfig.setLoginHint(false);
 
                     List<String> nameIdFormatList = idpDescriptor.getNameIDFormat();
-                    if (nameIdFormatList != null && !nameIdFormatList.isEmpty())
+                    if (nameIdFormatList != null && !nameIdFormatList.isEmpty()) {
                         samlIdentityProviderConfig.setNameIDPolicyFormat(nameIdFormatList.get(0));
-
+                    }
                     List<KeyDescriptorType> keyDescriptor = idpDescriptor.getKeyDescriptor();
                     String defaultCertificate = null;
 
@@ -147,7 +145,7 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                                 samlIdentityProviderConfig.addSigningCertificate(x509KeyInfo.getTextContent());
                             } else if (KeyTypes.ENCRYPTION.equals(keyDescriptorType.getUse())) {
                                 samlIdentityProviderConfig.setEncryptionPublicKey(x509KeyInfo.getTextContent());
-                            } else if (keyDescriptorType.getUse() ==  null) {
+                            } else if (keyDescriptorType.getUse() == null) {
                                 defaultCertificate = x509KeyInfo.getTextContent();
                             }
                         }
@@ -164,18 +162,9 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                     }
 
                     samlIdentityProviderConfig.setEnabledFromMetadata(entityType.getValidUntil() == null
-                        || entityType.getValidUntil().toGregorianCalendar().getTime().after(new Date(System.currentTimeMillis())));
+                            || entityType.getValidUntil().toGregorianCalendar().getTime().after(new Date(System.currentTimeMillis())));
 
-                    // check for hide on login attribute
-                    if (entityType.getExtensions() != null && entityType.getExtensions().getEntityAttributes() != null) {
-                        for (AttributeType attribute : entityType.getExtensions().getEntityAttributes().getAttribute()) {
-                            if (MACEDIR_ENTITY_CATEGORY.equals(attribute.getName())
-                                && attribute.getAttributeValue().contains(REFEDS_HIDE_FROM_DISCOVERY)) {
-                                samlIdentityProviderConfig.setHideOnLogin(true);
-                            }
-                        }
-
-                    }
+                    // (There used to be a check here that we removed pre-emptively, since it used a deprecated method, and deprecated site in a value.)
 
                     return samlIdentityProviderConfig.getConfig();
                 }
@@ -183,7 +172,6 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
         } catch (ParsingException pe) {
             throw new RuntimeException("Could not parse IdP SAML Metadata", pe);
         }
-
         return new HashMap<>();
     }
 

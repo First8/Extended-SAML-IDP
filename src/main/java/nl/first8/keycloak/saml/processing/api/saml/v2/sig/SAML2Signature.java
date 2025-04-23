@@ -198,7 +198,7 @@ public class SAML2Signature {
             configureIdAttribute((Element) nodes.item(i));
         }
     }
-    
+
     public static void configureIdAttribute(Element element) {
         element.setIdAttribute(JBossSAMLConstants.ID.get(), true);
     }

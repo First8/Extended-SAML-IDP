@@ -1,15 +1,20 @@
 package nl.first8.keycloak.samlendpoint;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingService;
+import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
 import java.io.*;
+import java.util.List;
+import java.util.logging.Logger;
+
 
 
 public class SamlEndpointProvider implements RealmResourceProvider {
+    private static final Logger logger = Logger.getLogger(SamlEndpointProvider.class.getName());
+
 
     public SamlEndpointProvider(KeycloakSession keycloakSession) {
     }
@@ -40,6 +45,15 @@ public class SamlEndpointProvider implements RealmResourceProvider {
             return contentBuilder.toString();
         }
 
+    }
+    @POST
+    @Path("/pages/data")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<AttributeConsumingService> setAttributes(List<AttributeConsumingService> attributeServices) {
+        AttributeConsumingServiceType.setAttributeConsumingServices(attributeServices);
+        logger.info("Services set successfully.");
+        return attributeServices;
     }
 
 
@@ -87,7 +101,9 @@ public class SamlEndpointProvider implements RealmResourceProvider {
 
             return contentBuilder.toString();
         }
+
     }
+
 
 
     @Override

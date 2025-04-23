@@ -1,5 +1,5 @@
 const ServerUrl = window.location.protocol+"//" + window.location.host;
-const clientid = 'frontend';
+const clientid = 'saml-extended';
 const postLogoutRedirect = `${ServerUrl}/realms/master/samlconfig/pages/realm`;
 const redirectUri = `${ServerUrl}/realms/master/samlconfig/pages/list`;
 const editprovider=`${ServerUrl}/realms/master/samlconfig/pages/editprovider`;

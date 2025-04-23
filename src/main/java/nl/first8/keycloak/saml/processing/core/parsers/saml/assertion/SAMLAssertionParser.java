@@ -57,8 +57,7 @@ public class SAMLAssertionParser extends AbstractStaxSamlAssertionParser<Asserti
                 break;
 
             case ADVICE:
-                StaxParserUtil.bypassElementBlock(xmlEventReader);
-                // Ignored
+                target.addXacmlResources(new SAMLAdviceParser().processSubElement(xmlEventReader));
                 break;
 
             case STATEMENT:

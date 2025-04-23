@@ -1,17 +1,55 @@
 package nl.first8.keycloak.broker.saml;
 
 import org.jboss.logging.Logger;
+import org.keycloak.common.enums.SslRequired;
 import org.keycloak.models.IdentityProviderModel;
+import org.keycloak.models.RealmModel;
+import org.keycloak.protocol.saml.SamlPrincipalType;
+import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
+import org.keycloak.utils.StringUtil;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.keycloak.common.util.UriUtils.checkUrl;
 
 public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIdentityProviderConfig {
     protected static final Logger logger = Logger.getLogger(SAMLIdentityProviderConfig.class);
 
+    public static final String ENTITY_ID = "entityId";
+    public static final String IDP_ENTITY_ID = "idpEntityId";
+    public static final String ADD_EXTENSIONS_ELEMENT_WITH_KEY_INFO = "addExtensionsElementWithKeyInfo";
+    public static final String BACKCHANNEL_SUPPORTED = "backchannelSupported";
+    public static final String ENCRYPTION_PUBLIC_KEY = "encryptionPublicKey";
+    public static final String FORCE_AUTHN = "forceAuthn";
+    public static final String NAME_ID_POLICY_FORMAT = "nameIDPolicyFormat";
+    public static final String POST_BINDING_AUTHN_REQUEST = "postBindingAuthnRequest";
+    public static final String POST_BINDING_LOGOUT = "postBindingLogout";
+    public static final String POST_BINDING_RESPONSE = "postBindingResponse";
+    public static final String SIGNATURE_ALGORITHM = "signatureAlgorithm";
+    public static final String ENCRYPTION_ALGORITHM = "encryptionAlgorithm";
+    public static final String SIGNING_CERTIFICATE_KEY = "signingCertificate";
+    public static final String SINGLE_LOGOUT_SERVICE_URL = "singleLogoutServiceUrl";
+    public static final String SINGLE_SIGN_ON_SERVICE_URL = "singleSignOnServiceUrl";
+    public static final String VALIDATE_SIGNATURE = "validateSignature";
+    public static final String PRINCIPAL_TYPE = "principalType";
+    public static final String PRINCIPAL_ATTRIBUTE = "principalAttribute";
+    public static final String WANT_ASSERTIONS_ENCRYPTED = "wantAssertionsEncrypted";
+    public static final String WANT_ASSERTIONS_SIGNED = "wantAssertionsSigned";
+    public static final String WANT_AUTHN_REQUESTS_SIGNED = "wantAuthnRequestsSigned";
+    public static final String XML_SIG_KEY_INFO_KEY_NAME_TRANSFORMER = "xmlSigKeyInfoKeyNameTransformer";
+    public static final String ENABLED_FROM_METADATA  = "enabledFromMetadata";
+    public static final String AUTHN_CONTEXT_COMPARISON_TYPE = "authnContextComparisonType";
+    public static final String AUTHN_CONTEXT_CLASS_REFS = "authnContextClassRefs";
+    public static final String AUTHN_CONTEXT_DECL_REFS = "authnContextDeclRefs";
+    public static final String SIGN_SP_METADATA = "signSpMetadata";
+    public static final String ALLOW_CREATE = "allowCreate";
+    public static final String ATTRIBUTE_CONSUMING_SERVICE_INDEX = "attributeConsumingServiceIndex";
+    public static final String ATTRIBUTE_CONSUMING_SERVICE_NAME = "attributeConsumingServiceName";
+    public static final String ATTRIBUTE_CONSUMING_SERVICE_METADATA = "attributeConsumingServiceMetadata";
+    public static final String USE_METADATA_DESCRIPTOR_URL = "useMetadataDescriptorUrl";
     public static final String ASSERTION_CONSUMING_SERVICE_INDEX = "assertionConsumingServiceIndex";
     public static final String ARTIFACT_RESOLUTION = "artifactResolution";
     public static final String ARTIFACT_RESOLUTION_ENDPOINT = "artifactResolutionEndpoint";
@@ -26,6 +64,12 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     public static final String IGNORE_SAML_ADVICE_NODES = "ignoreSamlAdviceNodes";
     public static final String AUTHN_REQUEST_SCOPING = "scoping";
     public static final String LINKED_PROVIDERS = "linkedProviders";
+    public static final String SERVICE_NAME = "serviceName";
+    public static final String FRIENDLY_NAME = "friendlyName";
+    public static final String ATTRIBUTE_NAME = "attributeName";
+
+    public static final String ATTRIBUTE_VALUE = "attributeValue";
+
 
 
     public SAMLIdentityProviderConfig() {
@@ -42,6 +86,15 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
 
     public void setAssertionConsumingServiceIndex(int assertionConsumingServiceIndex) {
         getConfig().put(ASSERTION_CONSUMING_SERVICE_INDEX, String.valueOf(assertionConsumingServiceIndex));
+    }
+
+
+    public void setAttributeConsumingServiceMetadata(String attributeConsumingServiceName) {
+        getConfig().put(ATTRIBUTE_CONSUMING_SERVICE_METADATA, attributeConsumingServiceName);
+    }
+
+    public String getAttributeConsumingService() {
+        return getConfig().get(ATTRIBUTE_CONSUMING_SERVICE_METADATA);
     }
 
 
@@ -158,8 +211,88 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
         this.getConfig().put(LINKED_PROVIDERS, linkedProviders);
     }
 
-    public List<String> getAttributeConsumingServiceValues() {
-        return new ArrayList<>();
+    public void setAuthnContextDeclRefs(String authnContextDeclRefs) {
+        getConfig().put(AUTHN_CONTEXT_DECL_REFS, authnContextDeclRefs);
     }
 
+    public boolean isSignSpMetadata() {
+        return Boolean.valueOf(getConfig().get(SIGN_SP_METADATA));
+    }
+
+    public void setSignSpMetadata(boolean signSpMetadata) {
+        getConfig().put(SIGN_SP_METADATA, String.valueOf(signSpMetadata));
+    }
+
+    public boolean isAllowCreate() {
+        return Boolean.valueOf(getConfig().get(ALLOW_CREATE));
+    }
+
+    public void setAllowCreated(boolean allowCreate) {
+        getConfig().put(ALLOW_CREATE, String.valueOf(allowCreate));
+    }
+
+    public Integer getAttributeConsumingServiceIndex() {
+        Integer result = null;
+        String strAttributeConsumingServiceIndex = getConfig().get(ATTRIBUTE_CONSUMING_SERVICE_INDEX);
+        if (strAttributeConsumingServiceIndex != null && !strAttributeConsumingServiceIndex.isEmpty()) {
+            try {
+                result = Integer.parseInt(strAttributeConsumingServiceIndex);
+                if (result < 0) {
+                    result = null;
+                }
+            } catch (NumberFormatException e) {
+                // ignore the number format exception and use null
+            }
+        }
+        return result;
+
+
+    }
+
+    public void setAttributeConsumingServiceIndex(Integer attributeConsumingServiceIndex) {
+        if (attributeConsumingServiceIndex == null || attributeConsumingServiceIndex < 0) {
+            getConfig().remove(ATTRIBUTE_CONSUMING_SERVICE_INDEX);
+        } else {
+            getConfig().put(ATTRIBUTE_CONSUMING_SERVICE_INDEX, String.valueOf(attributeConsumingServiceIndex));
+        }
+    }
+
+    public void setAttributeConsumingServiceName(String attributeConsumingServiceName) {
+        getConfig().put(ATTRIBUTE_CONSUMING_SERVICE_NAME, attributeConsumingServiceName);
+    }
+
+    public String getAttributeConsumingServiceName() {
+        return getConfig().get(ATTRIBUTE_CONSUMING_SERVICE_NAME);
+    }
+
+    public void setUseMetadataDescriptorUrl(Boolean useDescriptorUrl) {
+        if (useDescriptorUrl == null || !useDescriptorUrl) {
+            getConfig().remove(USE_METADATA_DESCRIPTOR_URL);
+        } else {
+            getConfig().put(USE_METADATA_DESCRIPTOR_URL, Boolean.TRUE.toString());
+        }
+    }
+
+    public boolean isUseMetadataDescriptorUrl() {
+        return Boolean.parseBoolean(getConfig().get(USE_METADATA_DESCRIPTOR_URL));
+    }
+
+    @Override
+    public void validate(RealmModel realm) {
+        SslRequired sslRequired = realm.getSslRequired();
+
+        checkUrl(sslRequired, getSingleLogoutServiceUrl(), SINGLE_LOGOUT_SERVICE_URL);
+        checkUrl(sslRequired, getSingleSignOnServiceUrl(), SINGLE_SIGN_ON_SERVICE_URL);
+        if (StringUtil.isNotBlank(getMetadataDescriptorUrl())) {
+            checkUrl(sslRequired, getMetadataDescriptorUrl(), METADATA_DESCRIPTOR_URL);
+        }
+        if (isUseMetadataDescriptorUrl()) {
+            if (StringUtil.isBlank(getMetadataDescriptorUrl())) {
+                throw new IllegalArgumentException(USE_METADATA_DESCRIPTOR_URL + " needs a non-empty URL for " + METADATA_DESCRIPTOR_URL);
+            }
+        }
+        //transient name id format is not accepted together with principaltype SubjectnameId
+        if (JBossSAMLURIConstants.NAMEID_FORMAT_TRANSIENT.get().equals(getNameIDPolicyFormat()) && SamlPrincipalType.SUBJECT == getPrincipalType())
+            throw new IllegalArgumentException("Can not have Transient NameID Policy Format together with SUBJECT Principal Type");
+    }
 }
