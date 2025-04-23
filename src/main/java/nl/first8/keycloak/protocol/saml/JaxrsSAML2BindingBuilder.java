@@ -23,6 +23,7 @@ import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.protocol.saml.profile.util.Soap;
 import org.keycloak.saml.BaseSAML2BindingBuilder;
 import org.keycloak.saml.common.constants.GeneralConstants;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
@@ -127,14 +128,13 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
                         .build();
 
                 SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext,
-                        new String[]{"TLSv1.2", "TLSv1.1"},
+                        new String[]{"TLSv1.3", "TLSv1.2", "TLSv1.1"},
                         null,
                         SSLConnectionSocketFactory.getDefaultHostnameVerifier());
 
                 HttpClient httpClient = HttpClients.custom()
                         .setDefaultRequestConfig(buildRequestConfig())
                         .setSSLSocketFactory(sslConnectionSocketFactory)
-                        .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
                         .build();
 
                 return httpClient;
@@ -294,6 +294,22 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
 
     }
 
+    public static class SoapBindingBuilder extends BaseSoapBindingBuilder {
+        public SoapBindingBuilder(JaxrsSAML2BindingBuilder builder, Document document) throws ProcessingException {
+            super(builder, document);
+        }
+
+        public Response response() throws ConfigurationException, ProcessingException, IOException {
+            try {
+                Soap.SoapMessageBuilder messageBuilder = Soap.createMessage();
+                messageBuilder.addToBody(document);
+                return messageBuilder.build();
+            } catch (Exception e) {
+                throw new RuntimeException("Error while creating SAML response.", e);
+            }
+        }
+    }
+
     @Override
     public JaxrsSAML2BindingBuilder.RedirectBindingBuilder redirectBinding(Document document) throws ProcessingException {
         return new JaxrsSAML2BindingBuilder.RedirectBindingBuilder(this, document);
@@ -302,5 +318,10 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
     @Override
     public JaxrsSAML2BindingBuilder.PostBindingBuilder postBinding(Document document) throws ProcessingException {
         return new JaxrsSAML2BindingBuilder.PostBindingBuilder(this, document);
+    }
+
+    @Override
+    public SoapBindingBuilder soapBinding(Document document) throws ProcessingException {
+        return new SoapBindingBuilder(this, document);
     }
 }

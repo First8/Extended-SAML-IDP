@@ -46,7 +46,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
 
     public static final String ATTRIBUTE_DECRYPT = "attribute.decrypt";
-    public static final String ATTRIBUTE_XACML_CONTEXT = "attribute.xacml-context";
     public static final String ATTRIBUTE_NAME = "attribute.name";
     public static final String ATTRIBUTE_VALUE = "attribute.value";
     public static final String ATTRIBUTE_FRIENDLY_NAME = "attribute.friendly.name";
@@ -100,12 +99,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
         property.setHelpText("Decrypt the value and set the decrypted value in the property.");
         property.setType(ProviderConfigProperty.BOOLEAN_TYPE);
         configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(ATTRIBUTE_XACML_CONTEXT);
-        property.setLabel("Use XamlResource attributes");
-        property.setHelpText("Gets the attributes from the <xacml-context:Resource> instead of the <saml2:AttributeStatement> tag");
-        property.setType(ProviderConfigProperty.BOOLEAN_TYPE);
-        configProperties.add(property);
     }
 
     public static final String PROVIDER_ID = "saml-extended-user-attribute-idp-mapper";
@@ -143,6 +136,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
         logger.debug("Preprocess Federated Identity");
+        logContext(context, null);
         String attribute = mapperModel.getConfig().get(USER_ATTRIBUTE);
         if (StringUtil.isNullOrEmpty(attribute)) {
             return;
@@ -167,8 +161,14 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
             }
         }
 
+        logContext(context, null);
+        logger.tracef("BrokeredIdentityContext attribute `%s` has been set to `%s`.", attribute, context.getUserAttribute(attribute));
+
+    }
+
+    private static void logContext(BrokeredIdentityContext context, UserModel user) {
         if(logger.isTraceEnabled()) {
-            logger.tracef("Listing of known user attributes: ");
+            logger.tracef("Listing of known BrokeredIdentityContext attributes: ");
             for(Map.Entry<String, Object> contextAttribute : context.getContextData().entrySet()) {
                 logger.tracef("\t Attribute `%s` with values ", contextAttribute.getKey());
                 if(contextAttribute.getValue() instanceof String) {
@@ -181,7 +181,20 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
                     logger.tracef("\t\t value is of type `%s`", contextAttribute.getValue().getClass().getName());
                 }
             }
-            logger.tracef("Attribute `%s` has been set to `%s`.", attribute, context.getUserAttribute(attribute));
+        }
+
+        if(logger.isTraceEnabled()) {
+            if (user != null) {
+                logger.tracef("Listing of known user attributes: ");
+                for(Map.Entry<String, List<String>> userAttribute : user.getAttributes().entrySet()) {
+                    logger.tracef("\t Attribute `%s` with values ", userAttribute.getKey());
+                    for(String value : userAttribute.getValue()) {
+                        logger.tracef("\t\t value: `%s`", value);
+                    }
+                }
+            } else {
+                logger.tracef("User attributes are not known");
+            }
         }
     }
 
@@ -221,12 +234,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
     private Predicate<AttributeStatementType.ASTChoiceType> elementWith(String attributeName) {
         return attributeType -> {
             AttributeType attribute = attributeType.getAttribute();
-            return hasMatchingNameOrFriendlyName(attributeName).test(attribute);
-        };
-    }
-
-    private Predicate<AttributeType> hasMatchingNameOrFriendlyName(String attributeName) {
-        return attribute -> {
             String name = attribute.getName();
             String friendlyName = attribute.getFriendlyName();
             boolean eqName = attributeName.equals(name);
@@ -248,21 +255,9 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
 
 
     private List<String> findAttributeValuesInContext(String attributeName, BrokeredIdentityContext context, IdentityProviderMapperModel mapperModel, KeyWrapper keys) {
+        logger.debugf("Searching for Attribute `%s` in Attribute Context.", attributeName);
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
 
-        if(Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
-            logger.debugf("Searching for Attribute `%s` in Xacml context.", attributeName);
-            return assertion.getXacmlResources().stream()
-                    .flatMap(resource -> resource.getAttributes().stream())
-                    .filter(hasMatchingNameOrFriendlyName(attributeName))
-                    .flatMap(attribute -> attribute.getAttributeValue().stream())
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .map(object -> assignValue(mapperModel, object, keys))
-                    .map(List::of)
-                    .orElse(List.of());
-        }
-        logger.debugf("Searching for Attribute `%s` in Attribute Context.", attributeName);
         return assertion.getAttributeStatements().stream()
                 .flatMap(statement -> statement.getAttributes().stream())
                 .filter(elementWith(attributeName))
@@ -306,6 +301,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
     @Override
     public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
         logger.debug("Update Brokered User.");
+        logContext(context, user);
         String attribute = mapperModel.getConfig().get(USER_ATTRIBUTE);
         if (StringUtil.isNullOrEmpty(attribute)) {
             return;
@@ -314,8 +310,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
         KeyWrapper keys = session.keys().getActiveKey(realm, KeyUse.SIG, Algorithm.RS256);
 
         List<String> attributeValuesInContext = findAttributeValuesInContext(attributeName, context, mapperModel, keys);
-        logger.debugf("Found %d attributes for `%s`", attributeValuesInContext.size(), attributeName);
-        logger.debugf("Setting attribute as %s", attribute);
+        logger.debugf("Found %d attributes in BrokeredIdentityContext for `%s`. Setting user attribute as %s", attributeValuesInContext.size(), attributeName, attribute);
         if (attribute.equalsIgnoreCase(EMAIL)) {
             setIfNotEmptyAndDifferentAndStripMailto(user::setEmail, user::getEmail, attributeValuesInContext);
         } else if (attribute.equalsIgnoreCase(FIRST_NAME)) {
@@ -323,7 +318,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
         } else if (attribute.equalsIgnoreCase(LAST_NAME)) {
             setIfNotEmptyAndDifferent(user::setLastName, user::getLastName, attributeValuesInContext);
         } else {
-            logger.debugf("Attribute `%s` not of known type(`%s`, `%s`, `%s`). So setting custom attribute.", attribute, EMAIL, FIRST_NAME, LAST_NAME);
+            logger.debugf("Attribute `%s` not of known type(`%s`, `%s`, `%s`). So setting custom user attribute.", attribute, EMAIL, FIRST_NAME, LAST_NAME);
             List<String> currentAttributeValues = user.getAttributes().get(attribute);
             if (attributeValuesInContext == null) {
                 logger.debug("Attribute no longer sent by brokered idp, remove from user attributes");
@@ -344,16 +339,9 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
             // attribute already set.
         }
 
-        if(logger.isTraceEnabled()) {
-            logger.tracef("Listing of known user attributes: ");
-            for(Map.Entry<String, List<String>> contextAttribute : user.getAttributes().entrySet()) {
-                logger.tracef("\t Attribute `%s` with values ", contextAttribute.getKey());
-                for(String value : contextAttribute.getValue()) {
-                    logger.tracef("\t\t value: `%s`", value);
-                }
-            }
-            logger.tracef("Attribute `%s` has been set to `%s`.", attribute, context.getUserAttribute(attribute));
-        }
+        logContext(context, user);
+        logger.tracef("User attribute `%s` has been set to `%s`.", attribute, user.getFirstAttribute(attribute));
+
     }
 
     @Override

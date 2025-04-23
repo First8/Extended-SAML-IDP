@@ -30,8 +30,8 @@ public class SPMetadataDescriptorBuilder {
     private boolean wantAssertionsEncrypted;
     private String entityId;
     private String nameIDPolicyFormat;
-    private List<Element> signingCerts;
-    private List<Element> encryptionCerts;
+    private List<KeyDescriptorType> signingCerts;
+    private List<KeyDescriptorType> encryptionCerts;
     private Integer metadataValidUntilUnit;
     private Integer metadataValidUntilPeriod;
     private Integer defaultAssertionEndpoint;
@@ -92,12 +92,12 @@ public class SPMetadataDescriptorBuilder {
         return this;
     }
 
-    public SPMetadataDescriptorBuilder signingCerts(List<Element> signingCerts) {
+    public SPMetadataDescriptorBuilder signingCerts(List<KeyDescriptorType> signingCerts) {
         this.signingCerts = signingCerts;
         return this;
     }
 
-    public SPMetadataDescriptorBuilder encryptionCerts(List<Element> encryptionCerts) {
+    public SPMetadataDescriptorBuilder encryptionCerts(List<KeyDescriptorType> encryptionCerts) {
         this.encryptionCerts = encryptionCerts;
         return this;
     }
@@ -147,7 +147,7 @@ public class SPMetadataDescriptorBuilder {
             iterator = signingCerts.iterator();
 
             while (iterator.hasNext()) {
-                key = (Element) iterator.next();
+                key = ((KeyDescriptorType) iterator.next()).getKeyInfo();
                 keyDescriptor = new KeyDescriptorType();
                 keyDescriptor.setUse(KeyTypes.SIGNING);
                 keyDescriptor.setKeyInfo(key);
@@ -159,7 +159,7 @@ public class SPMetadataDescriptorBuilder {
             iterator = encryptionCerts.iterator();
 
             while (iterator.hasNext()) {
-                key = (Element) iterator.next();
+                key = ((KeyDescriptorType) iterator.next()).getKeyInfo();
                 keyDescriptor = new KeyDescriptorType();
                 keyDescriptor.setUse(KeyTypes.ENCRYPTION);
                 keyDescriptor.setKeyInfo(key);
@@ -177,7 +177,7 @@ public class SPMetadataDescriptorBuilder {
         if (this.assertionEndpoints != null && !this.assertionEndpoints.isEmpty()) {
             for (URI assertionEndpoint : this.assertionEndpoints) {
                 IndexedEndpointType assertionConsumerEndpoint = new IndexedEndpointType(loginBinding, assertionEndpoint);
-                if(defaultAssertionEndpoint.equals(assertionIndex)) {
+                if (defaultAssertionEndpoint.equals(assertionIndex)) {
                     assertionConsumerEndpoint.setIsDefault(true);
                 } else {
                     assertionConsumerEndpoint.setIsDefault(false);
@@ -187,7 +187,7 @@ public class SPMetadataDescriptorBuilder {
                 assertionIndex++;
 
                 IndexedEndpointType assertionConsumerEndpoint2 = new IndexedEndpointType(JBossSAMLURIConstants.SAML_HTTP_ARTIFACT_BINDING.getUri(), assertionEndpoint);
-                if(defaultAssertionEndpoint.equals(assertionIndex)) {
+                if (defaultAssertionEndpoint.equals(assertionIndex)) {
                     assertionConsumerEndpoint2.setIsDefault(true);
                 } else {
                     assertionConsumerEndpoint2.setIsDefault(false);

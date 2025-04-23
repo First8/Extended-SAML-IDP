@@ -4,13 +4,14 @@ import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import nl.first8.keycloak.dom.saml.v2.metadata.SPSSODescriptorType;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.BeforeEach;
-import org.w3c.dom.Element;
 import org.junit.jupiter.api.Test;
 import org.keycloak.dom.saml.v2.metadata.EndpointType;
 import org.keycloak.dom.saml.v2.metadata.IndexedEndpointType;
+import org.keycloak.dom.saml.v2.metadata.KeyDescriptorType;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.net.URI;
@@ -29,8 +30,6 @@ class SPMetadataDescriptorBuilderTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
-        Element element = mock(Element.class);
         builder = new SPMetadataDescriptorBuilder();
 
         SPMetadataDescriptorBuilder.logger = logger;
@@ -47,8 +46,8 @@ class SPMetadataDescriptorBuilderTest {
                 .wantAssertionsSigned(true)
                 .wantAssertionsEncrypted(false)
                 .nameIDPolicyFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-                .signingCerts(List.of(element))
-                .encryptionCerts(List.of(element))
+                .signingCerts(List.of(new KeyDescriptorType()))
+                .encryptionCerts(List.of(new KeyDescriptorType()))
                 .metadataValidUntilUnit(Calendar.DAY_OF_MONTH)
                 .metadataValidUntilPeriod(7)
                 .defaultAssertionEndpoint(1);
@@ -75,8 +74,8 @@ class SPMetadataDescriptorBuilderTest {
 
     @Test
     void shouldSetSigningCerts() {
-        Element keyDescriptor = mock(Element.class);
-        List<Element> signingCerts = Collections.singletonList(keyDescriptor);
+        KeyDescriptorType keyDescriptor = new KeyDescriptorType();
+        List<KeyDescriptorType> signingCerts = Collections.singletonList(keyDescriptor);
 
         EntityDescriptorType entityDescriptor = builder
                 .signingCerts(signingCerts)

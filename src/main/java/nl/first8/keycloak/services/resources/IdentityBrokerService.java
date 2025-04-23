@@ -4,8 +4,7 @@ import nl.first8.keycloak.authentication.authenticators.broker.util.SerializedBr
 import nl.first8.keycloak.broker.saml.SAMLEndpoint;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.cache.NoCache;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.keycloak.http.HttpRequest;
 import org.keycloak.OAuthErrorException;
 import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
@@ -47,6 +46,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.utils.AuthenticationFlowResolver;
 import org.keycloak.models.utils.FormMessage;
+import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
@@ -86,7 +86,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -116,26 +115,26 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     private final RealmModel realmModel;
 
-    @Context
-    private KeycloakSession session;
+    private final KeycloakSession session;
 
-    @Context
-    private ClientConnection clientConnection;
+    private final ClientConnection clientConnection;
 
-    @Context
-    private HttpRequest request;
+    private final HttpRequest request;
 
-    @Context
-    private HttpHeaders headers;
+    private final HttpHeaders headers;
 
     private EventBuilder event;
 
 
-    public IdentityBrokerService(RealmModel realmModel) {
+    public IdentityBrokerService(KeycloakSession session) {
+        this.session = session;
+        this.clientConnection= session.getContext().getConnection();
+        realmModel = session.getContext().getRealm();
         if (realmModel == null) {
             throw new IllegalArgumentException("Realm can not be null.");
         }
-        this.realmModel = realmModel;
+        this.request = session.getContext().getHttpRequest();
+        this.headers = session.getContext().getRequestHeaders();
     }
 
     public void init() {
@@ -400,9 +399,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             throw new NotFoundException(e.getMessage());
         }
 
-        Object callback = identityProvider.callback(realmModel, this, event);
-        ResteasyProviderFactory.getInstance().injectProperties(callback);
-        return callback;
+        return identityProvider.callback(realmModel, this, event);
     }
 
     @Path("{provider_id}/token")
@@ -460,6 +457,10 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                         return corsResponse(badRequest("User [" + authResult.getUser().getId() + "] is not associated with identity provider [" + providerId + "]."), clientModel);
                     }
 
+                    if (identity.getToken() == null) {
+                        return corsResponse(notFound("No token stored for user [" + authResult.getUser().getId() + "] with associated identity provider [" + providerId + "]."), clientModel);
+                    }
+
                     this.event.success();
 
                     return corsResponse(identityProvider.retrieveToken(session, identity), clientModel);
@@ -487,7 +488,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             }
             context.setToken(null);
         }
-
+        
         StatusResponseType loginResponse = (StatusResponseType) context.getContextData().get(SAMLEndpoint.SAML_LOGIN_RESPONSE);
         if (loginResponse != null) {
             for(Iterator<SamlAuthenticationPreprocessor> it = SamlSessionUtils.getSamlAuthenticationPreprocessorIterator(session); it.hasNext();) {
@@ -553,7 +554,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                 logger.warnv("Nested first broker flow detected: {0} -> {1}", ctx0.getIdentityProviderId(), ctx1.getIdentityProviderId());
                 logger.debug("Resuming last execution");
                 URI redirect = new AuthenticationFlowURLHelper(session, realmModel, session.getContext().getUri())
-                        .getLastExecutionUrl(authenticationSession);
+                    .getLastExecutionUrl(authenticationSession);
                 return Response.status(Status.FOUND).location(redirect).build();
             }
 
@@ -599,14 +600,14 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     private Map<String, String> extractAuthNotesFromSession(AuthenticationSessionModel authenticationSession) {
         return Stream.of(
-                        LocaleSelectorProvider.USER_REQUEST_LOCALE,
-                        LocaleSelectorProvider.CLIENT_REQUEST_LOCALE
-                )
-                .filter(it -> authenticationSession.getAuthNote(it) != null)
-                .collect(Collectors.toMap(
-                        Function.identity(),
-                        authenticationSession::getAuthNote
-                ));
+            LocaleSelectorProvider.USER_REQUEST_LOCALE,
+            LocaleSelectorProvider.CLIENT_REQUEST_LOCALE
+        )
+            .filter(it -> authenticationSession.getAuthNote(it) != null)
+            .collect(Collectors.toMap(
+                Function.identity(),
+                authenticationSession::getAuthNote
+            ));
     }
 
 
@@ -842,15 +843,16 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
 
     @Override
-    public Response cancelled() {
+    public Response cancelled(IdentityProviderModel idpConfig) {
         AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
 
-        Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.CONSENT_DENIED);
+        String idpDisplayName = KeycloakModelUtils.getIdentityProviderDisplayName(session, idpConfig);
+        Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.ACCESS_DENIED_WHEN_IDP_AUTH, idpDisplayName);
         if (accountManagementFailedLinking != null) {
             return accountManagementFailedLinking;
         }
 
-        return browserAuthentication(authSession, null);
+        return browserAuthentication(authSession, Messages.ACCESS_DENIED_WHEN_IDP_AUTH, idpDisplayName);
     }
 
     @Override
@@ -1155,7 +1157,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             return webEx.getResponse();
         }
 
-        return ErrorPage.error(this.session, authSession, status, message, parameters);
+        throw new ErrorPageException(this.session, authSession, status, message, parameters);
     }
 
     private Response redirectToAccountErrorPage(AuthenticationSessionModel authSession, String message, Object ... parameters) {
@@ -1174,7 +1176,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     }
 
 
-    protected Response browserAuthentication(AuthenticationSessionModel authSession, String errorMessage) {
+    protected Response browserAuthentication(AuthenticationSessionModel authSession, String errorMessage, Object... parameters) {
         this.event.event(EventType.LOGIN);
         AuthenticationFlowModel flow = AuthenticationFlowResolver.resolveBrowserFlow(authSession);
         String flowId = flow.getId();
@@ -1189,10 +1191,10 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                 .setSession(session)
                 .setUriInfo(session.getContext().getUri())
                 .setRequest(request);
-        if (errorMessage != null) processor.setForwardedErrorMessage(new FormMessage(null, errorMessage));
+        if (errorMessage != null) processor.setForwardedErrorMessage(new FormMessage(null, errorMessage, parameters));
 
         try {
-            CacheControlUtil.noBackButtonCacheControlHeader();
+            CacheControlUtil.noBackButtonCacheControlHeader(session);
             return processor.authenticate();
         } catch (Exception e) {
             return processor.handleBrowserException(e);
@@ -1202,12 +1204,17 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     private Response badRequest(String message) {
         fireErrorEvent(message);
-        return ErrorResponse.error(message, Response.Status.BAD_REQUEST);
+        throw ErrorResponse.error(message, Response.Status.BAD_REQUEST);
     }
 
     private Response forbidden(String message) {
         fireErrorEvent(message);
-        return ErrorResponse.error(message, Response.Status.FORBIDDEN);
+        throw ErrorResponse.error(message, Response.Status.FORBIDDEN);
+    }
+
+    private Response notFound(String message) {
+        fireErrorEvent(message);
+        throw ErrorResponse.error(message, Response.Status.NOT_FOUND);
     }
 
     public static IdentityProvider getIdentityProvider(KeycloakSession session, RealmModel realm, String alias) {
@@ -1228,7 +1235,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     public static IdentityProviderFactory getIdentityProviderFactory(KeycloakSession session, IdentityProviderModel model) {
         return Stream.concat(session.getKeycloakSessionFactory().getProviderFactoriesStream(IdentityProvider.class),
-                        session.getKeycloakSessionFactory().getProviderFactoriesStream(SocialIdentityProvider.class))
+                session.getKeycloakSessionFactory().getProviderFactoriesStream(SocialIdentityProvider.class))
                 .filter(providerFactory -> Objects.equals(providerFactory.getId(), model.getProviderId()))
                 .map(IdentityProviderFactory.class::cast)
                 .findFirst()

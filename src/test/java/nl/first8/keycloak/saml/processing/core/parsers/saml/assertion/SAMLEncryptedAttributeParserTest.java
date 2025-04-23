@@ -34,19 +34,20 @@ class SAMLEncryptedAttributeParserTest {
     @Test
     void testParseRealSAML() throws Exception {
         // Sample SAML Encrypted Attribute XML
-        String samlXml = "<saml:EncryptedAttribute xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
-                "<xenc:EncryptedData xmlns:xenc=\"http://www.w3.org/2001/04/xmlenc#\">" +
-                "<xenc:CipherData>" +
-                "<xenc:CipherValue>EncryptedDataHere</xenc:CipherValue>" +
-                "</xenc:CipherData>" +
-                "</xenc:EncryptedData>" +
-                "<xenc:EncryptedKey xmlns:xenc=\"http://www.w3.org/2001/04/xmlenc#\" Id=\"key123\" Recipient=\"testRecipient\">" +
-                "<xenc:CipherData>" +
-                "<xenc:CipherValue>EncryptedKeyHere</xenc:CipherValue>" +
-                "</xenc:CipherData>" +
-                "</xenc:EncryptedKey>" +
-                "</saml:EncryptedAttribute>";
-
+        String samlXml = """
+                <saml:EncryptedAttribute xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
+                    <xenc:EncryptedData xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+                        <xenc:CipherData>
+                            <xenc:CipherValue>EncryptedDataHere</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </xenc:EncryptedData>
+                    <xenc:EncryptedKey xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" Id="key123" Recipient="testRecipient">
+                        <xenc:CipherData>
+                            <xenc:CipherValue>EncryptedKeyHere</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </xenc:EncryptedKey>
+                </saml:EncryptedAttribute>
+                """;
 
         // Create XML Event Reader from the string
         XMLInputFactory factory = XMLInputFactory.newInstance();

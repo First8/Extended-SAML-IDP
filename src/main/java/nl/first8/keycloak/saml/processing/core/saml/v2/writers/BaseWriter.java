@@ -455,7 +455,7 @@ public class BaseWriter {
                     if (attributeValue instanceof String) {
                         writeStringAttributeValue((String) attributeValue);
                     } else if (attributeValue instanceof NameIDType) {
-                        writeNameIDTypeAttributeValue((NameIDType) attributeValue);
+                    	writeNameIDTypeAttributeValue((NameIDType) attributeValue);
                     } else if (attributeValue instanceof XMLGregorianCalendar) {
                         writeDateAttributeValue((XMLGregorianCalendar) attributeValue);
                     } else if (attributeValue instanceof Element) {
@@ -480,7 +480,7 @@ public class BaseWriter {
 
     public void writeNameIDTypeAttributeValue(NameIDType attributeValue) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.ATTRIBUTE_VALUE.get(), ASSERTION_NSURI.get());
-        write((NameIDType)attributeValue, new QName(ASSERTION_NSURI.get(), JBossSAMLConstants.NAMEID.get(), ASSERTION_PREFIX));
+    	write((NameIDType)attributeValue, new QName(ASSERTION_NSURI.get(), JBossSAMLConstants.NAMEID.get(), ASSERTION_PREFIX));
         StaxUtil.writeEndElement(writer);
     }
 

@@ -28,6 +28,8 @@ done
 if [ -z "$KEYCLOAK" ]; then
   echo "No keycloak source directory found. Use -k | --keycloak <dir> to "
 else
+  copy_file "services/src/main/java/org/keycloak/authentication/authenticators/broker/util/SerializedBrokeredIdentityContext.java"
+
   copy_file "services/src/main/java/org/keycloak/broker/saml/mappers/AdvancedAttributeToRoleMapper.java"
   copy_file "services/src/main/java/org/keycloak/broker/saml/mappers/AttributeToRoleMapper.java"
   copy_file "services/src/main/java/org/keycloak/broker/saml/mappers/UserAttributeMapper.java"
@@ -52,7 +54,6 @@ else
   copy_file "services/src/main/java/org/keycloak/protocol/saml/mappers/SamlMetadataDescriptorUpdater.java"
 
   copy_file "services/src/main/java/org/keycloak/protocol/saml/JaxrsSAML2BindingBuilder.java"
-  copy_file "services/src/main/java/org/keycloak/protocol/saml/mappers/SamlMetadataDescriptorUpdater.java"
   copy_file "services/src/main/java/org/keycloak/protocol/saml/SamlProtocolUtils.java"
 
   copy_file "saml-core-api/src/main/java/org/keycloak/saml/common/constants/JBossSAMLConstants.java"
@@ -67,7 +68,9 @@ else
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/assertion/AbstractStaxSamlAssertionParser.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/assertion/SAMLAssertionParser.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/assertion/SAMLAssertionQNames.java"
+  copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/assertion/SAMLAttributeParser.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/assertion/SAMLAttributeStatementParser.java"
+  copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/assertion/SAMLAttributeValueParser.java"
 
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/metadata/SAMLAttributeConsumingServiceParser.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/metadata/SAMLEntitiesDescriptorParser.java"
@@ -81,6 +84,7 @@ else
 
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/util/AssertionUtil.java"
 
+  copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/writers/BaseWriter.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/writers/SAMLAssertionWriter.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/writers/SAMLMetadataWriter.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/writers/SAMLRequestWriter.java"
@@ -91,5 +95,7 @@ else
   copy_file "saml-core/src/main/java/org/keycloak/saml/SAML2AuthnRequestBuilder.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/SAMLRequestParser.java"
 
-  cp ${KEYCLOAK}"/themes/src/main/resources/theme/base/admin/resources/partials/realm-identity-provider-saml.html" "src/main/resources/theme-resources/resources/partials/"
+  copy_file "services/src/main/java/org/keycloak/services/resources/IdentityBrokerService.java"
+
+  #cp ${KEYCLOAK}"/themes/src/main/resources/theme/base/admin/resources/partials/realm-identity-provider-saml.html" "src/main/resources/theme-resources/resources/partials/"
 fi

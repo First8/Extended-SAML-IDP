@@ -6,6 +6,7 @@ import nl.first8.keycloak.dom.saml.v2.metadata.RequestedAttributeValueType;
 import nl.first8.keycloak.dom.saml.v2.metadata.SPSSODescriptorType;
 import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.metadata.*;
+import org.keycloak.dom.xmlsec.w3.xmlenc.EncryptionMethodType;
 import org.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ProcessingException;
@@ -468,8 +469,22 @@ public class SAMLMetadataWriter extends BaseWriter {
 
         Element keyInfo = keyDescriptor.getKeyInfo();
         StaxUtil.writeDOMElement(writer, keyInfo);
+
+        List<EncryptionMethodType> encryptionMethodTypes = keyDescriptor.getEncryptionMethod();
+        if (encryptionMethodTypes != null && !encryptionMethodTypes.isEmpty()) {
+            for (EncryptionMethodType encryptionMethodType : encryptionMethodTypes) {
+                writeEncryptionMethod(encryptionMethodType);
+            }
+        }
+
         StaxUtil.writeEndElement(writer);
         StaxUtil.flush(writer);
+    }
+
+    public void writeEncryptionMethod(EncryptionMethodType methodType) throws ProcessingException {
+        StaxUtil.writeStartElement(writer, METADATA_PREFIX, JBossSAMLConstants.ENCRYPTION_METHOD.get(), JBossSAMLURIConstants.METADATA_NSURI.get());
+        StaxUtil.writeAttribute(writer, JBossSAMLConstants.ALGORITHM.get(), methodType.getAlgorithm());
+        StaxUtil.writeEndElement(writer);
     }
 
     public void writeAttributeService(EndpointType endpoint) throws ProcessingException {
