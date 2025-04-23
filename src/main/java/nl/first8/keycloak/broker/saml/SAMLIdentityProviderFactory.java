@@ -16,7 +16,9 @@ import org.keycloak.saml.validators.DestinationValidator;
 import org.w3c.dom.Element;
 
 import javax.xml.namespace.QName;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -50,9 +52,11 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
     }
 
     @Override
-    public Map<String, String> parseConfig(KeycloakSession session, InputStream inputStream) {
+    public Map<String, String> parseConfig(KeycloakSession session, String xmlContent) {
         try {
+            InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes("UTF-8"));
 
+            // Use the XML content string for parsing
             SAMLParser parser = SAMLParser.getInstance();
             logger.debugf("SAMLParser in use: %s", parser.getClass());
             Object parsedObject = parser.parse(inputStream);
@@ -63,6 +67,7 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
             } else {
                 entityType = (EntityDescriptorType) parsedObject;
             }
+
 
             List<EntityDescriptorType.EDTChoiceType> choiceType = entityType.getChoiceType();
 
@@ -171,6 +176,8 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
             }
         } catch (ParsingException pe) {
             throw new RuntimeException("Could not parse IdP SAML Metadata", pe);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
         return new HashMap<>();
     }

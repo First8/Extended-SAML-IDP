@@ -299,7 +299,7 @@
 
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@16.1.0/dist/keycloak.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.1/dist/keycloak.js"></script>
 </head>
 <header>
     <div class="logo">
@@ -401,10 +401,10 @@
             var serverUrl = localStorage.getItem('ServerUrl');
             var pluginAlias = localStorage.getItem('pluginalias');
             var link = document.getElementById('metadataLink');
-
             document.getElementById('metadataLink').onclick = function(event) {
                 event.preventDefault();
-                window.open(`${serverUrl}/realms/${selectedRealm}/broker/${pluginAlias}/endpoint/descriptor`, '_blank');}        </script>
+                window.open(`${serverUrl}/realms/${selectedRealm}/broker/${pluginAlias}/endpoint/descriptor`, '_blank');}
+        </script>
         </section>
         <h2 id="SAMLSettings">SAML settings</h2>
 

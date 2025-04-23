@@ -32,7 +32,6 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
 
     public static final String ATTRIBUTE_NAME = "attribute.name";
-    public static final String ATTRIBUTE_XACML_CONTEXT = "attribute.xacml-context";
     public static final String ATTRIBUTE_FRIENDLY_NAME = "attribute.friendly.name";
     public static final String ATTRIBUTE_NAME_FORMAT = "attribute.name.format";
     public static final String ATTRIBUTE_VALUE = "attribute.value";
@@ -77,12 +76,6 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
         property.setHelpText("User attribute name to store saml attribute.  Use email, lastName, and firstName to map to those predefined user properties.");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(ATTRIBUTE_XACML_CONTEXT);
-        property.setLabel("Use XamlResource attributes");
-        property.setHelpText("Gets the attributes from the <xacml-context:Resource> instead of the <saml2:AttributeStatement> tag");
-        property.setType(ProviderConfigProperty.BOOLEAN_TYPE);
-        configProperties.add(property);
     }
 
     public static final String PROVIDER_ID = "saml-extended-user-attribute-value-idp-mapper";
@@ -126,7 +119,7 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
         String attributeName = getAttributeNameFromMapperModel(mapperModel);
 
         List<String> attributeValuesInContext =
-                findAttributeValuesInContext(attributeName, context, mapperModel);
+                findAttributeValuesInContext(attributeName, context);
         if (!attributeValuesInContext.isEmpty()) {
             if (attribute.equalsIgnoreCase(EMAIL)) {
                 setIfNotEmptyAndStripMailto(context::setEmail, attributeValuesInContext);
@@ -175,30 +168,15 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
     private Predicate<AttributeStatementType.ASTChoiceType> elementWith(String attributeName) {
         return attributeType -> {
             AttributeType attribute = attributeType.getAttribute();
-            return hasMatchingName(attributeName).test(attribute);
+            return Objects.equals(attribute.getName(), attributeName)
+                    || Objects.equals(attribute.getFriendlyName(), attributeName);
         };
     }
 
-    private Predicate<AttributeType> hasMatchingName(String attributeName) {
-        return attribute -> Objects.equals(attribute.getName(), attributeName)
-                || Objects.equals(attribute.getFriendlyName(), attributeName);
 
-    }
-
-    private List<String> findAttributeValuesInContext(String attributeName, BrokeredIdentityContext context, IdentityProviderMapperModel mapperModel) {
+    private List<String> findAttributeValuesInContext(String attributeName, BrokeredIdentityContext context) {
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
 
-        if(Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
-            return assertion.getXacmlResources().stream()
-                    .flatMap(resource -> resource.getAttributes().stream())
-                    .filter(hasMatchingName(attributeName))
-                    .flatMap(attribute -> attribute.getAttributeValue().stream())
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .map(Object::toString)
-                    .map(List::of)
-                    .orElse(List.of());
-        }
         return assertion.getAttributeStatements().stream()
                 .flatMap(statement -> statement.getAttributes().stream())
                 .filter(elementWith(attributeName))
@@ -215,7 +193,7 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
             return;
         }
         String attributeName = getAttributeNameFromMapperModel(mapperModel);
-        List<String> attributeValuesInContext = findAttributeValuesInContext(attributeName, context, mapperModel);
+        List<String> attributeValuesInContext = findAttributeValuesInContext(attributeName, context);
         if (attribute.equalsIgnoreCase(EMAIL)) {
             setIfNotEmptyAndDifferentAndStripMailto(user::setEmail, user::getEmail, attributeValuesInContext);
         } else if (attribute.equalsIgnoreCase(FIRST_NAME)) {

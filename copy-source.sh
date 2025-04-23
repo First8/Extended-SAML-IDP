@@ -82,7 +82,11 @@ else
 
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/parsers/saml/SAMLParser.java"
 
+  copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/factories/JBossSAMLAuthnResponseFactory.java"
+  copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/factories/SAMLAssertionFactory.java"
+
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/util/AssertionUtil.java"
+  copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/util/SAMLMetadataUtil.java"
 
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/writers/BaseWriter.java"
   copy_file "saml-core/src/main/java/org/keycloak/saml/processing/core/saml/v2/writers/SAMLAssertionWriter.java"
@@ -97,5 +101,4 @@ else
 
   copy_file "services/src/main/java/org/keycloak/services/resources/IdentityBrokerService.java"
 
-  #cp ${KEYCLOAK}"/themes/src/main/resources/theme/base/admin/resources/partials/realm-identity-provider-saml.html" "src/main/resources/theme-resources/resources/partials/"
 fi

@@ -4,7 +4,6 @@ import nl.first8.keycloak.broker.saml.SAMLEndpoint;
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
-import nl.first8.keycloak.dom.saml.v2.assertion.XacmlResourceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import org.jboss.logging.Logger;
@@ -20,7 +19,6 @@ import org.keycloak.protocol.saml.mappers.SamlMetadataDescriptorUpdater;
 import org.keycloak.provider.ProviderConfigProperty;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC;
 
@@ -37,7 +35,6 @@ public class AttributeToRoleMapper extends AbstractAttributeToRoleMapper impleme
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
 
     public static final String ATTRIBUTE_NAME = "attribute.name";
-    public static final String ATTRIBUTE_XACML_CONTEXT = "attribute.xacml-context";
     public static final String ATTRIBUTE_FRIENDLY_NAME = "attribute.friendly.name";
     public static final String ATTRIBUTE_VALUE = "attribute.value";
 
@@ -68,12 +65,6 @@ public class AttributeToRoleMapper extends AbstractAttributeToRoleMapper impleme
         property.setLabel("Role");
         property.setHelpText("Role to grant to user.  Click 'Select Role' button to browse roles, or just type it in the textbox.  To reference a client role the syntax is clientname.clientrole, i.e. myclient.myrole");
         property.setType(ProviderConfigProperty.ROLE_TYPE);
-        configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(ATTRIBUTE_XACML_CONTEXT);
-        property.setLabel("Use XamlResource attributes");
-        property.setHelpText("Gets the attributes from the <xacml-context:Resource> instead of the <saml2:AttributeStatement> tag");
-        property.setType(ProviderConfigProperty.BOOLEAN_TYPE);
         configProperties.add(property);
     }
 
@@ -116,43 +107,15 @@ public class AttributeToRoleMapper extends AbstractAttributeToRoleMapper impleme
         if (friendly != null && friendly.trim().equals("")) friendly = null;
         String desiredValue = Optional.ofNullable(mapperModel.getConfig().get(ATTRIBUTE_VALUE)).orElse("");
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
-
-        if(Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
-            return appliesXacmlResource(name, friendly, desiredValue, assertion);
-        }
-        return appliesAttributeStatement(name, friendly, desiredValue, assertion);
-    }
-
-    private boolean appliesAttributeStatement(final String name, final String friendlyName,
-                                              final String desiredValue, final AssertionType assertion) {
         for (AttributeStatementType statement : assertion.getAttributeStatements()) {
-            if (hasMatchingAttribute(statement.getAttributes().stream()
-                    .map(choice -> choice.getAttribute())
-                    .collect(Collectors.toList()), name, friendlyName, desiredValue)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean appliesXacmlResource(final String name, final String friendlyName,
-                                         final String desiredValue, final AssertionType assertion) {
-        for (XacmlResourceType xacmlResource : assertion.getXacmlResources()) {
-            if (hasMatchingAttribute(xacmlResource.getAttributes(), name, friendlyName, desiredValue)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasMatchingAttribute(Collection<AttributeType> attributes, String name, String friendlyName, String desiredValue){
-        for (AttributeType attr : attributes) {
-            if (name != null && !name.equals(attr.getName())) continue;
-            if (friendlyName != null && !friendlyName.equals(attr.getFriendlyName())) continue;
-            for (Object val : attr.getAttributeValue()) {
-                val = Optional.ofNullable(val).orElse("");
-                if (val.equals(desiredValue)) {
-                    return true;
+            for (AttributeStatementType.ASTChoiceType choice : statement.getAttributes()) {
+                AttributeType attr = choice.getAttribute();
+                if (name != null && !name.equals(attr.getName())) continue;
+                if (friendly != null && !friendly.equals(attr.getFriendlyName())) continue;
+                for (Object val : attr.getAttributeValue()) {
+                    val = Optional.ofNullable(val).orElse("");
+                    if (val.equals(desiredValue))
+                        return true;
                 }
             }
         }
@@ -194,8 +157,8 @@ public class AttributeToRoleMapper extends AbstractAttributeToRoleMapper impleme
             for (EntityDescriptorType.EDTDescriptorChoiceType descriptor : descriptors) {
                 for (AttributeConsumingServiceType attributeConsumingService : descriptor.getSpDescriptor().getAttributeConsumingService()) {
                     boolean alreadyPresent = attributeConsumingService.getRequestedAttribute().stream()
-                            .anyMatch(t -> (attributeName == null || attributeName.equalsIgnoreCase(t.getName())) &&
-                                    (attributeFriendlyName == null || attributeFriendlyName.equalsIgnoreCase(t.getFriendlyName())));
+                        .anyMatch(t -> (attributeName == null || attributeName.equalsIgnoreCase(t.getName())) &&
+                                       (attributeFriendlyName == null || attributeFriendlyName.equalsIgnoreCase(t.getFriendlyName())));
 
                     if (!alreadyPresent)
                         attributeConsumingService.addRequestedAttribute(requestedAttribute);

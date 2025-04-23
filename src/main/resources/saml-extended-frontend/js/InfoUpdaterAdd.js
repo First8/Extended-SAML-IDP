@@ -3,6 +3,7 @@ storedData = localStorage.getItem('pluginData');
         if (storedData) {
 
             var pluginData = JSON.parse(storedData);
+
             function toggleCheckbox(configKey, checkbox) {
 
                 if (pluginData.config && pluginData.config[configKey]) {
@@ -183,7 +184,6 @@ storedData = localStorage.getItem('pluginData');
 
             if (pluginData.config && pluginData.config.artifactResolution) {
                 Artifact_Resolution_value = pluginData.config.artifactResolution;
-
                 if (pluginData.config.artifactResolution == "true") {
                     Artifact_Resolution.checked = true;
                     additionalField_endpoint.removeAttribute("disabled");
@@ -210,6 +210,7 @@ storedData = localStorage.getItem('pluginData');
                     newItem.innerHTML = '<input id="textinput_' + i + '" name="textinput" type="text" class="input_text" value="' + myArray[i] + '">';
                     container.appendChild(newItem);
                 }
+                console.log(pluginData.config[id]);
             }
         }
 

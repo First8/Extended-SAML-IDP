@@ -52,7 +52,6 @@ public class SamlEndpointProvider implements RealmResourceProvider {
     @Produces(MediaType.APPLICATION_JSON)
     public List<AttributeConsumingService> setAttributes(List<AttributeConsumingService> attributeServices) {
         AttributeConsumingServiceType.setAttributeConsumingServices(attributeServices);
-        logger.info("Services set successfully.");
         return attributeServices;
     }
 

@@ -1,5 +1,5 @@
 var accessToken;
-const keycloak = Keycloak({
+const keycloak =new Keycloak({
     url: `${ServerUrl}`,
     realm: `${realm}`,
     clientId: `${clientid}`,
@@ -64,9 +64,7 @@ keycloak
         
 
                     });
-                
-                
-                    console.log("Alias values have been successfully added to the select element.");
+
                 })
                 .catch(error => {
                     console.error(error);

@@ -142,7 +142,6 @@ add.addEventListener('click', () => {
                 });
 
                 if (updatePluginResponse.ok) {
-                    console.log('Plugin added successfully.');
                     alert("Plugin added successfully.");
                     window.location.href = `${editprovider}`;
                     localStorage.setItem('pluginData', JSON.stringify(data));

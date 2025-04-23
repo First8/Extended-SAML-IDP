@@ -1,5 +1,5 @@
 var accessToken;
-const keycloak = Keycloak({
+const keycloak = new Keycloak({
   url: `${ServerUrl}`,
   realm: `${realm}`,
   clientId: `${clientid}`,
@@ -61,6 +61,7 @@ keycloak
                     selectElement_firstLoginFlow.add(optionElement1, 0);
                     selectElement_firstLoginFlow.value = 'first broker login';
                 } else {
+
                     selectElement_firstLoginFlow.add(optionElement1);
                 }
             });
@@ -75,8 +76,6 @@ keycloak
 
           }
 
-
-          console.log("Alias values have been successfully added to the select element.");
         })
         .catch(error => {
           console.error(error);

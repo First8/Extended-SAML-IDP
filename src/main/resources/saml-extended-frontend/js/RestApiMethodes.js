@@ -111,6 +111,7 @@ function updateSelectedRealm() {
         select_realms.value = selectedrealm;
         select_realms.dispatchEvent(new Event('change'));
     } else {
+        console.error("selectedrealm undefined");
     }
 }
 
@@ -199,7 +200,7 @@ function updatePluginList(plugins, accessToken) {
         // Add the table to the results container
         resultsContainer.appendChild(table);
     } else {
-        console.log("resultsContainer not exists");
+        console.error("resultsContainer not exists");
     }
 }
 window.updatePluginList = updatePluginList;
@@ -248,7 +249,6 @@ function getPluginDetails(alias, accessToken) {
 
         keycloak.updateToken(300).then((bool) => {
             if (bool) {
-                console.log("Token is updated");
                 var accessToken = keycloak.token;
                 var selectedrealm = localStorage.getItem('selectedRealm');
                 fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {

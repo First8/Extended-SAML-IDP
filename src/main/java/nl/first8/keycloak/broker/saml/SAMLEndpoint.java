@@ -513,7 +513,7 @@ public class SAMLEndpoint {
                     return ErrorPage.error(session, authSession, Response.Status.BAD_REQUEST, Messages.INVALID_REQUESTER);
                 }
 
-                BrokeredIdentityContext identity = new BrokeredIdentityContext(principal);
+                BrokeredIdentityContext identity = new BrokeredIdentityContext(principal,config);
                 identity.getContextData().put(SAML_LOGIN_RESPONSE, responseType);
                 identity.getContextData().put(SAML_ASSERTION, assertion);
                 identity.setAuthenticationSession(authSession);
@@ -567,7 +567,6 @@ public class SAMLEndpoint {
 
                 String brokerUserId = config.getAlias() + "." + principal;
                 identity.setBrokerUserId(brokerUserId);
-                identity.setIdpConfig(config);
                 identity.setIdp(provider);
                 if (authn != null && authn.getSessionIndex() != null) {
                     String brokerSessionId = config.getAlias() + "." + authn.getSessionIndex();
@@ -788,7 +787,6 @@ public class SAMLEndpoint {
         protected SAMLDocumentHolder extractRequestDocument(String samlRequest) {
             return SAMLRequestParser.parseRequestPostBinding(samlRequest);
         }
-
         @Override
         protected SAMLDocumentHolder extractResponseDocument(String response) {
             byte[] samlBytes = response.getBytes();

@@ -455,13 +455,11 @@ public class BaseWriter {
                     if (attributeValue instanceof String) {
                         writeStringAttributeValue((String) attributeValue);
                     } else if (attributeValue instanceof NameIDType) {
-                        writeNameIDTypeAttributeValue((NameIDType) attributeValue);
+                    	writeNameIDTypeAttributeValue((NameIDType) attributeValue);
                     } else if (attributeValue instanceof XMLGregorianCalendar) {
                         writeDateAttributeValue((XMLGregorianCalendar) attributeValue);
                     } else if (attributeValue instanceof Element) {
                         writeElementAttributeValue((Element) attributeValue);
-                    } else if (attributeValue instanceof SamlEncryptedId) {
-                        logger.debug("EncryptedID is not implemented yet.");
                     } else
                         throw logger.writerUnsupportedAttributeValueError(attributeValue.getClass().getName());
                 } else {
@@ -481,12 +479,6 @@ public class BaseWriter {
     public void writeNameIDTypeAttributeValue(NameIDType attributeValue) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.ATTRIBUTE_VALUE.get(), ASSERTION_NSURI.get());
         write((NameIDType)attributeValue, new QName(ASSERTION_NSURI.get(), JBossSAMLConstants.NAMEID.get(), ASSERTION_PREFIX));
-        StaxUtil.writeEndElement(writer);
-    }
-
-    public void writeEncryptedIDAttributeValue(SamlEncryptedId attributeValue) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.ATTRIBUTE_VALUE.get(), ASSERTION_NSURI.get());
-        write((SamlEncryptedId)attributeValue, new QName(ASSERTION_NSURI.get(), JBossSAMLConstants.ENCRYPTED_ID.get(), ASSERTION_PREFIX));
         StaxUtil.writeEndElement(writer);
     }
 

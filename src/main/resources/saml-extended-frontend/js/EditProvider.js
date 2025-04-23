@@ -230,7 +230,7 @@ edit.addEventListener('click', () => {
                     // ... (Additional code that was commented out)
                 });
         }else
-        {console.error('alias_input does not exist')}
+        {console.log('alias_input does not exist')}
 
             // Setting a form element value to an empty string
 

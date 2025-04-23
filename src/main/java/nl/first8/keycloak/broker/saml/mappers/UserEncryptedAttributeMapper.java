@@ -1,6 +1,6 @@
 package nl.first8.keycloak.broker.saml.mappers;
 
-import nl.first8.keycloak.broker.saml.SAMLEndpoint;
+import org.keycloak.broker.saml.SAMLEndpoint;
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;

@@ -32,7 +32,7 @@ public class SamlEncryptedIdParser extends AbstractStaxSamlAssertionParser<SamlE
     @Override
     protected void processSubElement(XMLEventReader xmlEventReader, SamlEncryptedId target, SAMLAssertionQNames element, StartElement elementDetail) throws ParsingException {
         switch (element) {
-            case ENCRYPTED_DATA:
+            case  ENCRYPTED_DATA:
                 target.setEncryptedData(EncryptedDataParser.getInstance().parse(xmlEventReader));
                 break;
             case ENCRYPTED_KEY:

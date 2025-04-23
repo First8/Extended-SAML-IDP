@@ -260,7 +260,6 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             return new LinkedList<String>();
         }
     }
-
     @Override
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
@@ -486,7 +485,6 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                         return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifiers());
                     })
                     .collect(Collectors.toList());
-
             // Prepare the metadata descriptor model
             StringWriter sw = new StringWriter();
             XMLStreamWriter writer = StaxUtil.getXMLStreamWriter(sw);
@@ -580,7 +578,6 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                     attributeConsumingServiceIndex++;
                 }
             }
-
 
             // Write the metadata and export it to a string
             logger.debug("Write the metadata and export it to a string");
