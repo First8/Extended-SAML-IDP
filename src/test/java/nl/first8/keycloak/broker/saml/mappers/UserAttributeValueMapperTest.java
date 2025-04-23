@@ -46,7 +46,6 @@ class UserAttributeValueMapperTest {
         mapper.preprocessFederatedIdentity(session, realm, mapperModel, brokeredIdentityContext);
     }
 
-
     private Map<String, Object> getContext() {
 
         String attributeValue = "<saml:EncryptedID xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><xenc:EncryptedData xmlns:xenc=\"http://www.w3.org/2001/04/xmlenc#\" Id=\"_eafaac3107634baeb7a41b4131c440e5\" Type=\"http://www.w3.org/2001/04/xmlenc#Element\"><xenc:EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes256-cbc\"/><ds:KeyInfo><ds:RetrievalMethod Type=\"http://www.w3.org/2001/04/xmlenc#EncryptedKey\" URI=\"#_c9034e8a48ac43dcbfcdef4ce0aec000\"/></ds:KeyInfo><xenc:CipherData><xenc:CipherValue> DFKsO9nqmQmi1cRiDHpY0kMSRLK8CFhdzX2pJh3gH5jgZPM3VS36AclLjLIIBvW2ln68qi5izMrcqIy5gWUqDxlrt5t7L5lSoppierATcxKHab9a0005FyYJl0kor9Z4TQouhr/bwZ2GBw4J88OiVwWrXWrjpqLIzbtJHiHsKkZ8Azh4FxR3xYlvFSdoJ3xHy4si2pQsCZ5KzGJislkNY/j/rKc2j2HX2aJXcJvJc0RvPqQT9yzKs3chJeSdujXaldK5FS/DBIkV0RMQ2nCzIpR+3pbxx+aMTmKx/YkvvhhEPi7xg5oXhOQ407LJCswHyjjj9Jx9274ocuaDNmdVAJyoMceL05awS5z/wLi8AyQ=</xenc:CipherValue></xenc:CipherData></xenc:EncryptedData><xenc:EncryptedKey xmlns:xenc=\"http://www.w3.org/2001/04/xmlenc#\" Id=\"_c9034e8a48ac43dcbfcdef4ce0aec000\" Recipient=\"urn:etoegang:MR:0000000123456780000:entities:1234\"><xenc:EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p\"><ds:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"/></xenc:EncryptionMethod><ds:KeyInfo><ds:KeyName>43005cb6118b950cbc6664945cec888debc594a0</ds:KeyName></ds:KeyInfo><xenc:CipherData><xenc:CipherValue> MGn0l8bj2mZJIFY/HfXZs69JLOdmwqnogieizFdOtSFdnYYflcWZ8KIIm48/DkdXeYlmEPjWHNlwPWnTnN5HeZiUL8Oe3K/T+PTHxq1IFFY5sVDWcE6CgUR4RWZgvsX2Sru841gb1in7HEeOkyIV/hzojiqlbs/MCbD5z+yX5Z8Vo4gbsFVHOiZDOgmpWDUXsPonYn3EIPz8oOslrqgln6cuwCCFXEhRpT3vqMsey+V95EcJmLu9KMXYzdfvikm4cmzlDe9iLk15aeQza2xN+G1y3adov3TsrfbL2NBsK6CJ8U5h0M1QPicvgmFQFFKIdL6y/u9FuGGoq+Gn6P4VXg==</xenc:CipherValue></xenc:CipherData><xenc:ReferenceList><xenc:DataReference URI=\"#_eafaac3107634baeb7a41b4131c440e5\"/></xenc:ReferenceList></xenc:EncryptedKey></saml:EncryptedID>";
@@ -98,4 +97,5 @@ class UserAttributeValueMapperTest {
 
         return config;
     }
+    
 }

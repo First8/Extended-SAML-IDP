@@ -72,7 +72,6 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyPair;
-import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -480,7 +479,7 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                             throw new RuntimeException(e);
                         }
 
-                        return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifiers());
+                        return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifier());
                     })
                     .collect(Collectors.toList());
 
@@ -587,15 +586,13 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             if (getConfig().isSignSpMetadata())
             {
                 KeyManager.ActiveRsaKey activeKey = session.keys().getActiveRsaKey(realm);
-                X509Certificate certificate = activeKey.getCertificate();
-                String keyName = getConfig().getXmlSigKeyInfoKeyNameTransformer().getKeyName(activeKey.getKid(), certificate);
+                String keyName = getConfig().getXmlSigKeyInfoKeyNameTransformer().getKeyName(activeKey.getKid(), activeKey.getCertificate());
                 KeyPair keyPair = new KeyPair(activeKey.getPublicKey(), activeKey.getPrivateKey());
 
                 Document metadataDocument = DocumentUtil.getDocument(descriptor);
                 SAML2Signature signatureHelper = new SAML2Signature();
                 signatureHelper.setSignatureMethod(getSignatureAlgorithm().getXmlSignatureMethod());
                 signatureHelper.setDigestMethod(getSignatureAlgorithm().getXmlSignatureDigestMethod());
-                signatureHelper.setX509Certificate(certificate);
 
                 Node nextSibling = metadataDocument.getDocumentElement().getFirstChild();
                 signatureHelper.setNextSibling(nextSibling);

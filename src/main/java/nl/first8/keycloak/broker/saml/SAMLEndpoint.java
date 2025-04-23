@@ -134,7 +134,7 @@ public class SAMLEndpoint {
         if(samlArtifact != null && !samlArtifact.isEmpty()) {
             logger.info("[Redirect] Artifact Resolution required");
             logger.debugf("SAML artifact used for resolving artifact [%s]. Relay state: %s", samlArtifact, relayState);
-            return new SAMLEndpoint.SoapBinding().execute(samlArtifact, relayState);
+            return new SAMLEndpoint.PostBinding().execute(samlArtifact, relayState);
         } else {
             return new SAMLEndpoint.RedirectBinding().execute(samlRequest, samlResponse, relayState, null);
         }
@@ -149,7 +149,7 @@ public class SAMLEndpoint {
         if(samlArtifact != null && !samlArtifact.isEmpty()) {
             logger.info("[Post] Artifact Resolution required");
             logger.debugf("SAML artifact used for resolving artifact [%s]. Relay state: %s", samlArtifact, relayState);
-            return new SAMLEndpoint.SoapBinding().execute(samlArtifact, relayState);
+            return new SAMLEndpoint.PostBinding().execute(samlArtifact, relayState);
         } else {
             return new SAMLEndpoint.PostBinding().execute(samlRequest, samlResponse, relayState, null);
         }
@@ -560,7 +560,7 @@ public class SAMLEndpoint {
                 if (assertion.getAttributeStatements() != null ) {
                     String email = getX500Attribute(assertion, X500SAMLProfileConstants.EMAIL);
                     if (email != null) {
-                        logger.debugf("Set %s as email on the identity.", email);
+                        logger.debugf("Set % as email on the identity.", email);
                         identity.setEmail(email);
                     }
                 }
@@ -804,23 +804,6 @@ public class SAMLEndpoint {
         @Override
         protected String getBindingType() {
             return SamlProtocol.SAML_POST_BINDING;
-        }
-    }
-
-    protected class SoapBinding extends PostBinding {
-        @Override
-        protected boolean isDestinationRequired() {
-            return false;
-        }
-
-        @Override
-        protected SAMLDocumentHolder extractResponseDocument(String response) {
-            return SAMLRequestParser.parseResponseDocument(response.getBytes());
-        }
-
-        @Override
-        protected String getBindingType() {
-            return SamlProtocol.SAML_SOAP_BINDING;
         }
     }
 

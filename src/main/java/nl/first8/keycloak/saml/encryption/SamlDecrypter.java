@@ -3,7 +3,6 @@ package nl.first8.keycloak.saml.encryption;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.assertion.SAMLEncryptedAttribute;
 import nl.first8.keycloak.dom.saml.v2.assertion.SAMLEncryptedType;
-import org.apache.commons.codec.binary.Base64;
 import org.jboss.logging.Logger;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.xmlsec.w3.xmlenc.EncryptedKeyType;
@@ -20,6 +19,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.util.Base64;
 
 public class SamlDecrypter {
     protected static final Logger logger = Logger.getLogger(SamlDecrypter.class);
@@ -114,6 +114,6 @@ public class SamlDecrypter {
     }
 
     private static byte[] decode(byte[] encoded) {
-        return Base64.decodeBase64(encoded);
+        return Base64.getDecoder().decode(encoded);
     }
 }

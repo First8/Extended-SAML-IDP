@@ -11,7 +11,7 @@
     <description>
         SAML v2.0 extensions that adds more configuration options to connect to SAML Service Providers.
     </description>
-    <version>21.1.2-SNAPSHOT</version>
+    <version>21.0.2-SNAPSHOT</version>
 
     <build>
 
@@ -132,7 +132,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <keycloak.version>21.1.2</keycloak.version>
+        <keycloak.version>21.0.2</keycloak.version>
         <spotbugs.version>4.7.2.1</spotbugs.version>
     </properties>
 

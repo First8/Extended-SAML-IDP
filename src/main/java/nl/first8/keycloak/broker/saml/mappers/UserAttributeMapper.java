@@ -37,6 +37,10 @@ import java.util.stream.Collectors;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC;
 
+/**
+ * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
+ * @version $Revision: 1 $
+ */
 public class UserAttributeMapper extends AbstractIdentityProviderMapper implements SamlMetadataDescriptorUpdater {
 
     protected static final Logger logger = Logger.getLogger(UserAttributeMapper.class);
@@ -135,8 +139,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
 
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        logger.debug("Preprocess Federated Identity");
-        logContext(context, null);
         String attribute = mapperModel.getConfig().get(USER_ATTRIBUTE);
         if (StringUtil.isNullOrEmpty(attribute)) {
             return;
@@ -151,7 +153,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
             if (attribute.equalsIgnoreCase(ID)) {
                 setIfNotEmpty(context::setId, attributeValuesInContext);
             } else if (attribute.equalsIgnoreCase(EMAIL)) {
-                setIfNotEmptyAndStripMailto(context::setEmail, attributeValuesInContext);
+                setIfNotEmpty(context::setEmail, attributeValuesInContext);
             } else if (attribute.equalsIgnoreCase(FIRST_NAME)) {
                 setIfNotEmpty(context::setFirstName, attributeValuesInContext);
             } else if (attribute.equalsIgnoreCase(LAST_NAME)) {
@@ -218,18 +220,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
             consumer.accept(values.get(0));
         }
     }
-    private void setIfNotEmptyAndStripMailto(Consumer<String> consumer, List<String> values) {
-        if (values != null && !values.isEmpty()) {
-            consumer.accept(values.get(0).replace("mailto:",""));
-        }
-    }
-
-    private void setIfNotEmptyAndDifferentAndStripMailto(Consumer<String> consumer, Supplier<String> currentValueSupplier, List<String> values) {
-        if (values != null && !values.isEmpty() && !values.get(0).equals(currentValueSupplier.get())) {
-            consumer.accept(values.get(0).replace("mailto:",""));
-        }
-    }
-
 
     private Predicate<AttributeStatementType.ASTChoiceType> elementWith(String attributeName) {
         return attributeType -> {
@@ -312,7 +302,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
         List<String> attributeValuesInContext = findAttributeValuesInContext(attributeName, context, mapperModel, keys);
         logger.debugf("Found %d attributes in BrokeredIdentityContext for `%s`. Setting user attribute as %s", attributeValuesInContext.size(), attributeName, attribute);
         if (attribute.equalsIgnoreCase(EMAIL)) {
-            setIfNotEmptyAndDifferentAndStripMailto(user::setEmail, user::getEmail, attributeValuesInContext);
+            setIfNotEmptyAndDifferent(user::setEmail, user::getEmail, attributeValuesInContext);
         } else if (attribute.equalsIgnoreCase(FIRST_NAME)) {
             setIfNotEmptyAndDifferent(user::setFirstName, user::getFirstName, attributeValuesInContext);
         } else if (attribute.equalsIgnoreCase(LAST_NAME)) {
@@ -325,6 +315,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
                 // attribute no longer sent by brokered idp, remove it.
                 user.removeAttribute(attribute);
             } else if (currentAttributeValues == null) {
+                logger.debug("New attribute sent by brokered idp, add it");
                 logger.debug("New attribute sent by brokered idp, add to user attributes");
                 // new attribute sent by brokered idp, add it.
                 user.setAttribute(attribute, attributeValuesInContext);

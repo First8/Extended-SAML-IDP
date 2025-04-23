@@ -122,7 +122,7 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
                 findAttributeValuesInContext(attributeName, context);
         if (!attributeValuesInContext.isEmpty()) {
             if (attribute.equalsIgnoreCase(EMAIL)) {
-                setIfNotEmptyAndStripMailto(context::setEmail, attributeValuesInContext);
+                setIfNotEmpty(context::setEmail, attributeValuesInContext);
             } else if (attribute.equalsIgnoreCase(FIRST_NAME)) {
                 setIfNotEmpty(context::setFirstName, attributeValuesInContext);
             } else if (attribute.equalsIgnoreCase(LAST_NAME)) {
@@ -150,18 +150,6 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
     private void setIfNotEmptyAndDifferent(Consumer<String> consumer, Supplier<String> currentValueSupplier, List<String> values) {
         if (values != null && !values.isEmpty() && !values.get(0).equals(currentValueSupplier.get())) {
             consumer.accept(values.get(0));
-        }
-    }
-
-    private void setIfNotEmptyAndStripMailto(Consumer<String> consumer, List<String> values) {
-        if (values != null && !values.isEmpty()) {
-            consumer.accept(values.get(0).replace("mailto:",""));
-        }
-    }
-
-    private void setIfNotEmptyAndDifferentAndStripMailto(Consumer<String> consumer, Supplier<String> currentValueSupplier, List<String> values) {
-        if (values != null && !values.isEmpty() && !values.get(0).equals(currentValueSupplier.get())) {
-            consumer.accept(values.get(0).replace("mailto:",""));
         }
     }
 
@@ -195,7 +183,7 @@ public class UserAttributeValueMapper extends AbstractIdentityProviderMapper imp
         String attributeName = getAttributeNameFromMapperModel(mapperModel);
         List<String> attributeValuesInContext = findAttributeValuesInContext(attributeName, context);
         if (attribute.equalsIgnoreCase(EMAIL)) {
-            setIfNotEmptyAndDifferentAndStripMailto(user::setEmail, user::getEmail, attributeValuesInContext);
+            setIfNotEmptyAndDifferent(user::setEmail, user::getEmail, attributeValuesInContext);
         } else if (attribute.equalsIgnoreCase(FIRST_NAME)) {
             setIfNotEmptyAndDifferent(user::setFirstName, user::getFirstName, attributeValuesInContext);
         } else if (attribute.equalsIgnoreCase(LAST_NAME)) {

@@ -46,7 +46,6 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.utils.AuthenticationFlowResolver;
 import org.keycloak.models.utils.FormMessage;
-import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
@@ -843,16 +842,15 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
 
     @Override
-    public Response cancelled(IdentityProviderModel idpConfig) {
+    public Response cancelled() {
         AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
 
-        String idpDisplayName = KeycloakModelUtils.getIdentityProviderDisplayName(session, idpConfig);
-        Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.ACCESS_DENIED_WHEN_IDP_AUTH, idpDisplayName);
+        Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.CONSENT_DENIED);
         if (accountManagementFailedLinking != null) {
             return accountManagementFailedLinking;
         }
 
-        return browserAuthentication(authSession, Messages.ACCESS_DENIED_WHEN_IDP_AUTH, idpDisplayName);
+        return browserAuthentication(authSession, null);
     }
 
     @Override
@@ -1157,7 +1155,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             return webEx.getResponse();
         }
 
-        throw new ErrorPageException(this.session, authSession, status, message, parameters);
+        return ErrorPage.error(this.session, authSession, status, message, parameters);
     }
 
     private Response redirectToAccountErrorPage(AuthenticationSessionModel authSession, String message, Object ... parameters) {
@@ -1176,7 +1174,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     }
 
 
-    protected Response browserAuthentication(AuthenticationSessionModel authSession, String errorMessage, Object... parameters) {
+    protected Response browserAuthentication(AuthenticationSessionModel authSession, String errorMessage) {
         this.event.event(EventType.LOGIN);
         AuthenticationFlowModel flow = AuthenticationFlowResolver.resolveBrowserFlow(authSession);
         String flowId = flow.getId();
@@ -1191,7 +1189,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                 .setSession(session)
                 .setUriInfo(session.getContext().getUri())
                 .setRequest(request);
-        if (errorMessage != null) processor.setForwardedErrorMessage(new FormMessage(null, errorMessage, parameters));
+        if (errorMessage != null) processor.setForwardedErrorMessage(new FormMessage(null, errorMessage));
 
         try {
             CacheControlUtil.noBackButtonCacheControlHeader(session);
@@ -1204,17 +1202,17 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     private Response badRequest(String message) {
         fireErrorEvent(message);
-        throw ErrorResponse.error(message, Response.Status.BAD_REQUEST);
+        return ErrorResponse.error(message, Response.Status.BAD_REQUEST);
     }
 
     private Response forbidden(String message) {
         fireErrorEvent(message);
-        throw ErrorResponse.error(message, Response.Status.FORBIDDEN);
+        return ErrorResponse.error(message, Response.Status.FORBIDDEN);
     }
 
     private Response notFound(String message) {
         fireErrorEvent(message);
-        throw ErrorResponse.error(message, Response.Status.NOT_FOUND);
+        return ErrorResponse.error(message, Response.Status.NOT_FOUND);
     }
 
     public static IdentityProvider getIdentityProvider(KeycloakSession session, RealmModel realm, String alias) {

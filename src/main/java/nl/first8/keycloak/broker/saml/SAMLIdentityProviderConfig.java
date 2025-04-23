@@ -161,5 +161,4 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     public List<String> getAttributeConsumingServiceValues() {
         return new ArrayList<>();
     }
-
 }

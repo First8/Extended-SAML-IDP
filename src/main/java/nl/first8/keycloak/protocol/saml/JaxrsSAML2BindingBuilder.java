@@ -1,9 +1,7 @@
 package nl.first8.keycloak.protocol.saml;
 
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -16,14 +14,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.jboss.logging.Logger;
 import org.keycloak.connections.httpclient.HttpClientProvider;
-import org.keycloak.connections.httpclient.ProxyMappings;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-import org.keycloak.protocol.saml.profile.util.Soap;
 import org.keycloak.saml.BaseSAML2BindingBuilder;
 import org.keycloak.saml.common.constants.GeneralConstants;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
@@ -66,9 +62,6 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
     }
 
     public class PostBindingBuilder extends BasePostBindingBuilder {
-
-        private static final String HTTP_PROXY = "http_proxy";
-        private static final String HTTPS_PROXY = "https_proxy";
 
         public PostBindingBuilder(BaseSAML2BindingBuilder builder, Document document) throws ProcessingException {
             super(builder, document);
@@ -133,7 +126,9 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
                         SSLConnectionSocketFactory.getDefaultHostnameVerifier());
 
                 HttpClient httpClient = HttpClients.custom()
-                        .setDefaultRequestConfig(buildRequestConfig())
+                        .setDefaultRequestConfig(RequestConfig.custom()
+                                .setCookieSpec(CookieSpecs.STANDARD)
+                                .build())
                         .setSSLSocketFactory(sslConnectionSocketFactory)
                         .build();
 
@@ -141,41 +136,6 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
             }
             logger.debug("Mutual TLS is NOT required returning Keycloak default HTTPClient");
             return session.getProvider(HttpClientProvider.class).getHttpClient();
-        }
-
-        private RequestConfig buildRequestConfig() {
-            RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
-                    .setCookieSpec(CookieSpecs.STANDARD);
-            HttpHost proxy = getProxy();
-            if (proxy != null) {
-                logger.debugf("Using proxy %s", proxy);
-                requestConfigBuilder.setProxy(proxy);
-            }
-            return requestConfigBuilder.build();
-        }
-
-        private HttpHost getProxy() {
-            final String httpProxy = getHttpProxy();
-            if (StringUtils.isBlank(httpProxy)) {
-                return null;
-            }
-            return ProxyMappings.ProxyMapping.valueOf(".*" + ";" + httpProxy).getProxyHost();
-        }
-
-        private String getHttpProxy() {
-            final String httpsProxy = getEnv(HTTPS_PROXY);
-            if (StringUtils.isNotBlank(httpsProxy)) {
-                return httpsProxy;
-            }
-            return getEnv(HTTP_PROXY);
-        }
-
-        private String getEnv(String name) {
-            final String value = System.getenv(name.toLowerCase());
-            if (StringUtils.isNotBlank(value)) {
-                return value;
-            }
-            return System.getenv(name.toUpperCase());
         }
 
         private HttpPost createHttpPost(URI artifactResolutionEndpoint) throws ProcessingException, ConfigurationException, SOAPException, IOException {
@@ -294,22 +254,6 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
 
     }
 
-    public static class SoapBindingBuilder extends BaseSoapBindingBuilder {
-        public SoapBindingBuilder(JaxrsSAML2BindingBuilder builder, Document document) throws ProcessingException {
-            super(builder, document);
-        }
-
-        public Response response() throws ConfigurationException, ProcessingException, IOException {
-            try {
-                Soap.SoapMessageBuilder messageBuilder = Soap.createMessage();
-                messageBuilder.addToBody(document);
-                return messageBuilder.build();
-            } catch (Exception e) {
-                throw new RuntimeException("Error while creating SAML response.", e);
-            }
-        }
-    }
-
     @Override
     public JaxrsSAML2BindingBuilder.RedirectBindingBuilder redirectBinding(Document document) throws ProcessingException {
         return new JaxrsSAML2BindingBuilder.RedirectBindingBuilder(this, document);
@@ -318,10 +262,5 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
     @Override
     public JaxrsSAML2BindingBuilder.PostBindingBuilder postBinding(Document document) throws ProcessingException {
         return new JaxrsSAML2BindingBuilder.PostBindingBuilder(this, document);
-    }
-
-    @Override
-    public SoapBindingBuilder soapBinding(Document document) throws ProcessingException {
-        return new SoapBindingBuilder(this, document);
     }
 }
