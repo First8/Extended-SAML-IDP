@@ -10,7 +10,6 @@ function getAllPlugins(accessToken, selectedRealm) {
             .then(async response => {
                 if (response.ok) {
                     var plugins = await response.json();
-                    console.log('All Plugins:', plugins);
                     updatePluginList(plugins, accessToken);
                 } else {
                     console.error('Failed to fetch plugins:', response.status, response.statusText);
@@ -47,7 +46,6 @@ function getAllRealms(accessToken) {
             .then(async responseJSON => {
                 try {
                     const realms = responseJSON;
-                    console.log('realms:', realms);
                     const select_realms = document.getElementById('Realms');
                     while (select_realms.firstChild) {
                         select_realms.removeChild(select_realms.firstChild);
@@ -68,7 +66,6 @@ function getAllRealms(accessToken) {
                         var selectedRealm = select_realms.value;
                         clearPluginList()
                         localStorage.setItem('selectedRealm', selectedRealm);
-                        console.log(selectedRealm);
                         getAllPlugins(accessToken, selectedRealm);
 
 
@@ -92,7 +89,7 @@ function updateSelectedRealm() {
         select_realms.value = selectedrealm;
         select_realms.dispatchEvent(new Event('change'));
     } else {
-        console.log("selectedrealm undefined");
+        console.error("selectedrealm undefined");
     }
 }
 
@@ -125,7 +122,7 @@ function updatePluginList(plugins, accessToken) {
 
                 // Create a link
                 var link = document.createElement('a');
-                link.href = `${editplugin}`;
+                link.href = `${editprovider}`;
                 if (plugin.displayName) {
                     link.textContent = plugin.displayName;
                 }
@@ -141,7 +138,7 @@ function updatePluginList(plugins, accessToken) {
                         await getPluginDetails(plugin.alias);
                         await new Promise(resolve => setTimeout(resolve, 0));
 
-                        window.location.href = `${editplugin}`;
+                        window.location.href = `${editprovider}`;
                         localStorage.setItem('pluginalias', plugin.alias);
                     } catch (error) {
                         console.error('Error:', error);
@@ -230,7 +227,6 @@ function getPluginDetails(alias, accessToken) {
 
         keycloak.updateToken(300).then((bool) => {
             if (bool) {
-                console.log("Token is updated");
                 var accessToken = keycloak.token;
                 var selectedrealm = localStorage.getItem('selectedRealm');
                 fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {
@@ -243,14 +239,13 @@ function getPluginDetails(alias, accessToken) {
                         if (response.ok) {
                             var pluginData = await response.json();
                             localStorage.setItem('pluginData', JSON.stringify(pluginData));
-                            console.log('Plugin Details:', pluginData);
                             resolve();
                         } else {
                             console.error('Failed to fetch plugin details:', response.status, response.statusText);
                         }
                     })
             } else {
-                console.log("Token is not updated");
+                console.error("Token is not updated");
             }
         })
 

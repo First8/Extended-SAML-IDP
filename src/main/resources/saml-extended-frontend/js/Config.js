@@ -1,14 +1,13 @@
 const ServerUrl = window.location.protocol+"//" + window.location.host;
-console.log(ServerUrl)
 const clientid = 'frontend';
 const postLogoutRedirect = `${ServerUrl}/realms/master/samlconfig/pages/realm`;
 const redirectUri = `${ServerUrl}/realms/master/samlconfig/pages/list`;
-const editplugin=`${ServerUrl}/realms/master/samlconfig/pages/editplugin`;
-const addplugin=`${ServerUrl}/realms/master/samlconfig/pages/addplugin`;
+const editprovider=`${ServerUrl}/realms/master/samlconfig/pages/editprovider`;
+const addprovider=`${ServerUrl}/realms/master/samlconfig/pages/addprovider`;
 const realm = localStorage.getItem('realm_input');
 localStorage.setItem('ServerUrl', ServerUrl);
 localStorage.setItem('postLogoutRedirect', postLogoutRedirect);
 localStorage.setItem('redirectUri', redirectUri);
-localStorage.setItem('addplugin', addplugin);
+localStorage.setItem('addprovider', addprovider);
 localStorage.setItem('clientid', clientid);
 localStorage.setItem('realm', realm);

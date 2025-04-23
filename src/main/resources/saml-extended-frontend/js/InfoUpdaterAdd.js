@@ -1,14 +1,8 @@
 storedData = localStorage.getItem('pluginData');
-document.addEventListener('DOMContentLoaded', function () {
-
-    console.log(pluginData);
-
     if (storedData) {
         if (storedData) {
 
             var pluginData = JSON.parse(storedData);
-            console.log(pluginData);
-
 
             function toggleCheckbox(configKey, checkbox) {
 
@@ -64,8 +58,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (pluginData.config && pluginData.config.wantAuthnRequestsSigned) {
 
-                console.log(`wantAuthnRequestsSigned_value: ${wantAuthnRequestsSigned.value}`);
-
                 if (pluginData.config.wantAuthnRequestsSigned == "true") {
                     SignatureAlgorithm.removeAttribute("disabled");
                     SAMLSignatureKeyName.removeAttribute("disabled");
@@ -83,10 +75,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (pluginData.config && pluginData.config.validateSignature) {
                 validateSignatures_value = pluginData.config.validateSignature;
-                console.log(`validateSignatures_value: ${validateSignatures_value}`);
 
                 if (pluginData.config.validateSignature == "true") {
-                    console.log(`validateSignatures_value: ${validateSignatures_value}`)
                     additionalField1.removeAttribute("disabled");
                     validateSignatures.checked = true;
                     if (pluginData.config.signingCertificate) {
@@ -104,16 +94,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (pluginData.config && pluginData.config.artifactResolution) {
                 Artifact_Resolution_value = pluginData.config.artifactResolution;
-                console.log(`Artifact_Resolution_value: ${Artifact_Resolution_value}`);
 
                 if (pluginData.config.artifactResolution == "true") {
-                    console.log(`Artifact_Resolution_value: ${Artifact_Resolution_value}`)
                     Artifact_Resolution.checked = true;
-                    console.log(`Artifact_Resolution_value: ${Artifact_Resolution_value}`)
                     additionalField_endpoint.removeAttribute("disabled");
                 } else {
                     Artifact_Resolution.checked = false;
-                    console.log(`Artifact_Resolution_value: ${Artifact_Resolution_value}`)
                     additionalField_endpoint.setAttribute("disabled", "true");
                     additionalField_endpoint.value = '';
 
@@ -135,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     newItem.innerHTML = '<input id="textinput_' + i + '" name="textinput" type="text" class="input_text" value="' + myArray[i] + '">';
                     container.appendChild(newItem);
                 }
-                console.log(pluginData.config[id]);
             }
         }
 
@@ -171,7 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pluginData.config.nameIDPolicyFormat) {
             const valueAfterFormat = extractValueAfterFormat(pluginData.config.nameIDPolicyFormat);
             updateField('nameIdPolicy', valueAfterFormat);
-            console.log(valueAfterFormat);
         }
         if (pluginData.config.principalType) {
             updateField('principalType', pluginData.config.principalType);
@@ -223,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var selectedrealm = localStorage.getItem('selectedRealm');
         var ServerUrl1 = localStorage.getItem('ServerUrl')
         var pluginalias=localStorage.setItem('pluginalias',`${pluginData.alias}`)
-        document.getElementById('redirectUri').value = `${ServerUrl1}realms/${selectedrealm}/broker/${pluginData.alias}/endpoint`
+        document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/${pluginData.alias}/endpoint`
 
         if (pluginData.config.allowedClockSkew) {
             updateField('allowedClockSkew', pluginData.config.allowedClockSkew);
@@ -249,10 +233,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-    }
+
 }
 
-);
+
 
 function toggleCheckbox(configKey, checkbox) {
 

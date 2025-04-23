@@ -200,7 +200,7 @@ public class SamlProtocolUtils {
     }
 
     /**
-     * Takes a saml object (an object that will be part of resulting ArtifactResponse), and inserts it as the body of
+     * Takes a saml object (an object that will be part of resulting ArtifactResponse), and inserts it as the body of 
      * an ArtifactResponse. The ArtifactResponse is returned as ArtifactResponseType
      *
      * @param samlObject a Saml object
@@ -226,9 +226,9 @@ public class SamlProtocolUtils {
     }
 
     /**
-     * Takes a saml object (an object that will be part of resulting ArtifactResponse), and inserts it as the body of
+     * Takes a saml object (an object that will be part of resulting ArtifactResponse), and inserts it as the body of 
      * an ArtifactResponse. The ArtifactResponse is returned as ArtifactResponseType
-     *
+     * 
      * @param samlObject a Saml object
      * @param issuer issuer of the resulting ArtifactResponse, should be the same as issuer of the samlObject
      * @return An ArtifactResponse containing the saml object.
@@ -250,7 +250,7 @@ public class SamlProtocolUtils {
         } else if (samlObject instanceof RequestAbstractType) {
             return buildArtifactResponse(samlObject, ((RequestAbstractType)samlObject).getIssuer());
         }
-
+        
         throw new ProcessingException("SAMLObject was not StatusResponseType or LogoutRequestType");
     }
 

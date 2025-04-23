@@ -1,6 +1,8 @@
 const redirectUriInput = document.getElementById("redirectUri");
 const alias_input = document.getElementById("alias");
 const add = document.getElementById("submit");
+const samlEntityDescriptor = document.getElementById("samlEntityDescriptor");
+const import_data = document.getElementById("import");
 const edit = document.getElementById("edit");
 const Display_Name_input = document.getElementById("displayName");
 const Display_Order_input = document.getElementById("displayOrder");
@@ -39,13 +41,14 @@ var errorMessage_URL_logout = document.getElementById("errorMessage_URL_logout")
 var Realms=document.getElementById("Realms");
 var encryption_algorithm=document.getElementById("encryption_algorithm");
 var storedData;
+var samlEntityDescriptor_input=document.getElementById("samlEntityDescriptor")
+var  samlEntityDescriptor_errorMessage_URL=document.getElementById("samlEntityDescriptor_errorMessage_URL")
+
 function handleCheckboxValue(checkbox) {
     if (checkbox.checked) {
         checkbox.value = true;
-        console.log(`${checkbox.id}_value: ${checkbox.value}`);
     } else {
         checkbox.value = false;
-        console.log(`${checkbox.id}_value: ${checkbox.value}`);
     }
 }
 

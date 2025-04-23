@@ -13,9 +13,6 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.processing.core.saml.v2.util.XMLTimeUtil;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import java.util.*;
 
 import static org.mockito.Mockito.*;
@@ -99,16 +96,5 @@ class UserAttributeValueMapperTest {
         config.put("attribute.xml.element", "true");
 
         return config;
-    }
-
-    private byte[] getFileFromResource(String fileName) throws IOException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream(fileName);
-
-        if (inputStream == null) {
-            throw new IllegalArgumentException("file not found! " + fileName);
-        } else {
-            return inputStream.readAllBytes();
-        }
     }
 }

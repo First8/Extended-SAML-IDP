@@ -53,14 +53,6 @@ import javax.xml.crypto.KeySelectorResult;
 import javax.xml.crypto.XMLCryptoContext;
 import org.keycloak.saml.common.util.SecurityActions;
 
-/**
- * Utility for XML Signature <b>Note:</b> You can change the canonicalization method type by using the system property
- * "picketlink.xmlsig.canonicalization"
- *
- * @author Anil.Saldhana@redhat.com
- * @author alessio.soldano@jboss.com
- * @since Dec 15, 2008
- */
 public class XMLSignatureUtil {
 
     private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();

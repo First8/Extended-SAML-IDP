@@ -1,5 +1,7 @@
 package nl.first8.keycloak.broker.saml;
 
+import org.jboss.resteasy.reactive.NoCache;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
@@ -10,7 +12,6 @@ import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
 import nl.first8.keycloak.saml.processing.core.saml.v2.util.AssertionUtil;
 import nl.first8.keycloak.saml.processing.core.util.XMLSignatureUtil;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
 import org.keycloak.broker.provider.IdentityProvider;
@@ -54,6 +55,7 @@ import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.util.CacheControlUtil;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.utils.StringUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -391,12 +393,17 @@ public class SAMLEndpoint {
 
             try {
                 AuthenticationSessionModel authSession;
-                if (clientId != null && ! clientId.trim().isEmpty()) {
+                if (StringUtil.isNotBlank(clientId)) {
                     logger.debugf("SAML IDP Initiated SSO from ClientId: %s", clientId);
                     authSession = samlIdpInitiatedSSO(clientId);
-                } else {
+                } else if (StringUtil.isNotBlank(relayState)) {
                     logger.debugf("Get and verify authentication session from relayState: %s", relayState);
                     authSession = callback.getAndVerifyAuthenticationSession(relayState);
+                } else {
+                    logger.error("SAML RelayState parameter was null when it should be returned by the IDP");
+                    event.event(EventType.LOGIN);
+                    event.error(Errors.INVALID_SAML_RESPONSE);
+                    return ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
                 }
                 session.getContext().setAuthenticationSession(authSession);
 
@@ -573,7 +580,7 @@ public class SAMLEndpoint {
                 if (assertion.getAttributeStatements() != null ) {
                     String email = getX500Attribute(assertion, X500SAMLProfileConstants.EMAIL);
                     if (email != null) {
-                        logger.debugf("Set %s as email on the identity.", email);
+                        logger.debugf("Set % as email on the identity.", email);
                         identity.setEmail(email);
                     }
                 }

@@ -139,12 +139,10 @@ wantAuthnRequestsSigned.addEventListener("change", function () {
         SignatureAlgorithm.removeAttribute("disabled");
         SAMLSignatureKeyName.removeAttribute("disabled");
         encryption_algorithm.removeAttribute("disabled");
-        console.log(`wantAuthnRequestsSigned_value: ${wantAuthnRequestsSigned.value}`)
 
     }
     else {
         wantAuthnRequestsSigned.value = false;
-        console.log(`wantAuthnRequestsSigned_value: ${wantAuthnRequestsSigned.value}`)
         SignatureAlgorithm.setAttribute("disabled", "true");
         SAMLSignatureKeyName.setAttribute("disabled", "true");
         encryption_algorithm.setAttribute("disabled", "true");
@@ -241,14 +239,12 @@ validateSignatures.value = pluginData.config.validateSignature ? pluginData.conf
 validateSignatures.addEventListener("change", function () {
     if (validateSignatures.checked) {
         validateSignatures.value = true;
-        console.log(`validateSignatures_value: ${validateSignatures.value}`)
         additionalField1.removeAttribute("disabled");
 
 
     }
     else {
         validateSignatures.value = false;
-        console.log(`validateSignatures_value: ${validateSignatures.value}`)
         additionalField1.setAttribute("disabled", "true");
         additionalField1.value = '';
         ;
@@ -261,13 +257,11 @@ Artifact_Resolution.value = pluginData.config.artifactResolution ? pluginData.co
 Artifact_Resolution.addEventListener("change", function () {
     if (Artifact_Resolution.checked) {
         Artifact_Resolution.value = true;
-        console.log(`Artifact_Resolution_value: ${Artifact_Resolution.value}`)
         additionalField_endpoint.removeAttribute("disabled");
 
     }
     else {
         Artifact_Resolution.value = false;
-        console.log(`Artifact_Resolution_value: ${Artifact_Resolution.value}`)
         additionalField_endpoint.setAttribute("disabled", "true");
         additionalField_endpoint.value = '';
 
@@ -325,7 +319,6 @@ enabled.addEventListener("change", function () {
 });
 
 principalType_input.addEventListener('change', function () {
-    console.log(principalType_input.value)
     if (principalType_input.value == "ATTRIBUTE" || principalType_input.value == "FRIENDLY_ATTRIBUTE") {
         principalAttribute_input.removeAttribute("disabled");
 

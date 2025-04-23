@@ -1,0 +1,37 @@
+image: smartsigns/bitbucket-pipeline:java17
+
+definitions:
+  buildAndTest: &buildAndTest
+    - parallel:
+        - step:
+            name: Build and Test
+            condition:
+              changesets:
+                includePaths:
+                  - "src/**"
+                  - "pom.xml"
+                  - "bitbucket-pipelines.yml"
+            caches:
+              - maven
+            script:
+              - export TESTCONTAINERS_RYUK_DISABLED=true
+              - docker login docker.first8.nl --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+              - mvn --batch-mode --file pom.xml --activate-profiles buildDocker -Ddocker.image.prefix=docker.first8.nl -DskipITs package
+              - /processJibMaven.sh docker-images.txt docker-deploy.txt
+              - /slackDockerTags.sh $SLACK_WEBHOOK_URL
+            after-script:
+              # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+              - pipe: atlassian/checkstyle-report:0.3.0
+            artifacts:
+              - 'target/idp-saml2-extended-*.jar'
+              - 'target/CycloneDX-Sbom.*'
+        - step:
+            name: Security Scan
+            script:
+              # Run a security scan for sensitive data.
+              # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+              - pipe: atlassian/git-secrets-scan:0.5.1
+
+pipelines:
+  default:
+    - <<: *buildAndTest

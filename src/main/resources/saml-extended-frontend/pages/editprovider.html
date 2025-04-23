@@ -520,8 +520,8 @@
                 onclick="alert('The signature algorithm to use to sign documents. Note that *SHA1* based algorithms are deprecated and can be removed in the future. It is recommended to stick to some more secure algorithm instead of *_SHA1')">
         </h5>
         <select name="Signature algorithm" id="SignatureAlgorithm" disabled>
-            <option value="RSA_SHA1">RSA_SHA1</option>
             <option value="RSA_SHA256">RSA_SHA256</option>
+            <option value="RSA_SHA1">RSA_SHA1</option>
             <option value="RSA_SHA256_MGF1">RSA_SHA256_MGF1</option>
             <option value="RSA_SHA512">RSA_SHA512</option>
             <option value="RSA_SHA512_MGF1">RSA_SHA512_MGF1</option>
@@ -901,9 +901,10 @@
     </form>
 </div>
 <script src="../../samlconfig/js/Fielders"></script>
+<script src="../../samlconfig/js/inputValidation"></script>
 <script src="../../samlconfig/js/InfoUpdaterEdit"></script>
-<script src="../../samlconfig/js/CheckBoxControllerEditPlugin"></script>
-<script src="../../samlconfig/js/EditPlugin"></script>
+<script src="../../samlconfig/js/CheckBoxControllerEditProvider"></script>
+<script src="../../samlconfig/js/EditProvider"></script>
 
 </body>
 

@@ -18,7 +18,23 @@
                 display: none;
             }
         }
+        #showMetadataLink {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: blue;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
 
+        #data {
+            display: none;
+        }
+        #import {
+            display: none
+        }
         .red-border {
             border: 1px solid red;
             width: 100%;
@@ -314,7 +330,7 @@
             <td> <a href="#ArtifactResolution">Artifact Resolution</a></td>
         </tr>
         <tr>
-            <td> <a href="#Metadata ">Metadata</a></td>
+            <td> <a href="#Metadata">Metadata</a></td>
         </tr>
 
     </table>
@@ -337,10 +353,7 @@
     </div>
     <script src="../../samlconfig/js/RestApiMethodes"></script>
     <script src="../../samlconfig/js/keycloakAdd"></script>
-
-    <h2 id="GeneralSettings">General Settings </h2>
-
-    <form id="GeneralSetting">
+    <h2  id="GeneralSettings">General Settings</h2>
         <h5>Redirect URI
             <img src=" ../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('The redirect uri to use when configuring the identity provider.')">
@@ -358,7 +371,7 @@
                 onclick="alert('The alias uniquely identifies an identity provider and it is also used to build the redirect uri.')">
         </h5>
         <span class="error-message" id="errorMessage"></span>
-        <input type="text" name="alias" id="alias" class="input_text" oninput="copyValue(event)">
+        <input type="text" name="alias" id="alias" class="input_text" oninput="copyValue(event)" required>
         <script>
             var selectedrealm = localStorage.getItem('selectedRealm');
             var ServerUrl1 = localStorage.getItem('ServerUrl')
@@ -391,7 +404,6 @@
                 onclick="alert('The alias uniquely identifies an identity provider and it is also used to build the redirect uri.')">
 
         </h5>
-
         <a href="http://localhost:8080/realms/master/broker/saml-extended/endpoint/descriptor" id="metadataLink">
             SAML 2.0 Service Provider Metadata </a>
         </section>
@@ -401,22 +413,43 @@
             var alias_for_endpoint = localStorage.getItem('alias_for_endpoint');
             document.getElementById('metadataLink').href = `${serverUrl}/realms/${selectedRealm}/broker/${alias_for_endpoint}/endpoint/descriptor`;
         </script>
+
         <h2 id="SAMLSettings">SAML settings</h2>
-
-
         <h5>Service Provider Entity ID
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
-                onclick="alert('The Entity ID that will be used to uniquely identify this SAML Service Provider.')">
+                 onclick="alert('The Entity ID that will be used to uniquely identify this SAML Service Provider.')">
 
         </h5>
         <input type="text" class="input_text" name="spEntity" id="spEntityId">
+        <h5>Use entity descriptor
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('Import metadata from a remote IDP SAML entity descriptor.')">
+        </h5>
 
+        <label class="switch">
+            <input type="checkbox" name="entityDescriptor" value="true" id="useEntityDescriptor" checked>
+            <span class="slider round"></span>
+        </label>
+        <div id="entityDes">
+
+        <h5>SAML entity descriptor *
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('Allows you to load external IDP metadata from a config file or to download it from a URL.')">
+        </h5>
+            <span class="error-message" id="samlEntityDescriptor_errorMessage_URL"></span>
+            <input type="url" class="input_text" name="samlEntityDescriptor" id="samlEntityDescriptor" >
+        </div>
+        <div><button class="btn" type="submit" id="import">import</button>
+        </div>
+        <a id="showMetadataLink">Show Metadata</a>
+        <div id="data">
         <h5>Identity Provider Entity ID
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('The Entity ID used to validate the Issuer for received SAML assertions. If empty, no Issuer validation is performed.')">
 
         </h5>
         <input type="text" class="input_text" name="idpEntityId" id="idpEntityId">
+<form id="GeneralSetting">
 
         <h5>Single Sign-On Service URL *
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -424,7 +457,7 @@
         </h5>
         <span class="error-message" id="errorMessage_URL"></span>
 
-        <input type="url" name="ssoServiceUrl" id="ssoServiceUrl" class="input_text" required>
+        <input type="url" name="ssoServiceUrl" id="ssoServiceUrl" class="input_text" >
 
         <h5>Single Logout Service URL
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -537,8 +570,8 @@
                 onclick="alert('The signature algorithm to use to sign documents. Note that *SHA1* based algorithms are deprecated and can be removed in the future. It is recommended to stick to some more secure algorithm instead of *_SHA1')">
         </h5>
         <select name="Signature algorithm" id="SignatureAlgorithm" disabled>
-            <option value="RSA_SHA1">RSA_SHA1</option>
             <option value="RSA_SHA256">RSA_SHA256</option>
+            <option value="RSA_SHA1">RSA_SHA1</option>
             <option value="RSA_SHA256_MGF1">RSA_SHA256_MGF1</option>
             <option value="RSA_SHA512">RSA_SHA512</option>
             <option value="RSA_SHA512_MGF1">RSA_SHA512_MGF1</option>
@@ -656,7 +689,8 @@
 
         <input type="text" class="input_text" name="attributeConsumingServiceName" id="attributeConsumingServiceName">
 
-        <h2 id="RequestedAuthnContextConstraints">Requested AuthnContext Constraints</h2>
+        <div id="RequestedAuthnContextConstraints">
+        <h2 >Requested AuthnContext Constraints</h2>
 
         <h5>Comparison
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -670,7 +704,7 @@
             <option value="better">better</option>
         </select>
 
-        <form class="form-horizontal">
+<!--        <form class="form-horizontal">-->
             <!-- Text input-->
             <div id="ClassRefs_items" class="form-group">
                 <h5> AuthnContext ClassRefs <img src="../../samlconfig/images/question.png" class="image"
@@ -681,12 +715,12 @@
 
                 </div>
             </div>
-        </form>
+<!--        </form>-->
 
         <button id="addClassRefs" class="btn add-more button-yellow uppercase" type="button">+ Add </button>
         <button class="delete btn button-white uppercase">- Remove </button>
 
-        <form class="form-horizontal">
+<!--        <form class="form-horizontal">-->
             <!-- Text input-->
             <div id="DeclRefs_items" class="form-group">
                 <h5> AuthnContext DeclRefs <img src="../../samlconfig/images/question.png" class="image"
@@ -696,12 +730,13 @@
 
                 </div>
             </div>
-        </form>
+<!--        </form>-->
 
         <button id="addDeclRefs" class="btn add-more button-yellow uppercase" type="button">+ Add </button>
         <button class="delete1 btn button-white uppercase">- Remove </button>
-
-        <h2 id="AdvancedSettings">Advanced Settings</h2>
+        </div>
+        <div id="AdvancedSettings">
+        <h2>Advanced Settings</h2>
 
         <h5>Store Tokens
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -788,7 +823,9 @@
             <option value="LEGACY">Legacy</option>
             <option value="FORCE">Force</option>
         </select>
-        <h2 id="Metadata">Metadata</h2>
+        </div>
+        <div id="Metadata">
+        <h2>Metadata</h2>
         <div class="quantity-container">
             <i class="fas fa-arrow-up arrow-icon" onclick="changeQuantity(1)"></i>
             <h5>Metadata expires in
@@ -827,9 +864,9 @@
             }
         </script>
 
-
-
-        <h2 id="ArtifactResolution">Artifact Resolution</h2>
+        </div>
+        <div id="ArtifactResolution">
+        <h2>Artifact Resolution</h2>
         <h5>Artifact Resolution
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                 onclick="alert('Enable/disable signature vaildation of SAML responses.')">
@@ -915,14 +952,23 @@
             <input type="checkbox" name="Mutual_TLS  " id="Mutual_TLS" value="false">
             <span class="slider round"></span>
         </label>
+        </div>
+</form>
         <div><button class="btn" type="submit" id="submit">Save</button>
         </div>
-    </form>
 </div>
-
+</div>
+<script>
+    const formElements = document.getElementById('GeneralSetting').elements;
+    for (var i = 0; i < formElements.length; i++) {
+        formElements[i].readOnly = true;
+        formElements[i].disabled = true; // for select elements
+    }
+</script>
 <script src="../../samlconfig/js/Fielders"></script>
-<script src="../../samlconfig/js/CheckBoxControllerAddPlugin"></script>
-<script src="../../samlconfig/js/AddPlugin"></script>
+<script src="../../samlconfig/js/inputValidation"></script>
+<script src="../../samlconfig/js/CheckBoxControllerAddProvider"></script>
+<script src="../../samlconfig/js/AddProvider"></script>
 </body>
 
 </html>

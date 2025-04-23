@@ -1,7 +1,9 @@
 package nl.first8.keycloak.protocol.saml;
 
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -14,6 +16,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.jboss.logging.Logger;
 import org.keycloak.connections.httpclient.HttpClientProvider;
+import org.keycloak.connections.httpclient.ProxyMappings;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
@@ -63,6 +66,9 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
     }
 
     public class PostBindingBuilder extends BasePostBindingBuilder {
+
+        private static final String HTTP_PROXY = "http_proxy";
+        private static final String HTTPS_PROXY = "https_proxy";
 
         public PostBindingBuilder(BaseSAML2BindingBuilder builder, Document document) throws ProcessingException {
             super(builder, document);
@@ -127,9 +133,7 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
                         SSLConnectionSocketFactory.getDefaultHostnameVerifier());
 
                 HttpClient httpClient = HttpClients.custom()
-                        .setDefaultRequestConfig(RequestConfig.custom()
-                                .setCookieSpec(CookieSpecs.STANDARD)
-                                .build())
+                        .setDefaultRequestConfig(buildRequestConfig())
                         .setSSLSocketFactory(sslConnectionSocketFactory)
                         .build();
 
@@ -137,6 +141,41 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
             }
             logger.debug("Mutual TLS is NOT required returning Keycloak default HTTPClient");
             return session.getProvider(HttpClientProvider.class).getHttpClient();
+        }
+
+        private RequestConfig buildRequestConfig() {
+            RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
+                    .setCookieSpec(CookieSpecs.STANDARD);
+            HttpHost proxy = getProxy();
+            if (proxy != null) {
+                logger.debugf("Using proxy %s", proxy);
+                requestConfigBuilder.setProxy(proxy);
+            }
+            return requestConfigBuilder.build();
+        }
+
+        private HttpHost getProxy() {
+            final String httpProxy = getHttpProxy();
+            if (StringUtils.isBlank(httpProxy)) {
+                return null;
+            }
+            return ProxyMappings.ProxyMapping.valueOf(".*" + ";" + httpProxy).getProxyHost();
+        }
+
+        private String getHttpProxy() {
+            final String httpsProxy = getEnv(HTTPS_PROXY);
+            if (StringUtils.isNotBlank(httpsProxy)) {
+                return httpsProxy;
+            }
+            return getEnv(HTTP_PROXY);
+        }
+
+        private String getEnv(String name) {
+            final String value = System.getenv(name.toLowerCase());
+            if (StringUtils.isNotBlank(value)) {
+                return value;
+            }
+            return System.getenv(name.toUpperCase());
         }
 
         private HttpPost createHttpPost(URI artifactResolutionEndpoint) throws ProcessingException, ConfigurationException, SOAPException, IOException {

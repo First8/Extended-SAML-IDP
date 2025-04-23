@@ -17,7 +17,6 @@ keycloak
     .then((authenticated) => {
         if (authenticated) {
             accessToken = keycloak.token;
-            console.log(`Access Token: ${accessToken}`);
             localStorage.setItem('accessToken', keycloak.token);
             var selectedrealm = localStorage.getItem('selectedRealm');
             //get flow from KEY
@@ -58,10 +57,8 @@ keycloak
                         optionElement1.text = flow.alias;
                         if (flow.alias == 'first broker login') {
                             selectElement_firstLoginFlow.add(optionElement1, 0);
-                            console.log(flow.alias)
                             selectElement_firstLoginFlow.value = 'first broker login';
                         } else {
-                            console.log(flow.alias)
                             selectElement_firstLoginFlow.add(optionElement1);
                         }
         
@@ -79,7 +76,6 @@ keycloak
             const tokenParsed = keycloak.tokenParsed;
             const realmroles = tokenParsed.realm_access.roles;
             const clientroles = tokenParsed.resource_access;
-            console.log(clientroles);
 
             if ((clientroles && clientroles['realm-management'] && clientroles['realm-management'].roles.includes("realm-admin")) || realmroles.includes("admin")) {
                 document.body.style.display = 'block';

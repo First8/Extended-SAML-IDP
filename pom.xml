@@ -11,7 +11,7 @@
     <description>
         SAML v2.0 extensions that adds more configuration options to connect to SAML Service Providers.
     </description>
-    <version>${keycloak.version}-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT-23</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -19,12 +19,16 @@
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <keycloak.version>22.0.5</keycloak.version>
-        <spotbugs.version>4.7.2.1</spotbugs.version>
+
+        <keycloak.version>23.0.4</keycloak.version>
+        <spotbugs.version>4.8.3.1</spotbugs.version>
+
+        <jib-maven-plugin.version>3.4.1</jib-maven-plugin.version>
+        <docker.image.prefix>docker.first8.nl</docker.image.prefix>
+        <docker.image.name>idp-saml2-extended</docker.image.name>
     </properties>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}-${git.commit.id.abbrev}</finalName>
         <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
         <directory>${project.basedir}/target</directory>
         <resources>
@@ -34,19 +38,83 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>pl.project13.maven</groupId>
-                <artifactId>git-commit-id-plugin</artifactId>
-                <version>4.0.5</version>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>7.0.0</version>
                 <executions>
                     <execution>
-                        <id>get-the-git-infos</id>
                         <goals>
                             <goal>revision</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                    <injectAllReactorProjects>true</injectAllReactorProjects>
+                    <verbose>false</verbose>
+
+                    <!-- this is false by default, forces the plugin to generate the git.properties
+                        file -->
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+
+                    <!-- The path for the properties file to be generated. See Super Pom
+                        for default variable reference https://maven.apache.org/guides/introduction/introduction-to-the-pom.html -->
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+
+                    <!-- The option can be used to tell the plugin how it should generate
+                        the 'git.commit.id' property. Due to some naming issues when exporting the
+                        properties as an json-object (https://github.com/ktoso/maven-git-commit-id-plugin/issues/122)
+                        we needed to make it possible to export all properties as a valid json-object.
+                        Due to the fact that this is one of the major properties the plugin is exporting
+                        we just don't want to change the exporting mechanism and somehow throw the
+                        backwards compatibility away. We rather provide a convenient switch where
+                        you can choose if you would like the properties as they always had been,
+                        or if you rather need to support full json-object compatibility. In the case
+                        you need to fully support json-object we unfortunately need to change the
+                        'git.commit.id' property from 'git.commit.id' to 'git.commit.id.full' in
+                        the exporting mechanism to allow the generation of a fully valid json object.
+                        Currently the switch allows two different options: 1. By default this property
+                        is set to 'flat' and will generate the formerly known property 'git.commit.id'
+                        as it was in the previous versions of the plugin. Keeping it to 'flat' by
+                        default preserve backwards compatibility and does not require further adjustments
+                        by the end user. 2. If you set this switch to 'full' the plugin will export
+                        the formerly known property 'git.commit.id' as 'git.commit.id.full' and therefore
+                        will generate a fully valid json object in the exporting mechanism. *Note*:
+                        Depending on your plugin configuration you obviously can choose the 'prefix'
+                        of your properties by setting it accordingly in the plugin's configuration.
+                        As a result this is therefore only an illustration what the switch means
+                        when the 'prefix' is set to it's default value. *Note*: If you set the value
+                        to something that's not equal to 'flat' or 'full' (ignoring the case) the
+                        plugin will output a warning and will fallback to the default 'flat' mode. -->
+                    <commitIdGenerationMode>full</commitIdGenerationMode>
+
+                    <!-- Controls the length of the abbreviated git commit it (git.commit.id.abbrev)
+                        Defaults to `7`. `0` carries the special meaning. Maximum value is `40`,
+                        because of max SHA-1 length. -->
+                    <abbrevLength>5</abbrevLength>
+
+                    <!-- add these 2 to prevent NPE when performing maven release -->
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
+                    <gitDescribe>
+                        <!-- Use also lightweight tags - (the ones without annotation) -->
+                        <tags>true</tags>
+                    </gitDescribe>
+
+                    <replacementProperties>
+                        <!--
+                            example:
+                            apply replacement only to the specific property git.branch and replace '/' with '-'
+                            see also [issue 138](https://github.com/git-commit-id/git-commit-id-maven-plugin/issues/138)
+                        -->
+                        <replacementProperty>
+                            <property>git.branch</property>
+                            <propertyOutputSuffix>docker.tag</propertyOutputSuffix>
+                            <token>^([^\/]*)\/([^\/]*)$</token>
+                            <value>$1-$2</value>
+                            <regex>true</regex>
+                            <forceValueEvaluation>false</forceValueEvaluation>
+                        </replacementProperty>
+                    </replacementProperties>
                 </configuration>
             </plugin>
             <plugin>
@@ -66,7 +134,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifestEntries>
-                            <Implementation-Build>${git.commit.id.abbrev}</Implementation-Build>
+                            <Implementation-Build>${git.commit.id.full}</Implementation-Build>
                             <Is-a-dirty-build>${git.dirty}</Is-a-dirty-build>
                         </manifestEntries>
                     </archive>
@@ -85,7 +153,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.5</version>
             </plugin>
 
             <plugin>
@@ -105,7 +173,7 @@
                         <plugin>
                             <groupId>com.h3xstream.findsecbugs</groupId>
                             <artifactId>findsecbugs-plugin</artifactId>
-                            <version>1.12.0</version>
+                            <version>1.13.0</version>
                         </plugin>
                     </plugins>
                 </configuration>
@@ -114,7 +182,7 @@
             <plugin>
                 <groupId>org.cyclonedx</groupId>
                 <artifactId>cyclonedx-maven-plugin</artifactId>
-                <version>2.7.5</version>
+                <version>2.7.9</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -191,6 +259,12 @@
             <version>3.11</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus.resteasy.reactive</groupId>
+            <artifactId>resteasy-reactive-common</artifactId>
+            <version>3.2.9.Final</version>
+            <scope>provided</scope>
+        </dependency>
 
 
         <!-- Needed for generating SAML messages in test -->
@@ -204,31 +278,31 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.2</version>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.9.2</version>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>4.0.0</version>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>2.0.6</version>
+            <version>2.0.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.6</version>
+            <version>2.0.12</version>
             <scope>test</scope>
         </dependency>
 
@@ -243,5 +317,68 @@
             </plugin>
         </plugins>
     </reporting>
+
+
+    <profiles>
+        <profile>
+            <id>buildDocker</id>
+            <properties>
+                <maven.build.timestamp.format>yyyyMMdd'T'HHmm
+                </maven.build.timestamp.format>    <!-- Required for correct docker tag building -->
+            </properties>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.google.cloud.tools</groupId>
+                        <artifactId>jib-maven-plugin</artifactId>
+                        <version>${jib-maven-plugin.version}</version>
+                        <configuration>
+                            <from>
+                                <image>busybox:1.35</image>
+                            </from>
+                            <to>
+                                <image>${docker.image.prefix}/${docker.image.name}</image>
+                                <tags>
+                                    <tag>latest</tag>
+                                    <tag>${project.version}</tag>
+                                    <tag>${project.version}-${maven.build.timestamp}</tag>
+                                    <tag>${git.branch.docker.tag}</tag>
+                                    <tag>${git.branch.docker.tag}-${maven.build.timestamp}</tag>
+                                </tags>
+                                <auth>
+                                    <username>${DOCKER_REGISTRY_USER}</username>
+                                    <password>${DOCKER_REGISTRY_PWD}</password>
+                                </auth>
+                            </to>
+                            <container>
+                                <entrypoint>INHERIT</entrypoint>
+                                <workingDirectory>
+                                    /
+                                </workingDirectory>
+                                <labels>
+                                    <projectVersion>${project.version}</projectVersion>
+                                    <buildAt>${maven.build.timestamp}</buildAt>
+                                    <git>${git.commit.id.full}</git>
+                                    <git-dirty>${git.dirty}</git-dirty>
+                                    <branch>${git.branch}</branch>
+                                </labels>
+                            </container>
+                            <containerizingMode>packaged</containerizingMode>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build</id>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

@@ -17,13 +17,11 @@ keycloak
     .then((authenticated) => {
         if (authenticated) {
             accessToken = keycloak.token;
-            console.log(`Access Token: ${accessToken}`);
             // getAllPlugins(accessToken);
             getAllRealms(accessToken)
             const tokenParsed = keycloak.tokenParsed;
             const realmroles = tokenParsed.realm_access.roles;
             const clientroles = tokenParsed.resource_access;
-            console.log(clientroles);
 
             if ((clientroles && clientroles['realm-management'] && clientroles['realm-management'].roles.includes("realm-admin")) || realmroles.includes("admin")) {
                 document.body.style.display = 'block';

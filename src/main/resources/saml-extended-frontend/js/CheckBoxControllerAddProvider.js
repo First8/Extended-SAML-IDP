@@ -1,29 +1,85 @@
 
+document.addEventListener('DOMContentLoaded', function() {
+    const formElements = document.getElementById('GeneralSetting').elements;
+    samlEntityDescriptor.addEventListener('input', function() {
+    if (samlEntityDescriptor.value.trim() !== '') {
+        import_data.style.display = 'block';
+    } else {
+        import_data.style.display = 'none';
+    }
+});
 
+document.getElementById('showMetadataLink').addEventListener('click', function(event) {
+    event.preventDefault();
+    var data = document.getElementById('data');
+    if (data.style.display === 'none'|| data.style.display === '') {
+        data.style.display = 'block';
+        this.textContent = 'Hide Metadata';
+    } else {
+        data.style.display = 'none';
+        this.textContent = 'Show Metadata';
+    }
+});
+const useEntityDescriptor = document.getElementById("useEntityDescriptor");
+const entityDes=document.getElementById("entityDes")
+const showMetadataLink=document.getElementById("showMetadataLink")
+useEntityDescriptor.addEventListener("change", function () {
+    var data = document.getElementById('data');
+    if (useEntityDescriptor.checked) {
+        useEntityDescriptor.value = "true";
+        data.style.display = 'none';
+        entityDes.style.display='block'
+        showMetadataLink.style.display='block'
+        for (var i = 0; i < formElements.length; i++) {
+            formElements[i].readOnly = true;
+            formElements[i].disabled = true; // for select elements
+        }
 
+    } else {
+        for (var i = 0; i < formElements.length; i++) {
+            formElements[i].readOnly = false;
+            formElements[i].disabled = false; // for select elements
+        }
+        useEntityDescriptor.value = "false";
+        data.style.display = 'block';
+        entityDes.style.display='none'
+        showMetadataLink.style.display='none'
+    }
+});
+
+const backchannel = document.getElementById("backchannel");
 storedData = localStorage.getItem('pluginData');
 var pluginData = JSON.parse(storedData);
-backchannel.value = pluginData.config.backchannelSupported ? pluginData.config.backchannelSupported : false;
+
+
+const enabled = document.getElementById("enabled");
+enabled.addEventListener("change", function () {
+    handleCheckboxValue(enabled);
+
+});
+
+const ArtifactResolutionService_in_metadata = document.getElementById("ArtifactResolutionService_in_metadata");
+ArtifactResolutionService_in_metadata.addEventListener("change", function () {
+    handleCheckboxValue(ArtifactResolutionService_in_metadata);
+});
+
 backchannel.addEventListener("change", function () {
     handleCheckboxValue(backchannel);
 });
 
 
 const allowCreate = document.getElementById("allowCreate");
-allowCreate.value = pluginData.config.allowCreate ? pluginData.config.allowCreate : false;
 allowCreate.addEventListener("change", function () {
     handleCheckboxValue(allowCreate);
+
 });
 
 
 
 
 const httpPostBindingResponse = document.getElementById("httpPostBindingResponse");
-httpPostBindingResponse.value = pluginData.config.postBindingResponse ? pluginData.config.postBindingResponse : false;
 httpPostBindingResponse.addEventListener("change", function () {
     handleCheckboxValue(httpPostBindingResponse);
-
-
 });
 
 
@@ -32,14 +88,12 @@ httpPostBindingResponse.addEventListener("change", function () {
 
 
 const httpPostBindingAuthnRequest = document.getElementById("httpPostBindingAuthnRequest");
-httpPostBindingAuthnRequest.value = pluginData.config.postBindingAuthnRequest ? pluginData.config.postBindingAuthnRequest : false;
 httpPostBindingAuthnRequest.addEventListener("change", function () {
     handleCheckboxValue(httpPostBindingAuthnRequest);
 
 });
 
 const httpPostBindingLogout = document.getElementById("httpPostBindingLogout");
-httpPostBindingLogout.value = pluginData.config.postBindingLogout ? pluginData.config.postBindingLogout : false;
 httpPostBindingLogout.addEventListener("change", function () {
     handleCheckboxValue(httpPostBindingLogout);
 
@@ -47,7 +101,6 @@ httpPostBindingLogout.addEventListener("change", function () {
 
 
 const wantAssertionsSigned = document.getElementById("wantAssertionsSigned");
-wantAssertionsSigned.value = pluginData.config.wantAssertionsSigned ? pluginData.config.wantAssertionsSigned : false;
 wantAssertionsSigned.addEventListener("change", function () {
     handleCheckboxValue(wantAssertionsSigned);
 
@@ -55,7 +108,6 @@ wantAssertionsSigned.addEventListener("change", function () {
 
 
 const wantAssertionsEncrypted = document.getElementById("wantAssertionsEncrypted");
-wantAssertionsEncrypted.value = pluginData.config.wantAssertionsEncrypted ? pluginData.config.wantAssertionsEncrypted : false;
 wantAssertionsEncrypted.addEventListener("change", function () {
     handleCheckboxValue(wantAssertionsEncrypted);
 
@@ -63,15 +115,14 @@ wantAssertionsEncrypted.addEventListener("change", function () {
 
 
 const forceAuthentication = document.getElementById("forceAuthentication");
-forceAuthentication.value = pluginData.config.forceAuthn ? pluginData.config.forceAuthn : false;
 forceAuthentication.addEventListener("change", function () {
     handleCheckboxValue(forceAuthentication);
+
 });
 
 
 
 const signMetadata = document.getElementById("signMetadata");
-signMetadata.value = pluginData.config.signSpMetadata ? pluginData.config.signSpMetadata : false
 signMetadata.addEventListener("change", function () {
     handleCheckboxValue(signMetadata);
 
@@ -79,7 +130,6 @@ signMetadata.addEventListener("change", function () {
 
 
 const passSubject = document.getElementById("passSubject");
-passSubject.value = pluginData.config.loginHint ? pluginData.config.loginHint : false;
 passSubject.addEventListener("change", function () {
     handleCheckboxValue(passSubject);
 
@@ -87,7 +137,6 @@ passSubject.addEventListener("change", function () {
 
 
 const storeToken = document.getElementById("storeToken");
-storeToken.value = pluginData.storeToken ? pluginData.storeToken : false;
 storeToken.addEventListener("change", function () {
     handleCheckboxValue(storeToken);
 
@@ -95,7 +144,6 @@ storeToken.addEventListener("change", function () {
 
 
 const storedTokensReadable = document.getElementById("storedTokensReadable");
-storedTokensReadable.value = pluginData.addReadTokenRoleOnCreate ? pluginData.addReadTokenRoleOnCreate : false;
 storedTokensReadable.addEventListener("change", function () {
     handleCheckboxValue(storedTokensReadable);
 
@@ -103,7 +151,6 @@ storedTokensReadable.addEventListener("change", function () {
 
 
 const trustEmail = document.getElementById("trustEmail");
-trustEmail.value = pluginData.trustEmail ? pluginData.trustEmail : false;
 trustEmail.addEventListener("change", function () {
     handleCheckboxValue(trustEmail);
 
@@ -113,7 +160,6 @@ trustEmail.addEventListener("change", function () {
 
 
 const accountLinkingOnly = document.getElementById("accountLinkingOnly");
-accountLinkingOnly.value = pluginData.linkOnly ? pluginData.linkOnly : false;
 accountLinkingOnly.addEventListener("change", function () {
     handleCheckboxValue(accountLinkingOnly);
 
@@ -121,7 +167,6 @@ accountLinkingOnly.addEventListener("change", function () {
 
 
 const hideLoginPage = document.getElementById("hideLoginPage");
-hideLoginPage.value = pluginData.config.hideOnLoginPage ? pluginData.config.hideOnLoginPage : false;
 hideLoginPage.addEventListener("change", function () {
     handleCheckboxValue(hideLoginPage);
 
@@ -132,19 +177,16 @@ var SignatureAlgorithm = document.getElementById("SignatureAlgorithm");
 var SAMLSignatureKeyName = document.getElementById("SAMLSignatureKeyName");
 
 const wantAuthnRequestsSigned = document.getElementById("wantAuthnRequestsSigned");
-wantAuthnRequestsSigned.value = pluginData.config.wantAuthnRequestsSigned ? pluginData.config.wantAuthnRequestsSigned : false;
 wantAuthnRequestsSigned.addEventListener("change", function () {
     if (wantAuthnRequestsSigned.checked) {
         wantAuthnRequestsSigned.value = true;
         SignatureAlgorithm.removeAttribute("disabled");
         SAMLSignatureKeyName.removeAttribute("disabled");
         encryption_algorithm.removeAttribute("disabled");
-        console.log(`wantAuthnRequestsSigned_value: ${wantAuthnRequestsSigned.value}`)
 
     }
     else {
         wantAuthnRequestsSigned.value = false;
-        console.log(`wantAuthnRequestsSigned_value: ${wantAuthnRequestsSigned.value}`)
         SignatureAlgorithm.setAttribute("disabled", "true");
         SAMLSignatureKeyName.setAttribute("disabled", "true");
         encryption_algorithm.setAttribute("disabled", "true");
@@ -154,21 +196,13 @@ wantAuthnRequestsSigned.addEventListener("change", function () {
     }
 });
 
-const ArtifactResolutionService_in_metadata = document.getElementById("ArtifactResolutionService_in_metadata");
-ArtifactResolutionService_in_metadata.value = pluginData.config.includeArtifactResolutionServiceMetadata ? pluginData.config.includeArtifactResolutionServiceMetadata : false;
-ArtifactResolutionService_in_metadata.addEventListener("change", function () {
-    handleCheckboxValue(ArtifactResolutionService_in_metadata);
 
-});
-
-document.addEventListener("DOMContentLoaded", function () {
     const deleteButtonsClassRefs = document.querySelectorAll(".delete");
     const addButtonClassRefs = document.getElementById("addClassRefs");
     const ClassRefs_items = document.getElementById("ClassRefs_items");
 
     deleteButtonsClassRefs.forEach(function (button) {
-        button.style.display = "inline";
-    });
+        button.style.display = "inline";});
 
     addButtonClassRefs.addEventListener("click", function (e) {
         deleteButtonsClassRefs.forEach(function (button) {
@@ -183,6 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.body.addEventListener("click", function (e) {
         if (e.target.classList.contains("delete")) {
+            e.preventDefault();
             const items = ClassRefs_items.querySelectorAll(".next-referral");
             if (items.length > 0) {
                 items[items.length - 1].remove();
@@ -196,7 +231,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-document.addEventListener("DOMContentLoaded", function () {
     const deleteButtonsDeclRefs = document.querySelectorAll(".delete1");
     const addButtonDeclRefs = document.getElementById("addDeclRefs");
     const DeclRefs_items = document.getElementById("DeclRefs_items");
@@ -218,6 +252,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.body.addEventListener("click", function (e) {
         if (e.target.classList.contains("delete1")) {
+            e.preventDefault();
             const items = DeclRefs_items.querySelectorAll(".next-referral");
             if (items.length > 0) {
                 items[items.length - 1].remove();
@@ -228,49 +263,41 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
         }
-    });
-});
 
+});
 
 
 var validateSignatures = document.getElementById("validateSignatures");
 var additionalField1 = document.getElementById("ValidatingX509Certificates");
-validateSignatures.value = pluginData.config.validateSignature ? pluginData.config.validateSignature : false;
 
 
 validateSignatures.addEventListener("change", function () {
     if (validateSignatures.checked) {
         validateSignatures.value = true;
-        console.log(`validateSignatures_value: ${validateSignatures.value}`)
         additionalField1.removeAttribute("disabled");
 
 
     }
     else {
         validateSignatures.value = false;
-        console.log(`validateSignatures_value: ${validateSignatures.value}`)
         additionalField1.setAttribute("disabled", "true");
         additionalField1.value = '';
-        ;
     }
 });
 
 var Artifact_Resolution = document.getElementById("Artifact_Resolution");
-Artifact_Resolution.value = pluginData.config.artifactResolution ? pluginData.config.artifactResolution : false;
+
 
 Artifact_Resolution.addEventListener("change", function () {
     if (Artifact_Resolution.checked) {
         Artifact_Resolution.value = true;
-        console.log(`Artifact_Resolution_value: ${Artifact_Resolution.value}`)
         additionalField_endpoint.removeAttribute("disabled");
 
     }
     else {
         Artifact_Resolution.value = false;
-        console.log(`Artifact_Resolution_value: ${Artifact_Resolution.value}`)
         additionalField_endpoint.setAttribute("disabled", "true");
         additionalField_endpoint.value = '';
-
         ;
     }
 }
@@ -278,14 +305,12 @@ Artifact_Resolution.addEventListener("change", function () {
 
 
 const Sign_Artifact_Resolution_Request = document.getElementById("Sign_Artifact_Resolution_Request");
-Sign_Artifact_Resolution_Request.value = pluginData.config.signArtifactResolutionRequest ? pluginData.config.signArtifactResolutionRequest : false;
 Sign_Artifact_Resolution_Request.addEventListener("change", function () {
     handleCheckboxValue(Sign_Artifact_Resolution_Request);
 
 });
 
 const ArtifactResolution_via_HTTP_ARTIFACT = document.getElementById("ArtifactResolution_via_HTTP_ARTIFACT");
-ArtifactResolution_via_HTTP_ARTIFACT.value = pluginData.config.artifactResolutionHTTPArtifact ? pluginData.config.artifactResolutionHTTPArtifact : false;
 ArtifactResolution_via_HTTP_ARTIFACT.addEventListener("change", function () {
     handleCheckboxValue(ArtifactResolution_via_HTTP_ARTIFACT);
 
@@ -293,9 +318,7 @@ ArtifactResolution_via_HTTP_ARTIFACT.addEventListener("change", function () {
 
 
 
-
 const Artifact_Resolution_with_SOAP = document.getElementById("Artifact_Resolution_with_SOAP");
-Artifact_Resolution_with_SOAP.value = pluginData.config.artifactResolutionSOAP ? pluginData.config.artifactResolutionSOAP : false;
 Artifact_Resolution_with_SOAP.addEventListener("change", function () {
     handleCheckboxValue(Artifact_Resolution_with_SOAP);
 
@@ -304,7 +327,6 @@ Artifact_Resolution_with_SOAP.addEventListener("change", function () {
 
 
 const Artifact_Resolution_with_XML_header = document.getElementById("Artifact_Resolution_with_XML_header");
-Artifact_Resolution_with_XML_header.value = pluginData.config.artifactResolutionWithXmlHeader ? pluginData.config.artifactResolutionWithXmlHeader : false;
 Artifact_Resolution_with_XML_header.addEventListener("change", function () {
     handleCheckboxValue(Artifact_Resolution_with_XML_header);
 
@@ -312,20 +334,11 @@ Artifact_Resolution_with_XML_header.addEventListener("change", function () {
 
 
 const Mutual_TLS = document.getElementById("Mutual_TLS");
-Mutual_TLS.value = pluginData.config.mutualTls ? pluginData.config.mutualTls : false;
 Mutual_TLS.addEventListener("change", function () {
     handleCheckboxValue(Mutual_TLS);
-
-});
-const enabled = document.getElementById("enabled");
-enabled.value = pluginData.enabled ? pluginData.enabled : false;
-enabled.addEventListener("change", function () {
-    handleCheckboxValue(enabled);
-
 });
 
 principalType_input.addEventListener('change', function () {
-    console.log(principalType_input.value)
     if (principalType_input.value == "ATTRIBUTE" || principalType_input.value == "FRIENDLY_ATTRIBUTE") {
         principalAttribute_input.removeAttribute("disabled");
 
@@ -334,4 +347,5 @@ principalType_input.addEventListener('change', function () {
         principalAttribute_input.setAttribute("disabled", "true");
 
     }
+
 });

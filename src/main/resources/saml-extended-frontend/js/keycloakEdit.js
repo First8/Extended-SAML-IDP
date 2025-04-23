@@ -17,7 +17,6 @@ keycloak
   .then((authenticated) => {
     if (authenticated) {
       accessToken = keycloak.token;
-      console.log(`Access Token: ${accessToken}`);
       localStorage.setItem('accessToken', keycloak.token);
 
       //get flow from KEY
@@ -54,23 +53,26 @@ keycloak
 
 
           });
-          responseJSON.forEach((flow, index) => {
-            const optionElement1 = document.createElement('option');
-            optionElement1.value = flow.alias;
-            optionElement1.text = flow.alias;
-            selectElement_firstLoginFlow.add(optionElement1);
-            console.log(flow.id);
-            console.log(flow.alias);
-          });
+            responseJSON.forEach((flow, index) => {
+                const optionElement1 = document.createElement('option');
+                optionElement1.value = flow.alias;
+                optionElement1.text = flow.alias;
+                if (flow.alias == 'first broker login') {
+                    selectElement_firstLoginFlow.add(optionElement1, 0);
+                    selectElement_firstLoginFlow.value = 'first broker login';
+                } else {
+                    selectElement_firstLoginFlow.add(optionElement1);
+                }
+
+
+            });
 
           if (pluginData.postBrokerLoginFlowAlias) {
-            console.log(postLoginFlow.value)
             updateField('postLoginFlow', pluginData.postBrokerLoginFlowAlias);
 
           }
 
           if (pluginData.firstBrokerLoginFlowAlias) {
-            console.log(postLoginFlow.value)
             updateField('firstLoginFlow', pluginData.firstBrokerLoginFlowAlias);
 
           }
@@ -86,7 +88,6 @@ keycloak
       const tokenParsed = keycloak.tokenParsed;
       const realmroles = tokenParsed.realm_access.roles;
       const clientroles = tokenParsed.resource_access;
-      console.log(clientroles);
 
       if ((clientroles && clientroles['realm-management'] && clientroles['realm-management'].roles.includes("realm-admin")) || realmroles.includes("admin")) {
         document.body.style.display = 'block';

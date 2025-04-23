@@ -160,7 +160,7 @@
       <select name="Realms" id="Realms">
       </select>
     </div>
-    <button id="add_plugin" class="btn">Add Plugin</button>
+    <button id="add_plugin" class="btn">Add Provider</button>
     <script src="../../samlconfig/js/Config"></script>
     <script> document.getElementById("add_plugin").addEventListener("click", function(event) {
   
@@ -171,8 +171,8 @@
         event.preventDefault();
        
       } else {
-        var addplugin=localStorage.getItem('addplugin')
-        window.location.href = `${addplugin}`;
+        var addprovider=localStorage.getItem('addprovider')
+        window.location.href = `${addprovider}`;
    
       }
     });</script>
