@@ -16,6 +16,7 @@
  */
 package nl.first8.keycloak.saml.processing.core.saml.v2.util;
 
+
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.function.Function;
@@ -44,6 +45,8 @@ import org.w3c.dom.NodeList;
  * @since Jan 31, 2011
  */
 public class SAMLMetadataUtil {
+
+    public static final String UTF8_BOM = "\uFEFF";
 
     /**
      * Get the {@link X509Certificate} from the KeyInfo
@@ -107,6 +110,7 @@ public class SAMLMetadataUtil {
     }
 
     public static EntityDescriptorType parseEntityDescriptorType(String descriptor) throws ParsingException {
+        descriptor = removeUTF8BOM(descriptor);
         Object parsedObject = SAMLParser.getInstance().parse(StaxParserUtil.getXMLEventReader(descriptor));
         EntityDescriptorType entityType;
 
@@ -152,5 +156,12 @@ public class SAMLMetadataUtil {
             }
         }
         return descriptor;
+    }
+
+    public static String removeUTF8BOM(String s) {
+        if (s.startsWith(UTF8_BOM)) {
+            s = s.substring(1);
+        }
+        return s;
     }
 }

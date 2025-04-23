@@ -1,7 +1,5 @@
 package nl.first8.keycloak.saml.processing.core.saml.v2.writers;
 
-import nl.first8.keycloak.dom.saml.v2.assertion.SAMLEncryptedType;
-import nl.first8.keycloak.dom.saml.v2.assertion.SamlEncryptedId;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.assertion.BaseIDAbstractType;
@@ -13,7 +11,6 @@ import org.keycloak.dom.saml.v2.assertion.SubjectConfirmationType;
 import org.keycloak.dom.saml.v2.assertion.SubjectType;
 import org.keycloak.dom.saml.v2.metadata.LocalizedNameType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.KeyInfoType;
-import org.keycloak.dom.xmlsec.w3.xmlenc.*;
 import org.keycloak.saml.common.PicketLinkLogger;
 import org.keycloak.saml.common.PicketLinkLoggerFactory;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
@@ -58,6 +55,7 @@ public class BaseWriter {
      *
      * @param nameIDType
      * @param tag
+     * @param out
      *
      * @throws org.keycloak.saml.common.exceptions.ProcessingException
      */
@@ -98,244 +96,6 @@ public class BaseWriter {
     }
 
     /**
-     * Write {@code SAMLEncryptedType} to stream
-     *
-     * @param samlEncryptedType
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(SAMLEncryptedType samlEncryptedType, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        write(samlEncryptedType.getEncryptedData(), JBossSAMLConstants.ENCRYPTED_DATA.getAsQName());
-
-        List<EncryptedKeyType> encryptedKeys = samlEncryptedType.getEncryptedKeys();
-        for (EncryptedKeyType encryptedKey : encryptedKeys) {
-            write(encryptedKey, JBossSAMLConstants.ENCRYPTED_KEY.getAsQName());
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code EncryptedDataType} to stream
-     *
-     * @param encryptedDataType
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(EncryptedDataType encryptedDataType, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        String id = encryptedDataType.getId();
-        if (StringUtil.isNotNull(id)) {
-            StaxUtil.writeAttribute(writer, JBossSAMLConstants.ID.get(), id);
-        }
-
-        String type = encryptedDataType.getType();
-        if (StringUtil.isNotNull(type)) {
-            StaxUtil.writeAttribute(writer, JBossSAMLConstants.TYPE.get(), type);
-        }
-
-        EncryptionMethodType encryptionMethod = encryptedDataType.getEncryptionMethod();
-        if (encryptionMethod != null) {
-            write(encryptionMethod, JBossSAMLConstants.ENCRYPTION_METHOD.getAsQName());
-        }
-        KeyInfoType keyInfo = encryptedDataType.getKeyInfo();
-        if(keyInfo != null) {
-            write(keyInfo, JBossSAMLConstants.KEY_INFO.getAsQName());
-        }
-
-        CipherDataType cipherData = encryptedDataType.getCipherData();
-        if(cipherData != null) {
-            write(cipherData, JBossSAMLConstants.CIPHER_DATA.getAsQName());
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code EncryptionMethodType} to stream
-     *
-     * @param encryptionMethod
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(EncryptionMethodType encryptionMethod, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        String algorithm = encryptionMethod.getAlgorithm();
-        if(StringUtil.isNotNull(algorithm)) {
-            StaxUtil.writeAttribute(writer, JBossSAMLConstants.ALGORITHM.get(), algorithm);
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code KeyInfoType} to stream
-     *
-     * @param keyInfoType
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(KeyInfoType keyInfoType, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        logger.debug("Not yet Implemented writing RetrievalMethod");
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code CipherDataType} to stream
-     *
-     * @param cipherData
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(CipherDataType cipherData, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        String cipherValue = new String(cipherData.getCipherValue());
-        if(StringUtil.isNotNull(cipherValue)) {
-            StaxUtil.writeAttribute(writer, JBossSAMLConstants.CIPHER_VALUE.get(), cipherValue);
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code EncryptedKeyType} to stream
-     *
-     * @param encryptedKey
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(EncryptedKeyType encryptedKey, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        String id = encryptedKey.getId();
-        if(StringUtil.isNotNull(id)) {
-            StaxUtil.writeAttribute(writer, JBossSAMLConstants.ID.get(), id);
-        }
-
-        String recipient = encryptedKey.getRecipient();
-        if(StringUtil.isNotNull(recipient)) {
-            StaxUtil.writeAttribute(writer, JBossSAMLConstants.RECIPIENT.get(), recipient);
-        }
-
-        EncryptionMethodType encryptionMethod = encryptedKey.getEncryptionMethod();
-        if(encryptionMethod != null) {
-            write(encryptionMethod, JBossSAMLConstants.ENCRYPTION_METHOD.getAsQName());
-        }
-
-        KeyInfoType keyInfo = encryptedKey.getKeyInfo();
-        if(keyInfo != null) {
-            write(keyInfo, JBossSAMLConstants.KEY_INFO.getAsQName());
-        }
-
-        CipherDataType cipherData = encryptedKey.getCipherData();
-        if(cipherData != null) {
-            write(cipherData, JBossSAMLConstants.CIPHER_DATA.getAsQName());
-        }
-
-        ReferenceList referenceList = encryptedKey.getReferenceList();
-        if(referenceList != null) {
-            write(referenceList, JBossSAMLConstants.REFERENCE_LIST.getAsQName());
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code ReferenceList} to stream
-     *
-     * @param referenceList
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(ReferenceList referenceList, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        List<ReferenceList.References> references = referenceList.getReferences();
-        for (ReferenceList.References reference : references) {
-            ReferenceType dataReference = reference.getDataReference();
-            if(dataReference != null) {
-                write(dataReference, JBossSAMLConstants.DATA_REFERENCE.getAsQName());
-            }
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
-     * Write {@code ReferenceType} to stream
-     *
-     * @param dataReference
-     * @param tag
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
-     */
-    public void write(ReferenceType dataReference, QName tag, boolean writeNamespace) throws ProcessingException {
-        StaxUtil.writeStartElement(writer, tag.getPrefix(), tag.getLocalPart(), tag.getNamespaceURI());
-
-        if (writeNamespace) {
-            StaxUtil.writeNameSpace(writer, ASSERTION_PREFIX, ASSERTION_NSURI.get());
-        }
-
-        String uri = dataReference.getURI().toString();
-        if(StringUtil.isNotNull(uri)) {
-            StaxUtil.writeAttribute(writer, "URI", uri);
-        }
-
-        StaxUtil.writeEndElement(writer);
-        StaxUtil.flush(writer);
-    }
-
-    /**
      * Write {@code NameIDType} to stream without writing a namespace
      */
     public void write(NameIDType nameIDType, QName tag) throws ProcessingException {
@@ -343,65 +103,10 @@ public class BaseWriter {
     }
 
     /**
-     * Write {@code SamlEncryptedId} to stream without writing a namespace
-     */
-    public void write(SamlEncryptedId samlEncryptedId, QName tag) throws ProcessingException {
-        this.write(samlEncryptedId, tag, false);
-    }
-
-    /**
-     * Write {@code EncryptedDataType} to stream without writing a namespace
-     */
-    public void write(EncryptedDataType encryptedDataType, QName tag) throws ProcessingException {
-        this.write(encryptedDataType, tag, false);
-    }
-
-    /**
-     * Write {@code EncryptionMethodType} to stream without writing a namespace
-     */
-    private void write(EncryptionMethodType encryptionMethod, QName tag) throws ProcessingException {
-        this.write(encryptionMethod, tag, false);
-    }
-
-    /**
-     * Write {@code KeyInfoType} to stream without writing a namespace
-     */
-    private void write(KeyInfoType keyInfoType, QName tag) throws ProcessingException {
-        this.write(keyInfoType, tag, false);
-    }
-
-    /**
-     * Write {@code CipherDataType} to stream without writing a namespace
-     */
-    private void write(CipherDataType cipherDataType, QName tag) throws ProcessingException {
-        this.write(cipherDataType, tag, false);
-    }
-
-    /**
-     * Write {@code CipherDataType} to stream without writing a namespace
-     */
-    private void write(EncryptedKeyType encryptedKey, QName tag) throws ProcessingException {
-        this.write(encryptedKey, tag, false);
-    }
-
-    /**
-     * Write {@code ReferenceList} to stream without writing a namespace
-     */
-    private void write(ReferenceList referenceList, QName tag) throws ProcessingException {
-        this.write(referenceList, tag, false);
-    }
-
-    /**
-     * Write {@code ReferenceType} to stream without writing a namespace
-     */
-    private void write(ReferenceType reference, QName tag) throws ProcessingException {
-        this.write(reference, tag, false);
-    }
-
-    /**
      * Write an {@code AttributeType} to stream
      *
      * @param attributeType
+     * @param out
      *
      * @throws ProcessingException
      */
@@ -455,7 +160,7 @@ public class BaseWriter {
                     if (attributeValue instanceof String) {
                         writeStringAttributeValue((String) attributeValue);
                     } else if (attributeValue instanceof NameIDType) {
-                    	writeNameIDTypeAttributeValue((NameIDType) attributeValue);
+                        writeNameIDTypeAttributeValue((NameIDType) attributeValue);
                     } else if (attributeValue instanceof XMLGregorianCalendar) {
                         writeDateAttributeValue((XMLGregorianCalendar) attributeValue);
                     } else if (attributeValue instanceof Element) {

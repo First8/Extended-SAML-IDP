@@ -164,5 +164,4 @@ public class SAMLAttributeValueParser implements StaxParser {
             }
         }
         return necessaryNamespaces;
-    }
-}
+    }}

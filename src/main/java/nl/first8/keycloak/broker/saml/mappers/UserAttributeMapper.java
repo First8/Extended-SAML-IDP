@@ -45,6 +45,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
 
     public static final String ATTRIBUTE_DECRYPT = "attribute.decrypt";
+    public static final String ATTRIBUTE_XACML_CONTEXT = "attribute.xacml-context";
     public static final String ATTRIBUTE_NAME = "attribute.name";
     public static final String ATTRIBUTE_VALUE = "attribute.value";
     public static final String ATTRIBUTE_FRIENDLY_NAME = "attribute.friendly.name";
@@ -96,6 +97,12 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
         property.setName(ATTRIBUTE_DECRYPT);
         property.setLabel("Decrypt Attribute");
         property.setHelpText("Decrypt the value and set the decrypted value in the property.");
+        property.setType(ProviderConfigProperty.BOOLEAN_TYPE);
+        configProperties.add(property);
+        property = new ProviderConfigProperty();
+        property.setName(ATTRIBUTE_XACML_CONTEXT);
+        property.setLabel("Use XamlResource attributes");
+        property.setHelpText("Gets the attributes from the <xacml-context:Resource> instead of the <saml2:AttributeStatement> tag");
         property.setType(ProviderConfigProperty.BOOLEAN_TYPE);
         configProperties.add(property);
     }
@@ -233,6 +240,12 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
     private Predicate<AttributeStatementType.ASTChoiceType> elementWith(String attributeName) {
         return attributeType -> {
             AttributeType attribute = attributeType.getAttribute();
+            return hasMatchingNameOrFriendlyName(attributeName).test(attribute);
+        };
+    }
+
+    private Predicate<AttributeType> hasMatchingNameOrFriendlyName(String attributeName) {
+        return attribute -> {
             String name = attribute.getName();
             String friendlyName = attribute.getFriendlyName();
             boolean eqName = attributeName.equals(name);
@@ -254,9 +267,21 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
 
 
     private List<String> findAttributeValuesInContext(String attributeName, BrokeredIdentityContext context, IdentityProviderMapperModel mapperModel, KeyWrapper keys) {
-        logger.debugf("Searching for Attribute `%s` in Attribute Context.", attributeName);
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
 
+        if(Boolean.valueOf(mapperModel.getConfig().get(ATTRIBUTE_XACML_CONTEXT))) {
+            logger.debugf("Searching for Attribute `%s` in Xacml context.", attributeName);
+            return assertion.getXacmlResources().stream()
+                    .flatMap(resource -> resource.getAttributes().stream())
+                    .filter(hasMatchingNameOrFriendlyName(attributeName))
+                    .flatMap(attribute -> attribute.getAttributeValue().stream())
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .map(object -> assignValue(mapperModel, object, keys))
+                    .map(List::of)
+                    .orElse(List.of());
+        }
+        logger.debugf("Searching for Attribute `%s` in Attribute Context.", attributeName);
         return assertion.getAttributeStatements().stream()
                 .flatMap(statement -> statement.getAttributes().stream())
                 .filter(elementWith(attributeName))
@@ -367,8 +392,8 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
             for (EntityDescriptorType.EDTDescriptorChoiceType descriptor : descriptors) {
                 for (AttributeConsumingServiceType attributeConsumingService : descriptor.getSpDescriptor().getAttributeConsumingService()) {
                     boolean alreadyPresent = attributeConsumingService.getRequestedAttribute().stream()
-                        .anyMatch(t -> (attributeName == null || attributeName.equalsIgnoreCase(t.getName())) &&
-                                       (attributeFriendlyName == null || attributeFriendlyName.equalsIgnoreCase(t.getFriendlyName())));
+                            .anyMatch(t -> (attributeName == null || attributeName.equalsIgnoreCase(t.getName())) &&
+                                    (attributeFriendlyName == null || attributeFriendlyName.equalsIgnoreCase(t.getFriendlyName())));
 
                     if (!alreadyPresent)
                         attributeConsumingService.addRequestedAttribute(requestedAttribute);

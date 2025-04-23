@@ -344,4 +344,5 @@ public class EntityDescriptorType extends TypeWithOtherAttributes {
     public void setID(String value) {
         this.id = value;
     }
+
 }

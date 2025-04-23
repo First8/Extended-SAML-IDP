@@ -835,7 +835,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             logger.debugf("Performing local authentication for user [%s].", federatedUser);
         }
 
-        AuthenticationManager.setClientScopesInSession(authSession);
+        AuthenticationManager.setClientScopesInSession(session, authSession);
 
         String nextRequiredAction = AuthenticationManager.nextRequiredAction(session, authSession, request, event);
         if (nextRequiredAction != null) {
@@ -948,7 +948,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
         context.getIdp().authenticationFinished(authSession, context);
 
-        AuthenticationManager.setClientScopesInSession(authSession);
+        AuthenticationManager.setClientScopesInSession(session, authSession);
         TokenManager.attachAuthenticationSession(session, userSession, authSession);
 
         if (isDebugEnabled()) {

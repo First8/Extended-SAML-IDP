@@ -9,7 +9,6 @@ import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import nl.first8.keycloak.protocol.saml.JaxrsSAML2BindingBuilder;
 import nl.first8.keycloak.saml.SAML2ArtifactResolutionBuilder;
-import nl.first8.keycloak.saml.SAML2AuthnRequestBuilder;
 import nl.first8.keycloak.saml.SPMetadataDescriptorBuilder;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
@@ -91,14 +90,16 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             String nameIDPolicyFormat = getConfig().getNameIDPolicyFormat();
 
             if (nameIDPolicyFormat == null) {
-                nameIDPolicyFormat = JBossSAMLURIConstants.NAMEID_FORMAT_PERSISTENT.get();
+                nameIDPolicyFormat =  JBossSAMLURIConstants.NAMEID_FORMAT_PERSISTENT.get();
             }
 
             String protocolBinding = JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.get();
 
             String assertionConsumerServiceUrl = request.getRedirectUri();
 
-            if (getConfig().isPostBindingResponse()) {
+            if (getConfig().isArtifactBindingResponse()) {
+                protocolBinding = JBossSAMLURIConstants.SAML_HTTP_ARTIFACT_BINDING.get();
+            } else if (getConfig().isPostBindingResponse()) {
                 protocolBinding = JBossSAMLURIConstants.SAML_HTTP_POST_BINDING.get();
             }
 
@@ -112,20 +113,18 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             for (String authnContextDeclRef : getAuthnContextDeclRefUris())
                 requestedAuthnContext.addAuthnContextDeclRef(authnContextDeclRef);
 
-            String loginHint = getConfig().isLoginHint()
-                    ? request.getAuthenticationSession().getClientNote(OIDCLoginProtocol.LOGIN_HINT_PARAM)
-                    : null;
+            Integer attributeConsumingServiceIndex = getConfig().getAttributeConsumingServiceIndex();
+
+            String loginHint = getConfig().isLoginHint() ? request.getAuthenticationSession().getClientNote(OIDCLoginProtocol.LOGIN_HINT_PARAM) : null;
             Boolean allowCreate = null;
-
-            if (getConfig().getConfig().get(SAMLIdentityProviderConfig.ALLOW_CREATE) == null || getConfig().isAllowCreate())
+            if (getConfig().getConfig().get(org.keycloak.broker.saml.SAMLIdentityProviderConfig.ALLOW_CREATE) == null || getConfig().isAllowCreate())
                 allowCreate = Boolean.TRUE;
-
             LoginProtocol protocol = session.getProvider(LoginProtocol.class, request.getAuthenticationSession().getProtocol());
             Boolean forceAuthn = getConfig().isForceAuthn();
-
             if (protocol.requireReauthentication(null, request.getAuthenticationSession()))
                 forceAuthn = Boolean.TRUE;
             SAML2AuthnRequestBuilder authnRequestBuilder = new SAML2AuthnRequestBuilder()
+                    .assertionConsumerUrl(assertionConsumerServiceUrl)
                     .destination(destinationUrl)
                     .issuer(issuerURL)
                     .forceAuthn(forceAuthn)
@@ -133,41 +132,11 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                     .nameIdPolicy(SAML2NameIDPolicyBuilder
                             .format(nameIDPolicyFormat)
                             .setAllowCreate(allowCreate))
+                    .attributeConsumingServiceIndex(attributeConsumingServiceIndex)
                     .requestedAuthnContext(requestedAuthnContext)
                     .subject(loginHint);
 
-            Integer assertionConsumingServiceIndex = getConfig().getAssertionConsumingServiceIndex();
-
-            if (assertionConsumingServiceIndex != null) {
-                authnRequestBuilder.assertionConsumerIndex(assertionConsumingServiceIndex);
-            } else {
-                authnRequestBuilder.assertionConsumerUrl(assertionConsumerServiceUrl);
-            }
-            Integer attributeConsumingServiceIndex = getConfig().getAttributeConsumingServiceIndex();
-            if (attributeConsumingServiceIndex != null)
-                authnRequestBuilder.attributeConsumingServiceIndex(attributeConsumingServiceIndex);
-
-            List<String> scoping = getScoping();
-            if (scoping != null && !scoping.isEmpty()) {
-                logger.debugf("Adding scoping to AuthNRequest: %s", scoping);
-                IDPListType idpListType = new IDPListType();
-                scoping.stream()
-                        .filter(entry -> !entry.isEmpty())
-                        .forEach(entry -> {
-                            try {
-                                IDPEntryType idpEntryType = new IDPEntryType();
-                                idpEntryType.setProviderID(new URI(entry));
-                                idpListType.addIDPEntry(idpEntryType);
-                            } catch (URISyntaxException e) {
-                                logger.warnf("Scope %s not added as not valid URI. Ignoring this entry.", entry);
-                            }
-                        });
-                ScopingType scopingType = new ScopingType();
-                scopingType.setIDPList(idpListType);
-                authnRequestBuilder.scoping(scopingType);
-            }
-
-            JaxrsSAML2BindingBuilder binding = new JaxrsSAML2BindingBuilder(session, getConfig())
+            org.keycloak.protocol.saml.JaxrsSAML2BindingBuilder binding = new org.keycloak.protocol.saml.JaxrsSAML2BindingBuilder(session)
                     .relayState(request.getState().getEncoded());
             boolean postBinding = getConfig().isPostBindingAuthnRequest();
 
@@ -181,13 +150,13 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                 binding.signWith(keyName, keys.getPrivateKey(), keys.getPublicKey(), keys.getCertificate())
                         .signatureAlgorithm(getSignatureAlgorithm())
                         .signDocument();
-                if (!postBinding && getConfig().isAddExtensionsElementWithKeyInfo()) {    // Only include extension if REDIRECT binding and signing whole SAML protocol message
+                if (! postBinding && getConfig().isAddExtensionsElementWithKeyInfo()) {    // Only include extension if REDIRECT binding and signing whole SAML protocol message
                     authnRequestBuilder.addExtension(new KeycloakKeySamlExtensionGenerator(keyName));
                 }
             }
 
             AuthnRequestType authnRequest = authnRequestBuilder.createAuthnRequest();
-            for (Iterator<SamlAuthenticationPreprocessor> it = SamlSessionUtils.getSamlAuthenticationPreprocessorIterator(session); it.hasNext(); ) {
+            for(Iterator<SamlAuthenticationPreprocessor> it = SamlSessionUtils.getSamlAuthenticationPreprocessorIterator(session); it.hasNext(); ) {
                 authnRequest = it.next().beforeSendingLoginRequest(authnRequest, request.getAuthenticationSession());
             }
 
@@ -198,15 +167,10 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             // Save the current RequestID in the Auth Session as we need to verify it against the ID returned from the IdP
             request.getAuthenticationSession().setClientNote(SamlProtocol.SAML_REQUEST_ID_BROKER, authnRequest.getID());
 
-
-            Document authnRequestDocument = authnRequestBuilder.toDocument();
-            if (logger.isTraceEnabled()) {
-                logger.tracef("AuthNRequest document: %s", DocumentUtil.getDocumentAsString(authnRequestDocument));
-            }
             if (postBinding) {
-                return binding.postBinding(authnRequestDocument).request(destinationUrl);
+                return binding.postBinding(org.keycloak.saml.processing.api.saml.v2.request.SAML2Request.convert(authnRequest)).request(destinationUrl);
             } else {
-                return binding.redirectBinding(authnRequestDocument).request(destinationUrl);
+                return binding.redirectBinding(org.keycloak.saml.processing.api.saml.v2.request.SAML2Request.convert(authnRequest)).request(destinationUrl);
             }
         } catch (Exception e) {
             throw new IdentityBrokerException("Could not create authentication request.", e);
@@ -248,18 +212,6 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
         }
     }
 
-    private List<String> getScoping() {
-        String scoping = getConfig().getScoping();
-        if (scoping == null || scoping.isEmpty())
-            return new LinkedList<>();
-
-        try {
-            return Arrays.asList(scoping);
-        } catch (Exception e) {
-            logger.warn("Could not json-deserialize Scoping config entry: " + scoping, e);
-            return new LinkedList<String>();
-        }
-    }
     @Override
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
         AssertionType assertion = (AssertionType) context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);

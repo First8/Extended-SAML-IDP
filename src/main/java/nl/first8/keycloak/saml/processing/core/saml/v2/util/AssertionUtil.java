@@ -52,7 +52,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.stream.XMLEventReader;
 import java.io.ByteArrayInputStream;
@@ -301,7 +300,7 @@ public class AssertionUtil {
     }
 
     protected static Element getSignature(Element element) {
-        return DocumentUtil.getDirectChildElement(element, XMLSignature.XMLNS, "Signature");
+        return XMLSignatureUtil.getSignature(element);
     }
 
     /**

@@ -11,7 +11,7 @@
     <description>
         SAML v2.0 extensions that adds more configuration options to connect to SAML Service Providers.
     </description>
-    <version>1.1-SNAPSHOT-25</version>
+    <version>1.1-SNAPSHOT-26</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -20,10 +20,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <keycloak.version>25.0.1</keycloak.version>
+        <keycloak.version>26.0.0</keycloak.version>
         <spotbugs.version>4.8.3.1</spotbugs.version>
 
-        <jib-maven-plugin.version>3.4.3</jib-maven-plugin.version>
+        <jib-maven-plugin.version>3.4.1</jib-maven-plugin.version>
         <docker.image.prefix>docker.first8.nl</docker.image.prefix>
         <docker.image.name>idp-saml2-extended</docker.image.name>
     </properties>
@@ -337,17 +337,7 @@
                         <version>${jib-maven-plugin.version}</version>
                         <configuration>
                             <from>
-                                <image>busybox:1.36.1</image>
-                                <platforms>
-                                    <platform>
-                                        <architecture>amd64</architecture>
-                                        <os>linux</os>
-                                    </platform>
-                                    <platform>
-                                        <architecture>arm64</architecture>
-                                        <os>linux</os>
-                                    </platform>
-                                </platforms>
+                                <image>busybox:1.35</image>
                             </from>
                             <to>
                                 <image>${docker.image.prefix}/${docker.image.name}</image>

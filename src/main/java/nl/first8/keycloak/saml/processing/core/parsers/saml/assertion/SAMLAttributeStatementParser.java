@@ -8,6 +8,11 @@ import org.keycloak.saml.common.util.StaxParserUtil;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
 
+/**
+ * Parse the <conditions> in the saml assertion
+ *
+ * @since Oct 14, 2010
+ */
 public class SAMLAttributeStatementParser extends AbstractStaxSamlAssertionParser<AttributeStatementType> {
 
     private static final SAMLAttributeStatementParser INSTANCE = new SAMLAttributeStatementParser();

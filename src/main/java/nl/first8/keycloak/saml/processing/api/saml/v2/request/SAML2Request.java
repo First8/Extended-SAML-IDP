@@ -38,7 +38,6 @@ import org.w3c.dom.Document;
  */
 public class SAML2Request {
 
-
     private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
 
     private SAMLDocumentHolder samlDocumentHolder = null;
@@ -76,9 +75,7 @@ public class SAML2Request {
      * @param destination
      * @param issuerValue
      * @param protocolBindingUri
-     *
      * @return
-     *
      * @throws ConfigurationException
      */
     public AuthnRequestType createAuthnRequestType(String id, String assertionConsumerURL, String destination,
@@ -112,15 +109,13 @@ public class SAML2Request {
      * Get AuthnRequestType from a file
      *
      * @param fileName file with the serialized AuthnRequestType
-     *
      * @return AuthnRequestType
-     *
      * @throws ParsingException
      * @throws ProcessingException
      * @throws ConfigurationException
      * @throws IllegalArgumentException if the input fileName is null IllegalStateException if the InputStream from the
-     * fileName
-     * is null
+     *                                  fileName
+     *                                  is null
      */
     public AuthnRequestType getAuthnRequestType(String fileName) throws ConfigurationException, ProcessingException,
             ParsingException {
@@ -143,9 +138,7 @@ public class SAML2Request {
      * Get the Underlying SAML2Object from the input stream
      *
      * @param is
-     *
      * @return
-     *
      * @throws IOException
      * @throws ParsingException
      */
@@ -160,6 +153,7 @@ public class SAML2Request {
 
     /**
      * Get the Underlying SAML2Object from a document
+     *
      * @param samlDocument a Document containing a SAML2Object
      * @return a SAMLDocumentHolder
      * @throws ProcessingException
@@ -177,9 +171,7 @@ public class SAML2Request {
      * Get a Request Type from Input Stream
      *
      * @param is
-     *
      * @return
-     *
      * @throws ProcessingException
      * @throws ConfigurationException
      * @throws
@@ -204,9 +196,7 @@ public class SAML2Request {
      * Get the AuthnRequestType from an input stream
      *
      * @param is Inputstream containing the AuthnRequest
-     *
      * @return
-     *
      * @throws ParsingException
      * @throws ProcessingException
      * @throws ConfigurationException
@@ -240,9 +230,7 @@ public class SAML2Request {
      * Create a Logout Request
      *
      * @param issuer
-     *
      * @return
-     *
      * @throws ConfigurationException
      */
     public static LogoutRequestType createLogoutRequest(NameIDType issuer) throws ConfigurationException {
@@ -254,12 +242,25 @@ public class SAML2Request {
     }
 
     /**
+     * Create a Artifact Resolve Request
+     *
+     * @param issuer
+     * @return
+     * @throws ConfigurationException
+     */
+    public static ArtifactResolveType createArtifactResolveRequest(NameIDType issuer) {
+        ArtifactResolveType lrt = new ArtifactResolveType(IDGenerator.create("ID_"), XMLTimeUtil.getIssueInstant());
+
+        lrt.setIssuer(issuer);
+
+        return lrt;
+    }
+
+    /**
      * Return the DOM object
      *
      * @param rat
-     *
      * @return
-     *
      * @throws ProcessingException
      * @throws ParsingException
      * @throws ConfigurationException
@@ -272,6 +273,8 @@ public class SAML2Request {
             writer.write((AuthnRequestType) rat);
         } else if (rat instanceof LogoutRequestType) {
             writer.write((LogoutRequestType) rat);
+        } else if (rat instanceof ArtifactResolveType) {
+            writer.write((ArtifactResolveType) rat);
         }
 
         return DocumentUtil.getDocument(new String(bos.toByteArray(), GeneralConstants.SAML_CHARSET));
@@ -281,9 +284,7 @@ public class SAML2Request {
      * Convert a SAML2 Response into a Document
      *
      * @param responseType
-     *
      * @return
-     *
      * @throws ProcessingException
      * @throws ParsingException
      * @throws ConfigurationException
@@ -302,7 +303,6 @@ public class SAML2Request {
      *
      * @param requestType
      * @param os
-     *
      * @throws ProcessingException
      */
     public static void marshall(RequestAbstractType requestType, OutputStream os) throws ProcessingException {
@@ -320,7 +320,6 @@ public class SAML2Request {
      *
      * @param requestType
      * @param writer
-     *
      * @throws ProcessingException
      */
     public static void marshall(RequestAbstractType requestType, Writer writer) throws ProcessingException {

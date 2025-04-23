@@ -780,7 +780,7 @@ public class SAMLEndpoint {
                     return;
                 }
             }
-            SamlProtocolUtils.verifyDocumentSignature(documentHolder.getSamlDocument(), getIDPKeyLocator(), config.isIgnoreSamlAdviceNodes());
+            SamlProtocolUtils.verifyDocumentSignature(documentHolder.getSamlDocument(), getIDPKeyLocator());
         }
 
         @Override

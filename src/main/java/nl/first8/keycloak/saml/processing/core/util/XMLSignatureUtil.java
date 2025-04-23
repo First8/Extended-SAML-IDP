@@ -43,16 +43,14 @@ import java.security.interfaces.DSAPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import javax.xml.crypto.AlgorithmMethod;
-import javax.xml.crypto.KeySelector;
-import javax.xml.crypto.KeySelectorException;
-import javax.xml.crypto.KeySelectorResult;
-import javax.xml.crypto.XMLCryptoContext;
+import java.util.Set;
 import javax.xml.crypto.dom.DOMStructure;
 import org.keycloak.rotation.KeyLocator;
-import org.keycloak.saml.common.util.SecurityActions;
+import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 
 public class XMLSignatureUtil {
 
@@ -122,6 +120,52 @@ public class XMLSignatureUtil {
             }
         }
         return xsf;
+    }
+
+    /**
+     * Returns the element that contains the signature for the passed element.
+     *
+     * @param element The element to search for the signature
+     * @return The signature element or null
+     */
+    public static Element getSignature(Element element) {
+        Document doc = element.getOwnerDocument();
+        NodeList nl = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
+        if (element.getAttributeNode(JBossSAMLConstants.ID.get()) != null) {
+            // set the saml ID to be found
+            element.setIdAttribute(JBossSAMLConstants.ID.get(), true);
+        }
+        KeySelector nullSelector = new KeySelector() {
+            @Override
+            public KeySelectorResult select(KeyInfo ki, KeySelector.Purpose prps, AlgorithmMethod am, XMLCryptoContext xmlcc) throws KeySelectorException {
+                return () -> null;
+            }
+        };
+
+        try {
+            for (int i = 0; i < nl.getLength(); i++) {
+                Element signatureElement = (Element) nl.item(i);
+                DOMValidateContext valContext = new DOMValidateContext(nullSelector, signatureElement);
+                DOMStructure structure = new DOMStructure(signatureElement);
+                XMLSignature signature = fac.unmarshalXMLSignature(structure);
+                for (Reference ref : (List<Reference>) signature.getSignedInfo().getReferences()) {
+                    try {
+                        Data data = fac.getURIDereferencer().dereference(ref, valContext);
+                        if (data instanceof NodeSetData) {
+                            Iterator<Node> it = ((NodeSetData) data).iterator();
+                            if (it.hasNext() && element.equals(it.next())) {
+                                return signatureElement;
+                            }
+                        }
+                    } catch (URIReferenceException e) {
+                        logger.trace("Invalid URI reference in signature " + ref.getURI());
+                    }
+                }
+            }
+        } catch (MarshalException e) {
+            logger.trace("Error unmarshalling signature", e);
+        }
+        return null;
     }
 
     /**
@@ -393,22 +437,7 @@ public class XMLSignatureUtil {
         if (signedDoc == null)
             throw logger.nullArgumentError("Signed Document");
 
-        Element documentElement = signedDoc.getDocumentElement();
-        propagateIDAttributeSetup(documentElement, documentElement);
-        if(logger.isDebugEnabled()) {
-            NamedNodeMap attributes = documentElement.getAttributes();
-            for (int i = 0; i < attributes.getLength(); i++) {
-                logger.debug(attributes.item(i).getLocalName() + " : isID -> " + ((Attr) attributes.item(i)).isId());
-            }
-        }
-        Node samlReponseNode = getSamlReponseNode(signedDoc);
-        fixIDAttributeSetup(samlReponseNode, (Element) samlReponseNode);
-        if(logger.isDebugEnabled()) {
-            NamedNodeMap attributes = samlReponseNode.getAttributes();
-            for (int i = 0; i < attributes.getLength(); i++) {
-                logger.debug(attributes.item(i).getLocalName() + " : isID -> " + ((Attr) attributes.item(i)).isId());
-            }
-        }
+        propagateIDAttributeSetup(signedDoc.getDocumentElement(), signedDoc.getDocumentElement());
 
         NodeList nl = signedDoc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
         if (nl == null || nl.getLength() == 0) {
@@ -419,35 +448,36 @@ public class XMLSignatureUtil {
         if (locator == null)
             throw logger.nullValueError("Public Key");
 
-        int signedAssertions = 0;
-        String assertionNameSpaceUri = null;
+        HashSet<Node> signedNodes = new HashSet<>();
 
         for (int i = 0; i < nl.getLength(); i++) {
             Node signatureNode = nl.item(i);
-            logger.debug("Validating signature node: "+signatureNode.getNodeName());
-            Node parent = signatureNode.getParentNode();
-            if (parent != null && JBossSAMLConstants.ASSERTION.get().equals(parent.getLocalName())) {
-                ++signedAssertions;
-                if (assertionNameSpaceUri == null) {
-                    assertionNameSpaceUri = parent.getNamespaceURI();
+            if (!validateSingleNode(signatureNode, locator, signedNodes)) {
+                return false;
+            }
+        }
+
+        if (signedNodes.contains(signedDoc.getDocumentElement())) {
+            logger.trace("All signatures are OK and root document is signed");
+            return true;
+        }
+
+        NodeList assertions = signedDoc.getElementsByTagNameNS(JBossSAMLURIConstants.ASSERTION_NSURI.get(), JBossSAMLConstants.ASSERTION.get());
+
+        if (assertions.getLength() > 0) {
+            // if document is not fully signed check if all the assertions are signed
+            for (int i = 0; i < assertions.getLength(); i++) {
+                if (!signedNodes.contains(assertions.item(i))) {
+                    logger.debug("SAML Response document may contain malicious assertions. Signature validation will fail.");
+                    // there are unsigned assertions mixed with signed ones
+                    return false;
                 }
             }
-
-            Node grandParent = parent.getParentNode();
-            if((grandParent.getLocalName() != null && !grandParent.getLocalName().equals(JBossSAMLConstants.ADVICE)) && !ignoreAdviceNodes)
-                if (!validateSingleNode(signatureNode, locator)) return false;
-        }
-        logger.debug("Found "+signedAssertions+" assertions");
-
-        NodeList assertions = signedDoc.getElementsByTagNameNS(assertionNameSpaceUri, JBossSAMLConstants.ASSERTION.get());
-
-        if (signedAssertions > 0 && assertions != null && assertions.getLength() != signedAssertions) {
-            logger.debug("SAML Response document may contain malicious assertions. Signature validation will fail.");
-            // there are unsigned assertions mixed with signed ones
-            return false;
+            logger.trace("Document not signed but all assertions are signed OK");
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private static Node getSamlReponseNode(Document signedDoc) {
@@ -459,9 +489,13 @@ public class XMLSignatureUtil {
     }
 
     public static boolean validateSingleNode(Node signatureNode, final KeyLocator locator) throws MarshalException, XMLSignatureException {
+        return validateSingleNode(signatureNode, locator, new HashSet<>());
+    }
+
+    public static boolean validateSingleNode(Node signatureNode, final KeyLocator locator, Set<Node> signedNodes) throws MarshalException, XMLSignatureException {
         KeySelectorUtilizingKeyNameHint sel = new KeySelectorUtilizingKeyNameHint(locator);
         try {
-            if (validateUsingKeySelector(signatureNode, sel)) {
+            if (validateUsingKeySelector(signatureNode, sel, signedNodes)) {
                 return true;
             }
             if (sel.wasKeyLocated()) {
@@ -478,7 +512,7 @@ public class XMLSignatureUtil {
 
         for (Key key : locator) {
             try {
-                if (validateUsingKeySelector(signatureNode, KeySelector.singletonKeySelector(key))) {
+                if (validateUsingKeySelector(signatureNode, KeySelector.singletonKeySelector(key), signedNodes)) {
                     return true;
                 }
             } catch (XMLSignatureException ex) { // pass through MarshalException
@@ -490,7 +524,7 @@ public class XMLSignatureUtil {
         return false;
     }
 
-    private static boolean validateUsingKeySelector(Node signatureNode, KeySelector validationKeySelector) throws XMLSignatureException, MarshalException {
+    private static boolean validateUsingKeySelector(Node signatureNode, KeySelector validationKeySelector, Set<Node> signedNodes) throws XMLSignatureException, MarshalException {
         DOMValidateContext valContext = new DOMValidateContext(validationKeySelector, signatureNode);
         XMLSignature signature = fac.unmarshalXMLSignature(valContext);
         if(logger.isDebugEnabled()) {
@@ -502,7 +536,21 @@ public class XMLSignatureUtil {
         }
         boolean coreValidity = signature.validate(valContext);
 
-        if (! coreValidity) {
+        if (coreValidity) {
+            for (Reference ref : (List<Reference>) signature.getSignedInfo().getReferences()) {
+                try {
+                    Data data = fac.getURIDereferencer().dereference(ref, valContext);
+                    if (data instanceof NodeSetData) {
+                        Iterator<Node> it = ((NodeSetData) data).iterator();
+                        if (it.hasNext()) {
+                            signedNodes.add(it.next()); // add the first referenced object as signed element
+                        }
+                    }
+                } catch (URIReferenceException e) {
+                    // ignored as signature was ok so reference can be obtained
+                }
+            }
+        } else {
             if (logger.isTraceEnabled()) {
                 boolean sv = signature.getSignatureValue().validate(valContext);
                 logger.trace("Signature validation status: " + sv);

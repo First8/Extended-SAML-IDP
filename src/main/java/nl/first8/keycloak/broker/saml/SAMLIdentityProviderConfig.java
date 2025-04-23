@@ -291,8 +291,12 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
                 throw new IllegalArgumentException(USE_METADATA_DESCRIPTOR_URL + " needs a non-empty URL for " + METADATA_DESCRIPTOR_URL);
             }
         }
+        if (StringUtil.isNotBlank(getArtifactResolutionServiceUrl())) {
+            checkUrl(sslRequired, getArtifactResolutionServiceUrl(), ARTIFACT_RESOLUTION_SERVICE_URL);
+        }
         //transient name id format is not accepted together with principaltype SubjectnameId
         if (JBossSAMLURIConstants.NAMEID_FORMAT_TRANSIENT.get().equals(getNameIDPolicyFormat()) && SamlPrincipalType.SUBJECT == getPrincipalType())
             throw new IllegalArgumentException("Can not have Transient NameID Policy Format together with SUBJECT Principal Type");
+
     }
 }
