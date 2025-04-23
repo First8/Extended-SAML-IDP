@@ -1,0 +1,6 @@
+nl.first8.keycloak.broker.saml.mappers.AdvancedAttributeToRoleMapper
+nl.first8.keycloak.broker.saml.mappers.AttributeToRoleMapper
+nl.first8.keycloak.broker.saml.mappers.UserAttributeMapper
+nl.first8.keycloak.broker.saml.mappers.UserAttributeValueMapper
+nl.first8.keycloak.broker.saml.mappers.UserEncryptedAttributeMapper
+nl.first8.keycloak.broker.saml.mappers.UsernameTemplateMapper
