@@ -37,10 +37,6 @@ import java.util.stream.Collectors;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC;
 
-/**
- * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
- * @version $Revision: 1 $
- */
 public class UserAttributeMapper extends AbstractIdentityProviderMapper implements SamlMetadataDescriptorUpdater {
 
     protected static final Logger logger = Logger.getLogger(UserAttributeMapper.class);
@@ -139,6 +135,8 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
 
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
+        logger.debug("Preprocess Federated Identity");
+        logContext(context, null);
         String attribute = mapperModel.getConfig().get(USER_ATTRIBUTE);
         if (StringUtil.isNullOrEmpty(attribute)) {
             return;
@@ -213,7 +211,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
             consumer.accept(values.get(0));
         }
     }
-
 
     private void setIfNotEmptyAndDifferent(Consumer<String> consumer, Supplier<String> currentValueSupplier, List<String> values) {
         if (values != null && !values.isEmpty() && !values.get(0).equals(currentValueSupplier.get())) {
@@ -315,7 +312,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
                 // attribute no longer sent by brokered idp, remove it.
                 user.removeAttribute(attribute);
             } else if (currentAttributeValues == null) {
-                logger.debug("New attribute sent by brokered idp, add it");
                 logger.debug("New attribute sent by brokered idp, add to user attributes");
                 // new attribute sent by brokered idp, add it.
                 user.setAttribute(attribute, attributeValuesInContext);

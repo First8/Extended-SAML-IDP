@@ -49,10 +49,6 @@ public class EncryptedKeyParser extends AbstractStaxParser<EncryptedKeyType, SAM
             case CIPHER_DATA:
                 target.setCipherData(CipherDataParser.getInstance().parse(xmlEventReader));
                 break;
-            case CARRIED_KEY_NAME:
-                LOGGER.warn("Carried key name provided");
-                target.setCarriedKeyName(StaxParserUtil.getElementName(elementDetail));
-                break;
             case REFERENCE_LIST:
                 StaxParserUtil.bypassElementBlock(xmlEventReader);
                 break;

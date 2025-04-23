@@ -45,6 +45,7 @@ import org.keycloak.saml.common.util.DocumentUtil;
 import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
 import org.keycloak.saml.processing.core.saml.v2.constants.X500SAMLProfileConstants;
 import org.keycloak.saml.processing.core.util.KeycloakKeySamlExtensionGenerator;
+import org.keycloak.saml.processing.core.util.XMLEncryptionUtil;
 import org.keycloak.saml.validators.ConditionsValidator;
 import org.keycloak.saml.validators.DestinationValidator;
 import org.keycloak.services.ErrorPage;
@@ -56,15 +57,17 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.*;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.net.URI;
 import java.security.Key;
 import java.security.cert.CertificateException;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -420,15 +423,20 @@ public class SAMLEndpoint {
 
                 if (assertionIsEncrypted) {
                     try {
+                        XMLEncryptionUtil.DecryptionKeyLocator decryptionKeyLocator = new SAMLDecryptionKeysLocator(session, realm, config.getEncryptionAlgorithm());
                         /* This code is deprecated and will be removed in Keycloak 24 */
                         if (DEPRECATED_ENCRYPTION) {
                             KeyManager.ActiveRsaKey keys = session.keys().getActiveRsaKey(realm);
-                            assertionElement = AssertionUtil.decryptAssertion(responseType, keys.getPrivateKey());
-                        } else {
-                        /* End of deprecated code */
-                            logger.debug("Decrypt assertions!");
-                    assertionElement = AssertionUtil.decryptAssertion(responseType, new SAMLDecryptionKeysLocator(session, realm, config.getEncryptionAlgorithm()));
+                            final XMLEncryptionUtil.DecryptionKeyLocator tmp = decryptionKeyLocator;
+                            decryptionKeyLocator = data -> {
+                                List<PrivateKey> result = new ArrayList<>(tmp.getKeys(data));
+                                result.add(keys.getPrivateKey());
+                                return result;
+                            };
                         }
+                        /* End of deprecated code */
+                        logger.debug("Decrypt assertions!");
+                    assertionElement = AssertionUtil.decryptAssertion(responseType, decryptionKeyLocator);
                     } catch (ProcessingException ex) {
                         logger.warnf(ex, "Not possible to decrypt SAML assertion. Please check realm keys of usage ENC in the realm '%s' and make sure there is a key able to decrypt the assertion encrypted by identity provider '%s'", realm.getName(), config.getAlias());
                         throw new WebApplicationException(ex, Response.Status.BAD_REQUEST);
@@ -476,14 +484,19 @@ public class SAMLEndpoint {
 
                 if (AssertionUtil.isIdEncrypted(responseType)) {
                     try {
+                        XMLEncryptionUtil.DecryptionKeyLocator decryptionKeyLocator = new SAMLDecryptionKeysLocator(session, realm, config.getEncryptionAlgorithm());
                         /* This code is deprecated and will be removed in Keycloak 24 */
                         if (DEPRECATED_ENCRYPTION) {
                             KeyManager.ActiveRsaKey keys = session.keys().getActiveRsaKey(realm);
-                            AssertionUtil.decryptId(responseType, data -> Collections.singletonList(keys.getPrivateKey()));
-                        } else {
-                            /* End of deprecated code */
-                            AssertionUtil.decryptId(responseType, new SAMLDecryptionKeysLocator(session, realm, config.getEncryptionAlgorithm()));
+                            final XMLEncryptionUtil.DecryptionKeyLocator tmp = decryptionKeyLocator;
+                            decryptionKeyLocator = data -> {
+                                List<PrivateKey> result = new ArrayList<>(tmp.getKeys(data));
+                                result.add(keys.getPrivateKey());
+                                return result;
+                            };
                         }
+                        /* End of deprecated code */
+                        AssertionUtil.decryptId(responseType, decryptionKeyLocator);
                     } catch (ProcessingException ex) {
                         logger.warnf(ex, "Not possible to decrypt SAML encryptedId. Please check realm keys of usage ENC in the realm '%s' and make sure there is a key able to decrypt the encryptedId encrypted by identity provider '%s'", realm.getName(), config.getAlias());
                         throw new WebApplicationException(ex, Response.Status.BAD_REQUEST);
@@ -560,7 +573,7 @@ public class SAMLEndpoint {
                 if (assertion.getAttributeStatements() != null ) {
                     String email = getX500Attribute(assertion, X500SAMLProfileConstants.EMAIL);
                     if (email != null) {
-                        logger.debugf("Set % as email on the identity.", email);
+                        logger.debugf("Set %s as email on the identity.", email);
                         identity.setEmail(email);
                     }
                 }

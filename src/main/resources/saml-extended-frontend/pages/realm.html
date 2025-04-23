@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Keycloak</title>
+    <style>
+        .input_text {
+            width: 30%;
+            padding: 10px;
+            border: 1px solid#f0f0f0;
+            border-radius: 0px;
+            border-bottom-color: #8a8d90;
+            margin-bottom: 30px;
+        }
+
+
+
+
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin-left: 0;
+            padding: 0;
+            background-color: transparent;
+            box-sizing: border-box;
+        }
+
+
+
+        .btn {
+            background-color: #06c;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: auto;
+            margin-right: 10px;
+
+
+        }
+
+        header {
+            background-color: #151515;
+            color: #fff;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            height: 48px;
+        }
+    </style>
+</head>
+
+<script src="../../samlconfig/js/Config"></script>
+<!--<script src="../../samlconfig/config"></script>-->
+<body>
+    <h1>Enter Realm Name</h1>
+    <input type="text" class="input_text" id="realmNameInput" placeholder="Enter Realm Name">
+    <button onclick="loginToKeycloak()" class="btn">Login with Keycloak</button>
+    <script>
+        function loginToKeycloak() {
+            var realmName = document.getElementById("realmNameInput").value;
+            if (realmName) {
+                localStorage.setItem('realm_input', realmName)
+                var redirectUri=localStorage.getItem('redirectUri')
+                window.location.href = `${redirectUri}`;
+            } else {
+                alert("Enter realm")
+            }
+        }
+        console.log(window.location.host);
+        console.log(window.location.hostname);
+    </script>
+</body>
+
+</html>

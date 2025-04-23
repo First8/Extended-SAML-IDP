@@ -352,6 +352,21 @@ public class SAML2Response {
     }
 
     /**
+     * Get the Underlying SAML2Object from a document
+     * @param samlDocument a Document containing a SAML2Object
+     * @return a SAMLDocumentHolder
+     * @throws ProcessingException
+     * @throws ParsingException
+     */
+    public static SAMLDocumentHolder getSAML2ObjectFromDocument(Document samlDocument) throws ProcessingException, ParsingException {
+        SAMLParser samlParser = SAMLParser.getInstance();
+        JAXPValidationUtil.checkSchemaValidation(samlDocument);
+        SAML2Object responseType = (SAML2Object) samlParser.parse(samlDocument);
+
+        return new SAMLDocumentHolder(responseType, samlDocument);
+    }
+
+    /**
      * Convert an EncryptedElement into a Document
      *
      * @param encryptedElementType
@@ -381,7 +396,7 @@ public class SAML2Response {
      * @throws ConfigurationException
      * @throws ProcessingException
      */
-    public Document convert(StatusResponseType responseType) throws ProcessingException, ConfigurationException,
+    public static Document convert(StatusResponseType responseType) throws ProcessingException, ConfigurationException,
             ParsingException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 

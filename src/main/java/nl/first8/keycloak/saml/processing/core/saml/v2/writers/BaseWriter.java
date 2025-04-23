@@ -484,12 +484,12 @@ public class BaseWriter {
         StaxUtil.writeEndElement(writer);
     }
 
+
     public void writeEncryptedIDAttributeValue(SamlEncryptedId attributeValue) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.ATTRIBUTE_VALUE.get(), ASSERTION_NSURI.get());
         write((SamlEncryptedId)attributeValue, new QName(ASSERTION_NSURI.get(), JBossSAMLConstants.ENCRYPTED_ID.get(), ASSERTION_PREFIX));
         StaxUtil.writeEndElement(writer);
     }
-
 
     public void writeStringAttributeValue(String attributeValue) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.ATTRIBUTE_VALUE.get(), ASSERTION_NSURI.get());

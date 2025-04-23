@@ -6,10 +6,8 @@ import org.jboss.logging.Logger;
 import org.keycloak.dom.saml.v2.metadata.EndpointType;
 import org.keycloak.dom.saml.v2.metadata.IndexedEndpointType;
 import org.keycloak.dom.saml.v2.metadata.KeyDescriptorType;
-import org.keycloak.dom.saml.v2.metadata.KeyTypes;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.processing.core.saml.v2.common.IDGenerator;
-import org.w3c.dom.Element;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -140,30 +138,16 @@ public class SPMetadataDescriptorBuilder {
         for (URI logoutEndpoint : logoutEndpoints) {
             spSSODescriptor.addSingleLogoutService(new EndpointType(logoutBinding, logoutEndpoint));
         }
-        Iterator iterator;
-        Element key;
-        KeyDescriptorType keyDescriptor;
-        if (wantAuthnRequestsSigned && signingCerts != null) {
-            iterator = signingCerts.iterator();
 
-            while (iterator.hasNext()) {
-                key = ((KeyDescriptorType) iterator.next()).getKeyInfo();
-                keyDescriptor = new KeyDescriptorType();
-                keyDescriptor.setUse(KeyTypes.SIGNING);
-                keyDescriptor.setKeyInfo(key);
-                spSSODescriptor.addKeyDescriptor(keyDescriptor);
+        if (wantAuthnRequestsSigned && signingCerts != null) {
+            for (KeyDescriptorType key: signingCerts) {
+                spSSODescriptor.addKeyDescriptor(key);
             }
         }
 
         if (wantAssertionsEncrypted && encryptionCerts != null) {
-            iterator = encryptionCerts.iterator();
-
-            while (iterator.hasNext()) {
-                key = ((KeyDescriptorType) iterator.next()).getKeyInfo();
-                keyDescriptor = new KeyDescriptorType();
-                keyDescriptor.setUse(KeyTypes.ENCRYPTION);
-                keyDescriptor.setKeyInfo(key);
-                spSSODescriptor.addKeyDescriptor(keyDescriptor);
+            for (KeyDescriptorType key: encryptionCerts) {
+                spSSODescriptor.addKeyDescriptor(key);
             }
         }
 
@@ -177,7 +161,7 @@ public class SPMetadataDescriptorBuilder {
         if (this.assertionEndpoints != null && !this.assertionEndpoints.isEmpty()) {
             for (URI assertionEndpoint : this.assertionEndpoints) {
                 IndexedEndpointType assertionConsumerEndpoint = new IndexedEndpointType(loginBinding, assertionEndpoint);
-                if (defaultAssertionEndpoint.equals(assertionIndex)) {
+                if(defaultAssertionEndpoint.equals(assertionIndex)) {
                     assertionConsumerEndpoint.setIsDefault(true);
                 } else {
                     assertionConsumerEndpoint.setIsDefault(false);
@@ -187,7 +171,7 @@ public class SPMetadataDescriptorBuilder {
                 assertionIndex++;
 
                 IndexedEndpointType assertionConsumerEndpoint2 = new IndexedEndpointType(JBossSAMLURIConstants.SAML_HTTP_ARTIFACT_BINDING.getUri(), assertionEndpoint);
-                if (defaultAssertionEndpoint.equals(assertionIndex)) {
+                if(defaultAssertionEndpoint.equals(assertionIndex)) {
                     assertionConsumerEndpoint2.setIsDefault(true);
                 } else {
                     assertionConsumerEndpoint2.setIsDefault(false);

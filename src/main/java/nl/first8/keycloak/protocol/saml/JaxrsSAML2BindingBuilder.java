@@ -20,6 +20,7 @@ import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.protocol.saml.profile.util.Soap;
 import org.keycloak.saml.BaseSAML2BindingBuilder;
 import org.keycloak.saml.common.constants.GeneralConstants;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
@@ -28,13 +29,13 @@ import org.keycloak.saml.common.util.DocumentUtil;
 import org.keycloak.saml.processing.web.util.RedirectBindingUtil;
 import org.w3c.dom.Document;
 
-import javax.net.ssl.SSLContext;
-import javax.ws.rs.core.*;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPEnvelope;
+import jakarta.xml.soap.SOAPException;
+import jakarta.xml.soap.SOAPMessage;
+import jakarta.ws.rs.core.*;
 import javax.xml.XMLConstants;
-import javax.xml.soap.MessageFactory;
-import javax.xml.soap.SOAPEnvelope;
-import javax.xml.soap.SOAPException;
-import javax.xml.soap.SOAPMessage;
+import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -254,6 +255,22 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
 
     }
 
+    public static class SoapBindingBuilder extends BaseSoapBindingBuilder {
+        public SoapBindingBuilder(JaxrsSAML2BindingBuilder builder, Document document) throws ProcessingException {
+            super(builder, document);
+        }
+
+        public Response response() throws ConfigurationException, ProcessingException, IOException {
+            try {
+                Soap.SoapMessageBuilder messageBuilder = Soap.createMessage();
+                messageBuilder.addToBody(document);
+                return messageBuilder.build();
+            } catch (Exception e) {
+                throw new RuntimeException("Error while creating SAML response.", e);
+            }
+        }
+    }
+
     @Override
     public JaxrsSAML2BindingBuilder.RedirectBindingBuilder redirectBinding(Document document) throws ProcessingException {
         return new JaxrsSAML2BindingBuilder.RedirectBindingBuilder(this, document);
@@ -262,5 +279,10 @@ public class JaxrsSAML2BindingBuilder extends BaseSAML2BindingBuilder<JaxrsSAML2
     @Override
     public JaxrsSAML2BindingBuilder.PostBindingBuilder postBinding(Document document) throws ProcessingException {
         return new JaxrsSAML2BindingBuilder.PostBindingBuilder(this, document);
+    }
+
+    @Override
+    public SoapBindingBuilder soapBinding(Document document) throws ProcessingException {
+        return new SoapBindingBuilder(this, document);
     }
 }

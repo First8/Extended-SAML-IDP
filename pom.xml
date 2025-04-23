@@ -11,11 +11,27 @@
     <description>
         SAML v2.0 extensions that adds more configuration options to connect to SAML Service Providers.
     </description>
-    <version>21.0.2-SNAPSHOT</version>
+    <version>${keycloak.version}-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <keycloak.version>22.0.5</keycloak.version>
+        <spotbugs.version>4.7.2.1</spotbugs.version>
+    </properties>
 
     <build>
-
         <finalName>${project.artifactId}-${project.version}-${git.commit.id.abbrev}</finalName>
+        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+        <directory>${project.basedir}/target</directory>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
@@ -124,17 +140,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <keycloak.version>21.0.2</keycloak.version>
-        <spotbugs.version>4.7.2.1</spotbugs.version>
-    </properties>
 
     <dependencies>
         <dependency>

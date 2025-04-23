@@ -77,7 +77,6 @@ public enum SAMLAssertionQNames implements HasQName {
     ENCRYPTED_DATA(XMLENC_NSURI,"EncryptedData"),
     ENCRYPTED_KEY(XMLENC_NSURI,"EncryptedKey"),
     ENCRYPTION_METHOD(XMLENC_NSURI, "EncryptionMethod"),
-    CARRIED_KEY_NAME(XMLENC_NSURI, "CarriedKeyName"),
     REFERENCE_LIST(XMLENC_NSURI, "ReferenceList"),
 
     UNKNOWN_ELEMENT("");

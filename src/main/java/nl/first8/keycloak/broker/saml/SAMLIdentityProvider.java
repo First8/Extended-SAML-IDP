@@ -3,6 +3,7 @@ package nl.first8.keycloak.broker.saml;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
+import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
 import nl.first8.keycloak.protocol.saml.JaxrsSAML2BindingBuilder;
 import nl.first8.keycloak.saml.SAML2ArtifactResolutionBuilder;
 import nl.first8.keycloak.saml.SAML2AuthnRequestBuilder;
@@ -60,10 +61,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamWriter;
@@ -72,6 +73,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyPair;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -263,6 +265,7 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
 
     @Override
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context)  {
+        ResponseType responseType = (ResponseType)context.getContextData().get(SAMLEndpoint.SAML_LOGIN_RESPONSE);
         AssertionType assertion = (AssertionType)context.getContextData().get(SAMLEndpoint.SAML_ASSERTION);
         SubjectType subject = assertion.getSubject();
         SubjectType.STSubType subType = subject.getSubType();
@@ -405,12 +408,17 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
         logger.info("Exporting SAML v2.0 - Extended");
         try
         {
-            URI authnBinding = JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.getUri();
+            URI authnResponseBinding = JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.getUri();
             if (getConfig().isPostBindingAuthnRequest()) {
-                authnBinding = JBossSAMLURIConstants.SAML_HTTP_POST_BINDING.getUri();
+                authnResponseBinding = JBossSAMLURIConstants.SAML_HTTP_POST_BINDING.getUri();
             }
 
             URI artifactBinding = JBossSAMLURIConstants.SAML_SOAP_BINDING.getUri();
+            URI logoutBinding = JBossSAMLURIConstants.SAML_HTTP_REDIRECT_BINDING.getUri();
+
+            if (getConfig().isPostBindingLogout()) {
+                logoutBinding = JBossSAMLURIConstants.SAML_HTTP_POST_BINDING.getUri();
+            }
 
             List<URI> endpoints = new ArrayList();
             endpoints.add(uriInfo.getBaseUriBuilder()
@@ -479,7 +487,7 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                             throw new RuntimeException(e);
                         }
 
-                        return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifier());
+                        return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifiers());
                     })
                     .collect(Collectors.toList());
 
@@ -494,8 +502,8 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             }
 
             SPMetadataDescriptorBuilder spMetadataDescriptorBuilder = new SPMetadataDescriptorBuilder()
-                .loginBinding(authnBinding)
-                    .logoutBinding(authnBinding)
+                .loginBinding(authnResponseBinding)
+                    .logoutBinding(logoutBinding)
                     .assertionEndpoints(endpoints)
                     .defaultAssertionEndpoint(defaultAssertionEndpointIndex)
                     .logoutEndpoints(endpoints)
@@ -586,13 +594,15 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             if (getConfig().isSignSpMetadata())
             {
                 KeyManager.ActiveRsaKey activeKey = session.keys().getActiveRsaKey(realm);
-                String keyName = getConfig().getXmlSigKeyInfoKeyNameTransformer().getKeyName(activeKey.getKid(), activeKey.getCertificate());
+                X509Certificate certificate = activeKey.getCertificate();
+                String keyName = getConfig().getXmlSigKeyInfoKeyNameTransformer().getKeyName(activeKey.getKid(), certificate);
                 KeyPair keyPair = new KeyPair(activeKey.getPublicKey(), activeKey.getPrivateKey());
 
                 Document metadataDocument = DocumentUtil.getDocument(descriptor);
                 SAML2Signature signatureHelper = new SAML2Signature();
                 signatureHelper.setSignatureMethod(getSignatureAlgorithm().getXmlSignatureMethod());
                 signatureHelper.setDigestMethod(getSignatureAlgorithm().getXmlSignatureDigestMethod());
+                signatureHelper.setX509Certificate(certificate);
 
                 Node nextSibling = metadataDocument.getDocumentElement().getFirstChild();
                 signatureHelper.setNextSibling(nextSibling);

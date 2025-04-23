@@ -46,6 +46,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.utils.AuthenticationFlowResolver;
 import org.keycloak.models.utils.FormMessage;
+import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
@@ -67,7 +68,7 @@ import org.keycloak.services.messages.Messages;
 import org.keycloak.services.resources.Cors;
 import org.keycloak.services.resources.LoginActionsService;
 import org.keycloak.services.resources.SessionCodeChecks;
-import org.keycloak.services.resources.account.AccountFormService;
+import org.keycloak.services.resources.account.AccountConsole;
 import org.keycloak.services.util.AuthenticationFlowURLHelper;
 import org.keycloak.services.util.BrowserHistoryHelper;
 import org.keycloak.services.util.CacheControlUtil;
@@ -77,18 +78,18 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.OPTIONS;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -101,7 +102,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -561,10 +561,12 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
             boolean forwardedPassiveLogin = "true".equals(authenticationSession.getAuthNote(AuthenticationProcessor.FORWARDED_PASSIVE_LOGIN));
 
-            Map<String, String> extractedAuthNotes = extractAuthNotesFromSession(authenticationSession);
+            String userRequestedLocale = authenticationSession.getAuthNote(LocaleSelectorProvider.USER_REQUEST_LOCALE);
             // Redirect to firstBrokerLogin after successful login and ensure that previous authentication state removed
             AuthenticationProcessor.resetFlow(authenticationSession, LoginActionsService.FIRST_BROKER_LOGIN_PATH);
-            extractedAuthNotes.forEach(authenticationSession::setAuthNote);
+            if (userRequestedLocale != null) {
+                authenticationSession.setAuthNote(LocaleSelectorProvider.USER_REQUEST_LOCALE, userRequestedLocale);
+            }
 
             // Set the FORWARDED_PASSIVE_LOGIN note (if needed) after resetting the session so it is not lost.
             if (forwardedPassiveLogin) {
@@ -595,18 +597,6 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
             return finishOrRedirectToPostBrokerLogin(authenticationSession, context, false);
         }
-    }
-
-    private Map<String, String> extractAuthNotesFromSession(AuthenticationSessionModel authenticationSession) {
-        return Stream.of(
-            LocaleSelectorProvider.USER_REQUEST_LOCALE,
-            LocaleSelectorProvider.CLIENT_REQUEST_LOCALE
-        )
-            .filter(it -> authenticationSession.getAuthNote(it) != null)
-            .collect(Collectors.toMap(
-                Function.identity(),
-                authenticationSession::getAuthNote
-            ));
     }
 
 
@@ -842,15 +832,16 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
 
     @Override
-    public Response cancelled() {
+    public Response cancelled(IdentityProviderModel idpConfig) {
         AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
 
-        Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.CONSENT_DENIED);
+        String idpDisplayName = KeycloakModelUtils.getIdentityProviderDisplayName(session, idpConfig);
+        Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.ACCESS_DENIED_WHEN_IDP_AUTH, idpDisplayName);
         if (accountManagementFailedLinking != null) {
             return accountManagementFailedLinking;
         }
 
-        return browserAuthentication(authSession, null);
+        return browserAuthentication(authSession, Messages.ACCESS_DENIED_WHEN_IDP_AUTH, idpDisplayName);
     }
 
     @Override
@@ -930,7 +921,11 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             }
         } else {
             this.session.users().addFederatedIdentity(this.realmModel, authenticatedUser, newModel);
+            federatedUser = authenticatedUser;
         }
+
+        updateFederatedIdentity(context, federatedUser);
+
         context.getIdp().authenticationFinished(authSession, context);
 
         AuthenticationManager.setClientScopesInSession(authSession);
@@ -994,7 +989,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     }
 
     private void setBasicUserAttributes(BrokeredIdentityContext context, UserModel federatedUser) {
-        setDiffAttrToConsumer(federatedUser.getEmail(), context.getEmail(), federatedUser::setEmail);
+        setDiffAttrToConsumer(federatedUser.getEmail(), context.getEmail(), email -> setEmail(context, federatedUser, email));
         setDiffAttrToConsumer(federatedUser.getFirstName(), context.getFirstName(), federatedUser::setFirstName);
         setDiffAttrToConsumer(federatedUser.getLastName(), context.getLastName(), federatedUser::setLastName);
     }
@@ -1003,6 +998,18 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
         String actualValueNotNull = Optional.ofNullable(actualValue).orElse("");
         if (newValue != null && !newValue.equals(actualValueNotNull)) {
             consumer.accept(newValue);
+        }
+    }
+
+    private void setEmail(BrokeredIdentityContext context, UserModel federatedUser, String newEmail) {
+        federatedUser.setEmail(newEmail);
+        // change email verified depending if it is trusted or not
+        if (context.getIdpConfig().isTrustEmail() && !Boolean.parseBoolean(context.getAuthenticationSession().getAuthNote(AbstractIdpAuthenticator.UPDATE_PROFILE_EMAIL_CHANGED))) {
+            logger.tracef("Email verified automatically after updating user '%s' through Identity provider '%s' ", federatedUser.getUsername(), context.getIdpConfig().getAlias());
+            federatedUser.setEmailVerified(true);
+        } else {
+            logger.tracef("Email verified reset to false after updating user '%s' through Identity provider '%s' ", federatedUser.getUsername(), context.getIdpConfig().getAlias());
+            federatedUser.setEmailVerified(false);
         }
     }
 
@@ -1155,7 +1162,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             return webEx.getResponse();
         }
 
-        return ErrorPage.error(this.session, authSession, status, message, parameters);
+        throw new ErrorPageException(this.session, authSession, status, message, parameters);
     }
 
     private Response redirectToAccountErrorPage(AuthenticationSessionModel authSession, String message, Object ... parameters) {
@@ -1164,7 +1171,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
         FormMessage errorMessage = new FormMessage(message, parameters);
         try {
             String serializedError = JsonSerialization.writeValueAsString(errorMessage);
-            authSession.setAuthNote(AccountFormService.ACCOUNT_MGMT_FORWARDED_ERROR_NOTE, serializedError);
+            authSession.setAuthNote(AccountConsole.ACCOUNT_MGMT_FORWARDED_ERROR_NOTE, serializedError);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
@@ -1174,7 +1181,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     }
 
 
-    protected Response browserAuthentication(AuthenticationSessionModel authSession, String errorMessage) {
+    protected Response browserAuthentication(AuthenticationSessionModel authSession, String errorMessage, Object... parameters) {
         this.event.event(EventType.LOGIN);
         AuthenticationFlowModel flow = AuthenticationFlowResolver.resolveBrowserFlow(authSession);
         String flowId = flow.getId();
@@ -1189,7 +1196,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                 .setSession(session)
                 .setUriInfo(session.getContext().getUri())
                 .setRequest(request);
-        if (errorMessage != null) processor.setForwardedErrorMessage(new FormMessage(null, errorMessage));
+        if (errorMessage != null) processor.setForwardedErrorMessage(new FormMessage(null, errorMessage, parameters));
 
         try {
             CacheControlUtil.noBackButtonCacheControlHeader(session);
@@ -1202,17 +1209,17 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     private Response badRequest(String message) {
         fireErrorEvent(message);
-        return ErrorResponse.error(message, Response.Status.BAD_REQUEST);
+        throw ErrorResponse.error(message, Response.Status.BAD_REQUEST);
     }
 
     private Response forbidden(String message) {
         fireErrorEvent(message);
-        return ErrorResponse.error(message, Response.Status.FORBIDDEN);
+        throw ErrorResponse.error(message, Response.Status.FORBIDDEN);
     }
 
     private Response notFound(String message) {
         fireErrorEvent(message);
-        return ErrorResponse.error(message, Response.Status.NOT_FOUND);
+        throw ErrorResponse.error(message, Response.Status.NOT_FOUND);
     }
 
     public static IdentityProvider getIdentityProvider(KeycloakSession session, RealmModel realm, String alias) {
