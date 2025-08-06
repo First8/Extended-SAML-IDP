@@ -25,7 +25,7 @@ jobs:
         cache: 'maven'
 
     - name: Run Tests
-      run: ./mvnw $COMMON_MAVEN_ARGS --file pom.xml verif
+      run: ./mvnw $COMMON_MAVEN_ARGS --file pom.xml verify
 
     - name: Publish test results
       if: always()
