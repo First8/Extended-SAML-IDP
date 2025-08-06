@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
   pull_request:
 
+env:
+  NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+  NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+  MAVEN_MIRROR: ${{ secrets.MAVEN_MIRROR }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,8 +21,66 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17' 
+        java-version: '17'
         cache: 'maven'
+
+    - name: Configure Maven settings.xml
+      run: |
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml <<EOF
+        <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+          <servers>
+              <server>
+                  <id>nexus</id>
+                  <username><![CDATA[${env.NEXUS_USERNAME}]]></username>
+                  <password><![CDATA[${env.NEXUS_PASSWORD}]]></password>
+              </server>
+              <server>
+                  <id>snapshots</id>
+                  <username><![CDATA[${env.NEXUS_USERNAME}]]></username>
+                  <password><![CDATA[${env.NEXUS_PASSWORD}]]></password>
+              </server>
+              <server>
+                  <id>releases</id>
+                  <username><![CDATA[${env.NEXUS_USERNAME}]]></username>
+                  <password><![CDATA[${env.NEXUS_PASSWORD}]]></password>
+              </server>
+          </servers>
+          <profiles>
+              <profile>
+                  <id>mirror</id>
+                  <repositories>
+                      <repository>
+                          <id>nexus</id>
+                          <url>${env.MAVEN_MIRROR}</url>
+                          <releases>
+                              <enabled>true</enabled>
+                          </releases>
+                          <snapshots>
+                              <enabled>false</enabled>
+                          </snapshots>
+                      </repository>
+                  </repositories>
+                  <pluginRepositories>
+                      <pluginRepository>
+                          <id>nexus</id>
+                          <url>${env.MAVEN_MIRROR}</url>
+                          <releases>
+                              <enabled>true</enabled>
+                          </releases>
+                          <snapshots>
+                              <enabled>false</enabled>
+                          </snapshots>
+                      </pluginRepository>
+                  </pluginRepositories>
+              </profile>
+          </profiles>
+          <activeProfiles>
+              <activeProfile>mirror</activeProfile>
+          </activeProfiles>
+        </settings>
+        EOF
 
     - name: Install dependencies
       run: ./mvnw dependency:resolve
