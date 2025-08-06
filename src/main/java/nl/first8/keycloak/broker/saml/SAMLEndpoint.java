@@ -71,7 +71,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class SAMLEndpoint {
     protected static final Logger logger = Logger.getLogger(SAMLEndpoint.class);
