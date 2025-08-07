@@ -14,7 +14,7 @@ echo "  NEW_BRANCH: $NEW_BRANCH"
 
 OLD_DIR="./diff/old"
 NEW_DIR="./diff/new"
-PATCH_FILE="./branch-diff.patch"
+PATCH_FILE="./diffgen.patch"
 
 FILES=(
   services/src/main/java/org/keycloak/authentication/authenticators/broker/util/SerializedBrokeredIdentityContext.java
