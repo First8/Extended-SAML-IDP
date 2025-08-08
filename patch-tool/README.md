@@ -1,33 +1,32 @@
+# Keycloak Git Branch Diff & Patch Tool
 
-# Git Branch Diff & Patch Tool
-
-This script compares specific files between two branches of a Git repository, generates a patch, and (optionally) applies that patch to a target directory.
+This script is designed to work **specifically with the [Keycloak Git repository](https://github.com/keycloak/keycloak)**. It compares selected Java files between two branches of the Keycloak repo, generates a patch, and (optionally) applies that patch to a target directory.
 
 ## Features
 
-- Clones a repository into a temporary **.work** directory  
-- Extracts only files listed in `keycloak-files.txt`  
+- Clones the Keycloak repository into a temporary **.work** directory  
+- Extracts only files listed in `keycloak-files.txt` (tailored for Keycloak source paths)  
 - Compares two branches and creates a **unified diff patch**  
-- Cleans up paths and replaces package names in the patch  
+- Cleans up file paths and replaces package names in the patch for project-specific needs  
 - Optionally applies the patch to the **parent directory** of the current folder
 
 ## Requirements
 
 - **Bash** (Unix/Linux/macOS environment)  
 - **git** installed and configured  
-- Access to the repository (SSH key if private)  
-- A `keycloak-files.txt` file in the current directory containing the relative paths of files to compare
+- Access to the Keycloak repository (SSH key if private)  
+- A `keycloak-files.txt` file in the current directory containing relative file paths from the Keycloak repo  
 
 ## Usage
 
 ```bash
 ./patch.sh [--apply] OLD_BRANCH NEW_BRANCH
-```
+````
 
 ### Arguments
 
-* `OLD_BRANCH` – The base branch (e.g., `main`)
-* `NEW_BRANCH` – The comparison branch (e.g., `feature-branch`)
+* `OLD_BRANCH` – The base branch in the Keycloak repo (e.g., `origin/release/26.0`)
+* `NEW_BRANCH` – The comparison branch in the Keycloak repo (e.g., `origin/archive/release/26.1`)
 * `--apply` – Optional flag to **apply** the generated patch to the parent directory
 
 ### Examples
@@ -35,13 +34,13 @@ This script compares specific files between two branches of a Git repository, ge
 Generate patch without applying:
 
 ```bash
-./generate-patch.sh main feature-branch
+./patch.sh origin/release/26.0 origin/archive/release/26.1
 ```
 
 Generate and apply patch:
 
 ```bash
-./generate-patch.sh --apply main feature-branch
+./patch.sh --apply origin/release/26.0 origin/archive/release/26.1
 ```
 
 ## How It Works
@@ -58,7 +57,7 @@ Generate and apply patch:
               |
               v
 +-----------------------------+
-| Clone Git repository        |
+| Clone Keycloak repository   |
 | into .work/repo             |
 +-----------------------------+
               |
@@ -100,14 +99,13 @@ Generate and apply patch:
 
 ## Output
 
-* Generated patch: `.work/patch.patch`
-* Temporary files: `.work/files/old`, `.work/files/new`
+* Generated patch file: `.work/patch.patch`
+* Temporary exported files in `.work/files/old` and `.work/files/new`
 
 ## Notes
 
-* The `.work` directory is removed and recreated on each run.
-* The script exits on any error (`set -e`).
-* Missing files in either branch are reported but do not stop execution.
-* The patch is applied **only** if the `--apply` option is given.
-
+* The `.work` directory is deleted and recreated on each run to ensure a clean workspace.
+* The script exits immediately on any error (`set -e`).
+* Missing files on either branch will be reported but won’t stop the script.
+* Patch is applied **only** if the `--apply` option is specified.
 
