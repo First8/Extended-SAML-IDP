@@ -65,6 +65,14 @@ mkdir -p "$WORK_DIR" "$OLD_DIR" "$NEW_DIR"
 echo "Cloning repository..."
 git clone "$GIT_REPO_URL" "$REPO_DIR"
 
+# Validate branches exist
+for BRANCH in "$OLD_BRANCH" "$NEW_BRANCH"; do
+  if ! git -C "$REPO_DIR" ls-remote --exit-code --heads origin "$BRANCH" > /dev/null; then
+    echo "Error: Branch '$BRANCH' does not exist in remote repository."
+    exit 1
+  fi
+done
+
 echo "Exporting files..."
 for FILE in "${FILES[@]}"; do
     mkdir -p "$OLD_DIR/$(dirname "$FILE")"
