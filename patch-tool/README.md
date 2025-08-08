@@ -34,13 +34,13 @@ This script is designed to work **specifically with the [Keycloak Git repository
 Generate patch without applying:
 
 ```bash
-./patch.sh origin/release/26.0 origin/archive/release/26.1
+./patch.sh release/26.0 archive/release/26.1
 ```
 
 Generate and apply patch:
 
 ```bash
-./patch.sh --apply origin/release/26.0 origin/archive/release/26.1
+./patch.sh --apply release/26.0 archive/release/26.1
 ```
 
 ## How It Works
