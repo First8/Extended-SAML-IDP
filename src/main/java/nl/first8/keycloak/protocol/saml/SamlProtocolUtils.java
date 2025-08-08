@@ -3,7 +3,7 @@ package nl.first8.keycloak.protocol.saml;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
-
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -151,7 +151,7 @@ public class SamlProtocolUtils {
             String decodedAlgorithm = RedirectBindingUtil.urlDecode(encodedParams.getFirst(GeneralConstants.SAML_SIG_ALG_REQUEST_KEY));
             SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.getFromXmlMethod(decodedAlgorithm);
             if (!RedirectBindingSignatureUtil.validateRedirectBindingSignature(signatureAlgorithm,
-                    rawQuery.getBytes("UTF-8"), decodedSignature, locator, keyId)) {
+                    rawQuery.getBytes(StandardCharsets.UTF_8), decodedSignature, locator, keyId)) {
                 throw new VerificationException("Invalid query param signature");
             }
         } catch (Exception e) {
