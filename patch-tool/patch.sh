@@ -27,8 +27,23 @@ if [ $# -ne 2 ]; then
     usage
 fi
 
-OLD_BRANCH="$1"
-NEW_BRANCH="$2"
+# Function to normalize branch name
+normalize_branch() {
+    local BR="$1"
+    BR="${BR#origin/}"      # strip origin/ if present
+    echo "$BR"
+}
+
+OLD_BRANCH_RAW="$1"
+NEW_BRANCH_RAW="$2"
+
+# Clean branch names for validation
+OLD_BRANCH=$(normalize_branch "$OLD_BRANCH_RAW")
+NEW_BRANCH=$(normalize_branch "$NEW_BRANCH_RAW")
+
+# Always use origin/<branch> for git show
+OLD_REF="origin/$OLD_BRANCH"
+NEW_REF="origin/$NEW_BRANCH"
 
 GIT_REPO_URL="git@github.com:keycloak/keycloak.git"
 WORK_DIR="$(pwd)/.work"
@@ -40,8 +55,8 @@ FILES_LIST="$(pwd)/keycloak-files.txt"
 
 echo "=== Git Diff Generator ==="
 echo "Repository : $GIT_REPO_URL"
-echo "Old branch : $OLD_BRANCH"
-echo "New branch : $NEW_BRANCH"
+echo "Old branch : $OLD_BRANCH_RAW (normalized to $OLD_REF)"
+echo "New branch : $NEW_BRANCH_RAW (normalized to $NEW_REF)"
 echo "Work dir   : $WORK_DIR"
 echo "Apply patch: $APPLY_PATCH"
 
@@ -64,10 +79,11 @@ mkdir -p "$WORK_DIR" "$OLD_DIR" "$NEW_DIR"
 
 echo "Cloning repository..."
 git clone "$GIT_REPO_URL" "$REPO_DIR"
+git -C "$REPO_DIR" fetch origin "$OLD_BRANCH" "$NEW_BRANCH"
 
-# Validate branches exist
+# Validate branches exist (active or archived)
 for BRANCH in "$OLD_BRANCH" "$NEW_BRANCH"; do
-  if ! git -C "$REPO_DIR" ls-remote --exit-code --heads origin "$BRANCH" > /dev/null; then
+  if ! git -C "$REPO_DIR" ls-remote origin "$BRANCH" | grep -q .; then
     echo "Error: Branch '$BRANCH' does not exist in remote repository."
     exit 1
   fi
@@ -76,10 +92,10 @@ done
 echo "Exporting files..."
 for FILE in "${FILES[@]}"; do
     mkdir -p "$OLD_DIR/$(dirname "$FILE")"
-    git -C "$REPO_DIR" show "$OLD_BRANCH:$FILE" > "$OLD_DIR/$FILE" 2>/dev/null || echo "Missing in $OLD_BRANCH: $FILE"
+    git -C "$REPO_DIR" show "$OLD_REF:$FILE" > "$OLD_DIR/$FILE" 2>/dev/null || echo "Missing in $OLD_BRANCH: $FILE"
 
     mkdir -p "$NEW_DIR/$(dirname "$FILE")"
-    git -C "$REPO_DIR" show "$NEW_BRANCH:$FILE" > "$NEW_DIR/$FILE" 2>/dev/null || echo "Missing in $NEW_BRANCH: $FILE"
+    git -C "$REPO_DIR" show "$NEW_REF:$FILE" > "$NEW_DIR/$FILE" 2>/dev/null || echo "Missing in $NEW_BRANCH: $FILE"
 done
 
 echo "File count (.java only):"
