@@ -62,6 +62,11 @@ Generate and apply patch:
 +-----------------------------+
               |
               v
++-----------------------------+
+| Validate branches           |
++-----------------------------+
+              |
+              v
 +--------------------------------------+
 | Export listed files from OLD_BRANCH  |
 | to .work/files/old                   |
