@@ -151,6 +151,8 @@ fabric.properties
 
 !.idea/codeStyles
 !.idea/runConfigurations
+/.idea/codeStyles/codeStyleConfig.xml
+/.idea/codeStyles/Project.xml
 
 ### Maven ###
 target/
@@ -173,3 +175,4 @@ buildNumber.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/maven,intellij+all,eclipse
 /patch-tool/.work/
+
