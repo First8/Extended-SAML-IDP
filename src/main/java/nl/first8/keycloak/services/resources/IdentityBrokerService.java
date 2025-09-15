@@ -52,7 +52,6 @@ import org.keycloak.services.managers.*;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.resources.LoginActionsService;
 import org.keycloak.services.resources.SessionCodeChecks;
-import org.keycloak.services.resources.account.AccountConsole;
 import org.keycloak.services.util.AuthenticationFlowURLHelper;
 import org.keycloak.services.util.BrowserHistoryHelper;
 import org.keycloak.services.util.CacheControlUtil;
@@ -83,6 +82,8 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     private static final String LINKING_IDENTITY_PROVIDER = "LINKING_IDENTITY_PROVIDER";
 
     private static final Logger logger = Logger.getLogger(org.keycloak.services.resources.IdentityBrokerService.class);
+
+    public static final String ACCOUNT_MGMT_FORWARDED_ERROR = "ACCOUNT_MGMT_FORWARDED_ERROR";
 
     private final RealmModel realmModel;
 
@@ -144,8 +145,8 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     /**
      * Closes off CORS preflight requests for account linking
      *
-     * @param providerAlias
-     * @return
+     * @param providerAlias alias
+     * @return http response
      */
     @OPTIONS
     @Path("/{provider_alias}/link")
@@ -191,7 +192,6 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             return Response.status(302).location(builder.build()).build();
         }
 
-        cookieResult.getSession();
         event.session(cookieResult.getSession());
         event.user(cookieResult.getUser());
         event.detail(Details.USERNAME, cookieResult.getUser().getUsername());
@@ -241,8 +241,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             }
         }
 
-
-        IdentityProviderModel identityProviderModel = realmModel.getIdentityProviderByAlias(providerAlias);
+        IdentityProviderModel identityProviderModel = session.identityProviders().getByAlias(providerAlias);
         if (identityProviderModel == null) {
             event.error(Errors.UNKNOWN_IDENTITY_PROVIDER);
             UriBuilder builder = UriBuilder.fromUri(redirectUri)
@@ -385,15 +384,12 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
     @Path("{provider_alias}/endpoint")
     public Object getEndpoint(@PathParam("provider_alias") String providerAlias) {
-        IdentityProvider identityProvider;
-
         try {
-            identityProvider = getIdentityProvider(session, providerAlias);
+            IdentityProvider<?> identityProvider = getIdentityProvider(session, providerAlias);
+            return identityProvider.callback(realmModel, this, event);
         } catch (IdentityBrokerException e) {
             throw new NotFoundException(e.getMessage());
         }
-
-        return identityProvider.callback(realmModel, this, event);
     }
 
     @Path("{provider_alias}/token")
@@ -674,7 +670,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
             }
 
 
-            String isRegisteredNewUser = authSession.getAuthNote(AbstractIdpAuthenticator.BROKER_REGISTERED_NEW_USER);
+            String isRegisteredNewUser = authSession.getAuthNote(AbstractIdentityProvider.BROKER_REGISTERED_NEW_USER);
             if (Boolean.parseBoolean(isRegisteredNewUser)) {
 
                 logger.debugf("Registered new user '%s' after first login with identity provider '%s'. Identity provider username is '%s' . ", federatedUser.getUsername(), providerAlias, context.getUsername());
@@ -687,7 +683,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                     target.importNewUser(session, realmModel, federatedUser, mapper, context);
                 });
 
-                if (context.getIdpConfig().isTrustEmail() && !Validation.isBlank(federatedUser.getEmail()) && !Boolean.parseBoolean(authSession.getAuthNote(AbstractIdpAuthenticator.UPDATE_PROFILE_EMAIL_CHANGED))) {
+                if (context.getIdpConfig().isTrustEmail() && !Validation.isBlank(federatedUser.getEmail()) && !Boolean.parseBoolean(authSession.getAuthNote(AbstractIdentityProvider.UPDATE_PROFILE_EMAIL_CHANGED))) {
                     logger.debugf("Email verified automatically after registration of user '%s' through Identity provider '%s' ", federatedUser.getUsername(), context.getIdpConfig().getAlias());
                     federatedUser.setEmailVerified(true);
                 }
@@ -869,7 +865,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     }
 
     @Override
-    public Response error(String message) {
+    public Response error(IdentityProviderModel idpConfig, String message) {
         AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
 
         Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, message);
@@ -884,7 +880,6 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
         return browserAuthentication(authSession, message);
     }
-
 
     private boolean shouldPerformAccountLinking(AuthenticationSessionModel authSession, UserSessionModel userSession, String providerAlias) {
         String noteFromSession = authSession.getAuthNote(LINKING_IDENTITY_PROVIDER);
@@ -1028,7 +1023,8 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
     private void setEmail(BrokeredIdentityContext context, UserModel federatedUser, String newEmail) {
         federatedUser.setEmail(newEmail);
         // change email verified depending on if it is trusted or not
-        if (context.getIdpConfig().isTrustEmail() && !Boolean.parseBoolean(context.getAuthenticationSession().getAuthNote(AbstractIdpAuthenticator.UPDATE_PROFILE_EMAIL_CHANGED))) {
+        var note = context.getAuthenticationSession().getAuthNote(AbstractIdentityProvider.UPDATE_PROFILE_EMAIL_CHANGED);
+        if (context.getIdpConfig().isTrustEmail() && !Boolean.parseBoolean(note)) {
             logger.tracef("Email verified automatically after updating user '%s' through Identity provider '%s' ", federatedUser.getUsername(), context.getIdpConfig().getAlias());
             federatedUser.setEmailVerified(true);
         } else {
@@ -1158,7 +1154,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                     .setHttpHeaders(headers)
                     .setUriInfo(session.getContext().getUri())
                     .setEventBuilder(event);
-            return protocol.sendError(authSession, error, null);
+            return protocol.sendError(authSession, error, message);
         }
         return null;
     }
@@ -1200,8 +1196,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
 
         fireErrorEvent(message, throwable);
 
-        if (throwable != null && throwable instanceof WebApplicationException) {
-            WebApplicationException webEx = (WebApplicationException) throwable;
+        if (throwable instanceof WebApplicationException webEx) {
             return webEx.getResponse();
         }
 
@@ -1214,7 +1209,7 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
         FormMessage errorMessage = new FormMessage(message, parameters);
         try {
             String serializedError = JsonSerialization.writeValueAsString(errorMessage);
-            authSession.setAuthNote(AccountConsole.ACCOUNT_MGMT_FORWARDED_ERROR_NOTE, serializedError);
+            authSession.setAuthNote(ACCOUNT_MGMT_FORWARDED_ERROR, serializedError);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
