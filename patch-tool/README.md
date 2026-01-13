@@ -4,29 +4,36 @@ This script is designed to work **specifically with the [Keycloak Git repository
 
 ## Features
 
-- Clones the Keycloak repository into a temporary **.work** directory  
-- Extracts only files listed in `keycloak-files.txt` (tailored for Keycloak source paths)  
-- Compares two branches and creates a **unified diff patch**  
-- Cleans up file paths and replaces package names in the patch for project-specific needs  
+- Clones the Keycloak repository into a temporary **.work** directory
+- Extracts only files listed in `keycloak-files.txt` (tailored for Keycloak source paths)
+- Compares two branches and creates a **unified diff patch**
+- Cleans up file paths and replaces package names in the patch for project-specific needs
 - Optionally applies the patch to the **parent directory** of the current folder
 
 ## Requirements
 
-- **Bash** (Unix/Linux/macOS environment)  
-- **git** installed and configured  
-- Access to the Keycloak repository (SSH key if private)  
-- A `keycloak-files.txt` file in the current directory containing relative file paths from the Keycloak repo  
+- **Bash** (Unix/Linux/macOS environment)
+- **git** installed and configured
+- Access to the Keycloak repository (SSH key if private)
+- A `keycloak-files.txt` file in the current directory containing relative file paths from the Keycloak repo
 
 ## Usage
 
+This first command is only necessary for Windows users:
+```bash
+dos2unix keycloak-files.txt #If this doesn't work, try:  sed -i $'s/\r$//' keycloak-files.txt
+```
+
+The main command is:
+
 ```bash
 ./patch.sh [--apply] OLD_BRANCH NEW_BRANCH
-````
+```
 
 ### Arguments
 
-* `OLD_BRANCH` – The base branch in the Keycloak repo (e.g., `origin/release/26.0`)
-* `NEW_BRANCH` – The comparison branch in the Keycloak repo (e.g., `origin/archive/release/26.1`)
+* `OLD_BRANCH` – The base branch in the Keycloak repo (e.g., `archive/release/26.1`)
+* `NEW_BRANCH` – The comparison branch in the Keycloak repo (e.g., `archive/release/26.0`)
 * `--apply` – Optional flag to **apply** the generated patch to the parent directory
 
 ### Examples
@@ -113,4 +120,5 @@ Generate and apply patch:
 * The script exits immediately on any error (`set -e`).
 * Missing files on either branch will be reported but won’t stop the script.
 * Patch is applied **only** if the `--apply` option is specified.
+* Because of Windows' file name(-path) limit, it is recommended to give this repository a short name and put it close to your file system's root, otherwise the nested files in `.work` will be too long.
 

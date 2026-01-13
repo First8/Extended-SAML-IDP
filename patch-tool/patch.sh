@@ -92,10 +92,10 @@ done
 echo "Exporting files..."
 for FILE in "${FILES[@]}"; do
     mkdir -p "$OLD_DIR/$(dirname "$FILE")"
-    git -C "$REPO_DIR" show "$OLD_REF:$FILE" > "$OLD_DIR/$FILE" 2>/dev/null || echo "Missing in $OLD_BRANCH: $FILE"
+    git -C "$REPO_DIR" show "$OLD_REF:$FILE" > "$OLD_DIR/$FILE" 2>/dev/null || echo "Missing in $OLD_REF: $FILE"
 
     mkdir -p "$NEW_DIR/$(dirname "$FILE")"
-    git -C "$REPO_DIR" show "$NEW_REF:$FILE" > "$NEW_DIR/$FILE" 2>/dev/null || echo "Missing in $NEW_BRANCH: $FILE"
+    git -C "$REPO_DIR" show "$NEW_REF:$FILE" > "$NEW_DIR/$FILE" 2>/dev/null || echo "Missing in $NEW_REF: $FILE"
 done
 
 echo "File count (.java only):"
