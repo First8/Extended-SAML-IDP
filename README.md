@@ -28,36 +28,28 @@ with a custom frontend.
 
 The steps are as follows:
 
-1. Before you start make sure the latest release available in the plugin repo is up to date with master.
+1. Pull the branch corresponding to the most recent Keycloak minor version that already exists in the repository.
 
-2. Checkout the SAML-extended plugin and go to the `keycloak` branch
+2. Create a new branch from there, corresponding to the next minor version.
 
-3. Checkout the Keycloak source code and go to the correct release branch
+3. Update `<keycloak.version>` in the pom.xml to the most recent patch version of the relevant minor version.
 
-4. For every class in the keycloak branch of the SAML-plugin, look up this class in the keycloak source code and paste it in the plugin.
-Note that the packages in de saml plugin are the packages from the Keycloak codebase. For those that can run bash scripts there is an script that can do this for you. Simply run it with:
-
-```
-./copy-source.sh -k <keycloak-dir> -d <plugin-dir>
-```
-
-*Note: both dirs should not end in a /*
-
-5. Next, rebase the `keycloak` branch onto `main` and address conflicts if they arise. 
+4. Create a patch for the `.java` files corresponding to those in this repository, based on the [official Keycloak repository's](https://github.com/keycloak/keycloak) files and branches:
 
 ```
-git checkout master
-git rebase keycloak
+cd patch-tool
+./patch.sh archive/release/x.y archive/release/x.(y+1) 
+#E.g. x=27, y=2. Could be (x+1).0 instead of x.(y+1), or (one of) the releases may not be archived yet.
 ```
 
-6. Make sure it compiles.
+If you have trouble creating the patch, consult the Readme in the `/patch-tool` directory for more details.
 
-7. Make a release branch for this new version
+5. Apply the patch.
 
-```
-git checkout -b release/<version>.x
-```
-
+    * Many manual actions are needed, as the line numbers do not correspond.
+    * To understand why some changes took place in the official Keycloak repository, you could look up the documentation for the method/class that got replaced,
+for the old and/or new version. You will likely see that it's deprecated and what it should be replaced with, which is probably exactly what it got replaced with in the patch.
+    * You may find the rationale for the deprecated methods/classes in the [Upgrading Guide](https://www.keycloak.org/docs/latest/upgrading/index.html).
 
 ## Building
 
