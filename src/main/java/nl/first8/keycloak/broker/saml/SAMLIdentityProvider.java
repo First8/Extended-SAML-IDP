@@ -15,7 +15,6 @@ import nl.first8.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
 import nl.first8.keycloak.saml.processing.core.saml.v2.writers.SAMLMetadataWriter;
 import org.jboss.logging.Logger;
 import org.keycloak.broker.provider.*;
-import org.keycloak.broker.provider.util.SimpleHttp;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyUse;
@@ -28,6 +27,7 @@ import org.keycloak.dom.saml.v2.metadata.LocalizedNameType;
 import org.keycloak.dom.saml.v2.metadata.RequestedAttributeType;
 import org.keycloak.dom.saml.v2.protocol.*;
 import org.keycloak.events.EventBuilder;
+import org.keycloak.http.simple.SimpleHttp;
 import org.keycloak.keys.PublicKeyStorageProvider;
 import org.keycloak.keys.PublicKeyStorageUtils;
 import org.keycloak.models.*;
@@ -245,7 +245,7 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             if (logoutRequest.getDestination() != null) {
                 singleLogoutServiceUrl = logoutRequest.getDestination().toString();
             }
-            int status = SimpleHttp.doPost(singleLogoutServiceUrl, session)
+            int status = SimpleHttp.create(session).doPost(singleLogoutServiceUrl)
                     .param(GeneralConstants.SAML_REQUEST_KEY, binding.postBinding(SAML2Request.convert(logoutRequest)).encoded())
                     .param(GeneralConstants.RELAY_STATE, userSession.getId()).asStatus();
             boolean success = status >= 200 && status < 400;
