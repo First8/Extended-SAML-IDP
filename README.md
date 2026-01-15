@@ -30,7 +30,7 @@ The steps are as follows:
 
 1. Pull the branch corresponding to the most recent Keycloak minor version that already exists in the repository.
 
-2. Create a new branch from there, corresponding to the next minor version.
+2. Create a new branch from there, corresponding to the next minor version: `upgrade-to-{a}.{b+1}`, e.g. `upgrade-to-27.2`.
 
 3. Update `<keycloak.version>` in the pom.xml to the most recent patch version of the relevant minor version.
 
@@ -38,8 +38,8 @@ The steps are as follows:
 
 ```
 cd patch-tool
-./patch.sh archive/release/x.y archive/release/x.(y+1) 
-#E.g. x=27, y=2. Could be (x+1).0 instead of x.(y+1), or (one of) the releases may not be archived yet.
+./patch.sh archive/release/{a}.{b} archive/release/{a}.{b+1} 
+#E.g. a=27, b=1. Could be {a+1}.0 instead of {a}.{b+1}, or (one of) the releases may not be archived yet.
 ```
 
 If you have trouble creating the patch, consult the Readme in the `/patch-tool` directory for more details.
@@ -47,9 +47,27 @@ If you have trouble creating the patch, consult the Readme in the `/patch-tool` 
 5. Apply the patch.
 
     * Many manual actions are needed, as the line numbers do not correspond.
-    * To understand why some changes took place in the official Keycloak repository, you could look up the documentation for the method/class that got replaced,
-for the old and/or new version. You will likely see that it's deprecated and what it should be replaced with, which is probably exactly what it got replaced with in the patch.
-    * You may find the rationale for the deprecated methods/classes in the [Upgrading Guide](https://www.keycloak.org/docs/latest/upgrading/index.html).
+    * If a change introduces a references a Keycloak class that isn't in the repository, just import it, instead of adding it to this repository.
+    * If a method (/signature) is changed, it is probably due to deprecation. You could look up the documentation for the method that got replaced to make sure.
+    * You might understand the rationale for changes in the commit message corresponding to that change, and/or the issue that is linked from that commit message.
+
+6. Verify whether our local environment still works with eHerkenning, before trying the new jar.
+
+6. Build the jar from the new branch and test it in our local environment with an eHerkenning-testmiddel.
+
+    * A Keycloak upgrade might be needed beforehand.
+    * 
+
+6. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
+
+7. Push both new branches: `{a}.{b+1}.x-once-PR-merged` and `upgrade-to-{a}.{b+1}`
+
+8. Make, review, and merge a PR from `upgrade-to-{a}.{b+1}` into `{a}.{b+1}.x-once-PR-merged`.
+
+9. Verify that both branches are equal, then:
+
+    * Rename branch `{a}.{b+1}.x-once-PR-merged` to just `{a}.{b+1}.x`, e.g. `27.2.x`.
+    * Remove branch `upgrade-to-{a}.{b+1}`.
 
 ## Building
 
@@ -103,9 +121,9 @@ CMD [\
   - Valid Post Logout Redirect URIs: `{keycloak-server}/realms/master/samlconfig/pages/realm`
   - Web Origins: `*`
 - Click "Save".
-  - Front channel logout: on
+  - Front channel logout: On
   - Front-channel logout URL: `{keycloak-server}/realms/master/samlconfig/pages/realm`
-  - Backchannel logout session required: on
+  - Front-channel logout session required: On
 - Click "Save".
 
 ### Add Saml Theme to Keycloak(optional)
