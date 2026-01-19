@@ -56,7 +56,7 @@ If you have trouble creating the patch, consult the Readme in the `/patch-tool` 
 6. Build the jar from the new branch and test it in our local environment with an eHerkenning-testmiddel.
 
     * A Keycloak upgrade might be needed beforehand.
-    * 
+    * You could consider also testing it with DigiD using the simulator realm.
 
 6. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
 
@@ -68,6 +68,8 @@ If you have trouble creating the patch, consult the Readme in the `/patch-tool` 
 
     * Rename branch `{a}.{b+1}.x-once-PR-merged` to just `{a}.{b+1}.x`, e.g. `27.2.x`.
     * Remove branch `upgrade-to-{a}.{b+1}`.
+
+10. Change the repository's main branch to the most recent version branch, `{a}.{b+1}.x`.
 
 ## Building
 

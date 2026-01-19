@@ -1,15 +1,16 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.metadata;
 
+import java.util.List;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.StartElement;
+
 import nl.first8.keycloak.dom.saml.v2.metadata.SPSSODescriptorType;
+
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.util.StaxParserUtil;
 import org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLAssertionConsumerServiceParser;
 import org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLMetadataQNames;
 import org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLSSODescriptorTypeParser;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
-import java.util.List;
 
 import static org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLMetadataQNames.SP_SSO_DESCRIPTOR;
 

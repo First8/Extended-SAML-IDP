@@ -1,5 +1,9 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.assertion;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.StartElement;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import org.keycloak.saml.common.ErrorCodes;
 import org.keycloak.saml.common.exceptions.ParsingException;
@@ -9,10 +13,6 @@ import org.keycloak.saml.processing.core.parsers.saml.assertion.SAMLConditionsPa
 import org.keycloak.saml.processing.core.parsers.saml.assertion.SAMLSubjectParser;
 import org.keycloak.saml.processing.core.parsers.util.SAMLParserUtil;
 import org.keycloak.saml.processing.core.saml.v2.util.XMLTimeUtil;
-
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
 
 public class SAMLAssertionParser extends AbstractStaxSamlAssertionParser<AssertionType> {
 

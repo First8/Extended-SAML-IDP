@@ -1,5 +1,13 @@
 package nl.first8.keycloak.broker.saml.mappers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import nl.first8.keycloak.broker.saml.SAMLEndpoint;
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
@@ -19,8 +27,8 @@ import org.keycloak.models.IdentityProviderSyncMode;
 import org.keycloak.protocol.saml.mappers.SamlMetadataDescriptorUpdater;
 import org.keycloak.provider.ProviderConfigProperty;
 
-import java.util.*;
 import java.util.stream.Collectors;
+
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC;
 

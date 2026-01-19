@@ -1,22 +1,23 @@
 package nl.first8.keycloak.saml.processing.core.saml.v2.writers;
 
+import java.net.URI;
+import java.util.List;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamWriter;
+
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
+
 import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.saml.v2.assertion.SubjectType;
 import org.keycloak.dom.saml.v2.protocol.*;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
+import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.*;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.StaxUtil;
 import org.keycloak.saml.common.util.StringUtil;
+
 import org.w3c.dom.Element;
-
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamWriter;
-import java.net.URI;
-import java.util.List;
-
-import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.*;
 
 public class SAMLRequestWriter extends BaseWriter {
 

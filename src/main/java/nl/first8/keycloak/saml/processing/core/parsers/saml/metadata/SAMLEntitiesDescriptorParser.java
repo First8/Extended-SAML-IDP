@@ -1,16 +1,18 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.metadata;
 
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.StartElement;
+
 import nl.first8.keycloak.dom.saml.v2.metadata.EntitiesDescriptorType;
+
 import org.keycloak.dom.saml.v2.metadata.ExtensionsType;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.util.StaxParserUtil;
 import org.keycloak.saml.processing.core.parsers.saml.metadata.AbstractStaxSamlMetadataParser;
 import org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLExtensionsParser;
 import org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLMetadataQNames;
-import org.w3c.dom.Element;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
+import org.w3c.dom.Element;
 
 public class SAMLEntitiesDescriptorParser  extends AbstractStaxSamlMetadataParser<EntitiesDescriptorType> {
     private static final SAMLEntitiesDescriptorParser INSTANCE = new SAMLEntitiesDescriptorParser();

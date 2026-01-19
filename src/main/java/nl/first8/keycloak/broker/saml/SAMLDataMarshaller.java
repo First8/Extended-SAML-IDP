@@ -1,5 +1,9 @@
 package nl.first8.keycloak.broker.saml;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
@@ -14,9 +18,6 @@ import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.StaxUtil;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.List;
 
 public class SAMLDataMarshaller extends DefaultDataMarshaller {

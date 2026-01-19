@@ -1,11 +1,41 @@
 package nl.first8.keycloak.broker.saml;
 
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import java.io.IOException;
+import java.net.URI;
+import java.security.Key;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import javax.xml.crypto.dsig.XMLSignature;
+import javax.xml.namespace.QName;
+
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
-import nl.first8.keycloak.protocol.saml.SamlProtocolUtils;
 import nl.first8.keycloak.saml.SAMLRequestParser;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
@@ -15,7 +45,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.NoCache;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
-import org.keycloak.broker.provider.IdentityProvider;
+import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.common.VerificationException;
 import org.keycloak.common.util.Base64;
@@ -35,7 +65,14 @@ import org.keycloak.keys.PublicKeyStorageUtils;
 import org.keycloak.models.*;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.LoginProtocolFactory;
-import org.keycloak.protocol.saml.*;
+import org.keycloak.protocol.saml.SAMLDecryptionKeysLocator;
+import org.keycloak.protocol.saml.SamlMetadataKeyLocator;
+import org.keycloak.protocol.saml.SamlMetadataPublicKeyLoader;
+import org.keycloak.protocol.saml.SamlPrincipalType;
+import org.keycloak.protocol.saml.SamlProtocol;
+import org.keycloak.protocol.saml.SamlProtocolUtils;
+import org.keycloak.protocol.saml.SamlService;
+import org.keycloak.protocol.saml.SamlSessionUtils;
 import org.keycloak.protocol.saml.preprocessor.SamlAuthenticationPreprocessor;
 import org.keycloak.rotation.HardcodedKeyLocator;
 import org.keycloak.rotation.KeyLocator;
@@ -56,21 +93,11 @@ import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.util.CacheControlUtil;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.util.Booleans;
 import org.keycloak.utils.StringUtil;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import javax.xml.crypto.dsig.XMLSignature;
-import javax.xml.namespace.QName;
-import java.io.IOException;
-import java.net.URI;
-import java.security.Key;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class SAMLEndpoint {
     protected static final Logger logger = Logger.getLogger(SAMLEndpoint.class);
@@ -86,7 +113,7 @@ public class SAMLEndpoint {
     protected final RealmModel realm;
     protected EventBuilder event;
     protected final SAMLIdentityProviderConfig config;
-    protected final IdentityProvider.AuthenticationCallback callback;
+    protected final UserAuthenticationIdentityProvider.AuthenticationCallback callback;
     protected final SAMLIdentityProvider provider;
     private final DestinationValidator destinationValidator;
 
@@ -100,7 +127,7 @@ public class SAMLEndpoint {
     public SAMLEndpoint(KeycloakSession session,
                         SAMLIdentityProvider provider,
                         SAMLIdentityProviderConfig config,
-                        IdentityProvider.AuthenticationCallback callback,
+                        UserAuthenticationIdentityProvider.AuthenticationCallback callback,
                         DestinationValidator destinationValidator) {
         this.realm = session.getContext().getRealm();
         this.config = config;
@@ -526,7 +553,7 @@ public class SAMLEndpoint {
                     identity.setEmail(subjectNameID.getValue());
                 }
 
-                if (config.isStoreToken()) {
+                if (Booleans.isTrue(config.isStoreToken())) {
                     identity.setToken(samlResponse);
                 }
 
