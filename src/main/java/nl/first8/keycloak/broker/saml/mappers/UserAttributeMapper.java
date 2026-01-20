@@ -1,4 +1,18 @@
 package nl.first8.keycloak.broker.saml.mappers;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
@@ -28,11 +42,6 @@ import org.keycloak.saml.common.util.StringUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC;
 

@@ -1,9 +1,15 @@
 package nl.first8.keycloak.saml.processing.core.saml.v2.writers;
 
+import java.net.URI;
+import java.util.List;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamWriter;
+
 import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import nl.first8.keycloak.dom.saml.v2.metadata.RequestedAttributeValueType;
 import nl.first8.keycloak.dom.saml.v2.metadata.SPSSODescriptorType;
+
 import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.metadata.*;
 import org.keycloak.dom.xmlsec.w3.xmlenc.EncryptionMethodType;
@@ -11,12 +17,8 @@ import org.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.StaxUtil;
-import org.w3c.dom.Element;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamWriter;
-import java.net.URI;
-import java.util.List;
+import org.w3c.dom.Element;
 
 public class SAMLMetadataWriter extends BaseWriter {
 

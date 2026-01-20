@@ -1,12 +1,13 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.assertion;
 
-import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
-import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType.ASTChoiceType;
-import org.keycloak.saml.common.exceptions.ParsingException;
-import org.keycloak.saml.common.util.StaxParserUtil;
-
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
+
+import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
+import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType.ASTChoiceType;
+
+import org.keycloak.saml.common.exceptions.ParsingException;
+import org.keycloak.saml.common.util.StaxParserUtil;
 
 /**
  * Parse the <conditions> in the saml assertion

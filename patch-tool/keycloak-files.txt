@@ -1,4 +1,3 @@
-services/src/main/java/org/keycloak/authentication/authenticators/broker/util/SerializedBrokeredIdentityContext.java
 services/src/main/java/org/keycloak/broker/saml/mappers/AdvancedAttributeToRoleMapper.java
 services/src/main/java/org/keycloak/broker/saml/mappers/AttributeToRoleMapper.java
 services/src/main/java/org/keycloak/broker/saml/mappers/UserAttributeMapper.java

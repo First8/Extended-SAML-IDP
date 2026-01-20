@@ -1,35 +1,21 @@
 package nl.first8.keycloak.saml.processing.core.saml.v2.writers;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Set;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamWriter;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType.ASTChoiceType;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.assertion.SAMLAssertionQNames;
-import org.keycloak.dom.saml.v2.assertion.AdviceType;
-import org.keycloak.dom.saml.v2.assertion.AttributeType;
-import org.keycloak.dom.saml.v2.assertion.AudienceRestrictionType;
-import org.keycloak.dom.saml.v2.assertion.AuthnContextClassRefType;
-import org.keycloak.dom.saml.v2.assertion.AuthnContextDeclRefType;
-import org.keycloak.dom.saml.v2.assertion.AuthnContextDeclType;
-import org.keycloak.dom.saml.v2.assertion.AuthnContextType;
-import org.keycloak.dom.saml.v2.assertion.AuthnStatementType;
-import org.keycloak.dom.saml.v2.assertion.ConditionAbstractType;
-import org.keycloak.dom.saml.v2.assertion.ConditionsType;
-import org.keycloak.dom.saml.v2.assertion.EncryptedElementType;
-import org.keycloak.dom.saml.v2.assertion.NameIDType;
-import org.keycloak.dom.saml.v2.assertion.OneTimeUseType;
-import org.keycloak.dom.saml.v2.assertion.StatementAbstractType;
-import org.keycloak.dom.saml.v2.assertion.SubjectType;
-import org.keycloak.dom.saml.v2.assertion.URIType;
+
+import org.keycloak.dom.saml.v2.assertion.*;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.StaxUtil;
-
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamWriter;
-import java.net.URI;
-import java.util.List;
-import java.util.Set;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ASSERTION_NSURI;
 

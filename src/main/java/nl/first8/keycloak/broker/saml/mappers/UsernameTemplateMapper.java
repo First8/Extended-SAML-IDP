@@ -1,5 +1,18 @@
 package nl.first8.keycloak.broker.saml.mappers;
 
+import java.security.PrivateKey;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import nl.first8.keycloak.broker.saml.SAMLEndpoint;
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
@@ -7,6 +20,7 @@ import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.assertion.SamlEncryptedId;
 import nl.first8.keycloak.saml.encryption.DecryptionException;
 import nl.first8.keycloak.saml.encryption.SamlDecrypter;
+
 import org.jboss.logging.Logger;
 import org.keycloak.broker.provider.AbstractIdentityProviderMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
@@ -16,15 +30,13 @@ import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.saml.v2.assertion.SubjectType;
-import org.keycloak.models.*;
+import org.keycloak.models.IdentityProviderMapperModel;
+import org.keycloak.models.IdentityProviderSyncMode;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.provider.ProviderConfigProperty;
-
-import java.security.PrivateKey;
-import java.util.*;
-import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
 

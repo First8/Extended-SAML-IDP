@@ -1,9 +1,10 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.assertion;
 
+import javax.xml.namespace.QName;
+
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.processing.core.parsers.saml.xmldsig.XmlDSigQNames;
 import org.keycloak.saml.processing.core.parsers.util.HasQName;
-import javax.xml.namespace.QName;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.XMLENC_NSURI;
 
