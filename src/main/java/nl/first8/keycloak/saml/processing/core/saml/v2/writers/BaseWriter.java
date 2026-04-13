@@ -156,9 +156,9 @@ public class BaseWriter {
                         writeDateAttributeValue((XMLGregorianCalendar) attributeValue);
                     } else if (attributeValue instanceof Element) {
                         writeElementAttributeValue((Element) attributeValue);
-                    } else if (attributeValue instanceof SamlEncryptedId) {
-                        logger.debug("EncryptedID is not implemented yet.");
-                    } else
+                    }
+                    // Removed check for SamlEncryptedId as it cannot be resolved
+                    else
                         throw logger.writerUnsupportedAttributeValueError(attributeValue.getClass().getName());
                 } else {
                     writeStringAttributeValue(null);

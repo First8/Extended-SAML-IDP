@@ -94,7 +94,11 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
 
     @Override
     public Object callback(RealmModel realm, AuthenticationCallback callback, EventBuilder event) {
-        return new SAMLEndpoint(session, this, getConfig(), callback, destinationValidator);
+        AuthenticationCallback effectiveCallback = callback;
+        if (getConfig().isCustomErrorRedirectEnabled()) {
+            effectiveCallback = new ErrorRedirectCallbackWrapper(session, getConfig(), callback);
+        }
+        return new SAMLEndpoint(session, this, getConfig(), effectiveCallback, destinationValidator);
     }
 
     @Override
