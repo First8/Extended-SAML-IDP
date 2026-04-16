@@ -28,14 +28,14 @@ with a custom frontend.
 
 The steps are as follows:
 
-1. Before you start make sure the latest release available in the plugin repo is up to date with master.
+1. Pull the latest release available in the plugin repo, which should be the default branch.
 
-2. Checkout the SAML-extended plugin and go to the `keycloak` branch
+2. Make a branch called `keycloak`, only locally. Also, check it out.
 
 3. Checkout the Keycloak source code and go to the correct release branch
 
-4. For every class in the keycloak branch of the SAML-plugin, look up this class in the keycloak source code and paste it in the plugin.
-Note that the packages in de saml plugin are the packages from the Keycloak codebase. For those that can run bash scripts there is an script that can do this for you. Simply run it with:
+4. For every class in the keycloak branch of the SAML-plugin, look up this class in the keycloak source code and paste it in the plugin, 
+either manually or by running the script as below:
 
 ```
 ./copy-source.sh -k <keycloak-dir> -d <plugin-dir>
@@ -43,7 +43,7 @@ Note that the packages in de saml plugin are the packages from the Keycloak code
 
 *Note: both dirs should not end in a /*
 
-5. Next, rebase the `keycloak` branch onto `main` and address conflicts if they arise. 
+5. Next, rebase the `keycloak` branch onto the default branch (=latest release branch) and address conflicts if they arise. 
 
 ```
 git checkout master
@@ -58,6 +58,7 @@ git rebase keycloak
 git checkout -b release/<version>.x
 ```
 
+8. Remove your local `keycloak` branch.
 
 ## Building
 
