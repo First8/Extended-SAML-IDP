@@ -60,6 +60,14 @@ git checkout -b release/<version>.x
 
 8. Remove your local `keycloak` branch.
 
+### Pull Request Reviews
+
+9. Run the new code from the PR through Test classes, not only `<Response>` but also `<ArtifactResponse>`.
+
+10. Also manually test `<Response>`&`<ArtifactResponse>`.
+
+    * Once that works, also test with mappers and encryption.
+
 ## Building
 
 ```mvn clean package```
