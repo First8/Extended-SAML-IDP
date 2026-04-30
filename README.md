@@ -51,20 +51,32 @@ If you have trouble creating the patch, consult the Readme in the `/patch-tool` 
     * If a method (/signature) is changed, it is probably due to deprecation. You could look up the documentation for the method that got replaced to make sure.
     * You might understand the rationale for changes in the commit message corresponding to that change, and/or the issue that is linked from that commit message.
 
-6. Verify whether our local environment still works with eHerkenning, before trying the new jar.
+6. (Optionally) verify that your SAML IDP connections work with the old Keycloak version and/or old jar.
 
-6. Build the jar from the new branch and test it in our local environment with an eHerkenning-testmiddel.
+7. (Optionally) do the same tests as the PR reviewer will in steps
+
+8. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
+
+9. Push both new branches: `{a}.{b+1}.x-once-PR-merged` and `upgrade-to-{a}.{b+1}`
+
+10. Make a PR from `upgrade-to-{a}.{b+1}` into `{a}.{b+1}.x-once-PR-merged`.
+
+
+
+### For the Pull Request Reviewer
+
+11. Run the new code from the PR through Test classes, not only `<Response>` but also `<ArtifactResponse>`.
+
+    * (Preferably) don't just test the auto-generated mock (Artifact)Responses, 
+      but also real-world (Artifact)Responses that you can copy into the test resource folder and reference in Test classes (don't commit those changes).
+
+12. Build the jar from your new branch and try logging in with the SAML IDP connections in your test environment.
 
     * A Keycloak upgrade might be needed beforehand.
-    * 
+    * If you normally only receive `<Response>` or `<ArtifactResponse>`, set up a connection to test the other type (you may skip this if you already tested real-world examples of that type in Test classes)
+    * Also test with mappers and encryption.
 
-6. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
-
-7. Push both new branches: `{a}.{b+1}.x-once-PR-merged` and `upgrade-to-{a}.{b+1}`
-
-8. Make, review, and merge a PR from `upgrade-to-{a}.{b+1}` into `{a}.{b+1}.x-once-PR-merged`.
-
-9. Verify that both branches are equal, then:
+### After the PR merge
 
     * Rename branch `{a}.{b+1}.x-once-PR-merged` to just `{a}.{b+1}.x`, e.g. `27.2.x`.
     * Remove branch `upgrade-to-{a}.{b+1}`.
