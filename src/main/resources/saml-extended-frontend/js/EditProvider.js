@@ -3,7 +3,7 @@ edit.addEventListener('click', () => {
     keycloak.updateToken(300).then((bool) => {
         if (bool) {
             newAccessToken = keycloak.token;
-
+            
             var authnContextClassRefs = []
             const ClassRefs_inputs = ClassRefs_items.querySelectorAll("input");
             ClassRefs_inputs.forEach(input => {
@@ -18,7 +18,7 @@ edit.addEventListener('click', () => {
                     authnContextDeclRefs.push(input.value);
                 }
             });
-
+            
             var Single_Sign_On_Service_URL = Single_Sign_On_Service_URL_input.value;
             var Single_Logout_Service_URL = Single_Logout_Service_URL_input.value;
             var nameIdPolicy = nameIdPolicy_input.value;
@@ -42,6 +42,7 @@ edit.addEventListener('click', () => {
                     "postBindingLogout": httpPostBindingLogout.value,
                     "authnContextClassRefs": authnContextClassRefs.length > 0 ? JSON.stringify(authnContextClassRefs) : undefined,
                     "postBindingResponse": httpPostBindingResponse.value,
+                    "artifactBindingResponse": artifactBindingResponse.value,
                     "singleLogoutServiceUrl": Single_Logout_Service_URL,
                     "authnContextDeclRefs": authnContextDeclRefs.length > 0 ? JSON.stringify(authnContextDeclRefs) : undefined,
                     "backchannelSupported": backchannel.value,
@@ -88,28 +89,28 @@ edit.addEventListener('click', () => {
                     "metadataDescriptorUrl":samlEntityDescriptor_input.value,
                     "useMetadataDescriptorUrl":UseMetadataDescriptorURL.value,
                     "attributeConsumingServiceMetadata":attributeServicesArray.length > 0 ? JSON.stringify(attributeServicesArray) : undefined
-
+                    
                 }
             };
-
-
+            
+            
             let isValid = true;
             hasFocused = false;
-
+            
             if (!Single_Sign_On_Service_URL_input.value || !Single_Sign_On_Service_URL_input.value.startsWith("https://")) {
                 handleInvalidInput(Single_Sign_On_Service_URL_input, errorMessage_URL, "Enter a valid URL");
                 isValid = false;
             } else {
                 handleValidInput(Single_Sign_On_Service_URL_input, errorMessage_URL,"");
             }
-
+            
             if (Single_Logout_Service_URL_input.value && !Single_Logout_Service_URL_input.value.startsWith("https://")) {
                 handleInvalidInput(Single_Logout_Service_URL_input, errorMessage_URL_logout, "Enter a valid URL");
                 isValid = false;
             } else {
                 handleValidInput(Single_Logout_Service_URL_input, errorMessage_URL_logout,"");
             }
-
+            
             if (UseMetadataDescriptorURL.checked) {
                 if (!samlEntityDescriptor_input.value ||!samlEntityDescriptor_input.value.startsWith("https://")) {
                     handleInvalidInput(samlEntityDescriptor_input, samlEntityDescriptor_errorMessage_URL, "Enter a valid URL!");
@@ -118,17 +119,17 @@ edit.addEventListener('click', () => {
                 else
                 { handleValidInput(samlEntityDescriptor_input, samlEntityDescriptor_errorMessage_URL,"");
                 }
-
-
+                
+                
             }
-
+            
             if (!isValid) {
                 return;
             }
-
-
+            
+            
             removeEmptyStrings(data);
-
+            
             const configKeys = Object.keys(data.config);
             for (const key of configKeys) {
                 if (typeof data.config[key] === 'string' && data.config[key].trim() === "") {
@@ -138,102 +139,98 @@ edit.addEventListener('click', () => {
             if (Array.isArray(data.config.authnContextClassRefs) && data.config.authnContextClassRefs.length === 0) {
                 delete data.config.authnContextClassRefs;
             }
-
+            
             if (Array.isArray(data.config.authnContextDeclRefs) && data.config.authnContextDeclRefs.length === 0) {
                 delete data.config.authnContextDeclRefs;
             }
-
-
-
+            
+            
+            
             var selectedrealm = localStorage.getItem('selectedRealm');
-           if(alias_input.value){
-            // Sending a GET request to check if the plugin exists
-            fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${newAccessToken}`,
-                },
-            })
-
-                // Handling the response of the GET request
-                .then(async checkPluginResponse => {
-                    if (checkPluginResponse.ok) {
-                        var pluginData = await checkPluginResponse.json();
-                        const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Authorization': `Bearer ${newAccessToken}`,
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data),
-                        }
-
-                        );
-                        localStorage.setItem('pluginData', JSON.stringify(data));
-
-
-
-                        // Checking the response status for success
-                        if (updatePluginResponse.status === 204 || updatePluginResponse.status === 201) {
-                            console.log("Plugin updated successfully.");
-                            alert("Plugin updated successfully.");
-                            getAllPlugins(newAccessToken,selectedrealm);
-                            localStorage.setItem('pluginData', JSON.stringify(data));
-
-
-                        } else {
-                            console.error(`Failed to update/add the plugin. Response: ${updatePluginResponse.statusText}`);
-                            console.error("Error Details:", await updatePluginResponse.json());
-                            alert("Failed to update the plugin")
-                        }
-                    } else if (checkPluginResponse.status === 404) {
-                        // If the status is 404, the plugin does not exist, so send a POST request
-                        return fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${newAccessToken}`,
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data),
-                        })
+            if(alias_input.value){
+                // Sending a GET request to check if the plugin exists
+                fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${newAccessToken}`,
+                    },
+                })
+                  
+                  // Handling the response of the GET request
+                  .then(async checkPluginResponse => {
+                      if (checkPluginResponse.ok) {
+                          var pluginData = await checkPluginResponse.json();
+                          const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias_input.value}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${newAccessToken}`,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(data),
+                            }
+                          
+                          );
+                          localStorage.setItem('pluginData', JSON.stringify(data));
+                          
+                          // Checking the response status for success
+                          if (updatePluginResponse.status === 204 || updatePluginResponse.status === 201) {
+                              console.log("Plugin updated successfully.");
+                              alert("Plugin updated successfully.");
+                              getAllPlugins(newAccessToken,selectedrealm);
+                              localStorage.setItem('pluginData', JSON.stringify(data));
+                          } else {
+                              console.error(`Failed to update/add the plugin. Response: ${updatePluginResponse.statusText}`);
+                              console.error("Error Details:", await updatePluginResponse.json());
+                              alert("Failed to update the plugin")
+                          }
+                      } else if (checkPluginResponse.status === 404) {
+                          // If the status is 404, the plugin does not exist, so send a POST request
+                          return fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
+                              method: 'POST',
+                              headers: {
+                                  'Authorization': `Bearer ${newAccessToken}`,
+                                  'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify(data),
+                          })
                             .then(response => {
                                 if (response.ok) {
                                     alert("Plugin added successfully.");
-
+                                    
                                     localStorage.setItem('pluginData', JSON.stringify(data));
-
+                                    
                                 } else {
                                     console.error('Failed to add plugin:', response.status, response.statusText);
                                     alert("Failed to add plugin");
                                 }
                             })
                             .catch(error => {
-
+                                
                                 console.error('Network error or failed to send request:', error);
                             });
-
-
-                    } else {
-                        // If there is another status, an error occurred
-
-                        console.error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
-                        alert("Failed to retrieve the plugin");
-                        throw new Error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
-                    }
-                })
-
-                // Handling the response of the POST request (if executed)
-                .then(response => {
-                    // ... (Additional code that was commented out)
-                })
-                .catch(error => {
-                    // ... (Additional code that was commented out)
-                });
-        }else
-        {console.log('alias_input does not exist')}
-
+                          
+                          
+                      } else {
+                          // If there is another status, an error occurred
+                          
+                          console.error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
+                          alert("Failed to retrieve the plugin");
+                          throw new Error(`Failed to retrieve the plugin. Response: ${checkPluginResponse.statusText}`);
+                      }
+                  })
+                  
+                  // Handling the response of the POST request (if executed)
+                  .then(response => {
+                      // ... (Additional code that was commented out)
+                  })
+                  .catch(error => {
+                      // ... (Additional code that was commented out)
+                  });
+            }else
+            {console.log('alias_input does not exist')}
+            
             // Setting a form element value to an empty string
-
+            
         } else {
             console.log("Token is not updated");
         }

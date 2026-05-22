@@ -2,6 +2,7 @@ package nl.first8.keycloak.saml.processing.core.util;
 
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
+import org.jboss.logging.Logger;
 import org.keycloak.common.util.Base64;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.dom.xmlsec.w3.xmldsig.DSAKeyValueType;
@@ -9,7 +10,7 @@ import org.keycloak.dom.xmlsec.w3.xmldsig.KeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.RSAKeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.SignatureType;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
 import org.keycloak.saml.common.constants.WSTrustConstants;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.exceptions.ProcessingException;
@@ -53,7 +54,8 @@ import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 
 public class XMLSignatureUtil {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger =
+        PicketLinkLoggerFactory.getLogger(Logger.getLogger(XMLSignatureUtil.class));
 
     // Set some system properties and Santuario providers. Run this block before any other class initialization.
     static {
@@ -172,7 +174,6 @@ public class XMLSignatureUtil {
      * Use this method to not include the KeyInfo in the signature
      *
      * @param includeKeyInfoInSignature
-     *
      * @since v2.0.1
      */
     public static void setIncludeKeyInfoInSignature(boolean includeKeyInfoInSignature) {
@@ -188,9 +189,7 @@ public class XMLSignatureUtil {
      * @param digestMethod
      * @param signatureMethod
      * @param referenceURI
-     *
      * @return
-     *
      * @throws ParserConfigurationException
      * @throws XMLSignatureException
      * @throws MarshalException
@@ -250,13 +249,12 @@ public class XMLSignatureUtil {
     /**
      * Sign only specified element (assumption is that it already has ID attribute set)
      *
-     * @param elementToSign element to sign with set ID
-     * @param nextSibling child of elementToSign, which will be used as next sibling of created signature
+     * @param elementToSign   element to sign with set ID
+     * @param nextSibling     child of elementToSign, which will be used as next sibling of created signature
      * @param keyPair
      * @param digestMethod
      * @param signatureMethod
      * @param referenceURI
-     *
      * @throws GeneralSecurityException
      * @throws MarshalException
      * @throws XMLSignatureException
@@ -270,14 +268,13 @@ public class XMLSignatureUtil {
     /**
      * Sign only specified element (assumption is that it already has ID attribute set)
      *
-     * @param elementToSign element to sign with set ID
-     * @param nextSibling child of elementToSign, which will be used as next sibling of created signature
+     * @param elementToSign   element to sign with set ID
+     * @param nextSibling     child of elementToSign, which will be used as next sibling of created signature
      * @param keyPair
      * @param digestMethod
      * @param signatureMethod
      * @param referenceURI
      * @param x509Certificate {@link X509Certificate} to be placed in SignedInfo
-     *
      * @throws GeneralSecurityException
      * @throws MarshalException
      * @throws XMLSignatureException
@@ -342,9 +339,7 @@ public class XMLSignatureUtil {
      * @param digestMethod
      * @param signatureMethod
      * @param referenceURI
-     *
      * @return
-     *
      * @throws GeneralSecurityException
      * @throws XMLSignatureException
      * @throws MarshalException
@@ -361,9 +356,7 @@ public class XMLSignatureUtil {
      * @param digestMethod
      * @param signatureMethod
      * @param referenceURI
-     *
      * @return
-     *
      * @throws GeneralSecurityException
      * @throws XMLSignatureException
      * @throws MarshalException
@@ -388,9 +381,7 @@ public class XMLSignatureUtil {
     /**
      * Sign the root element
      *
-     *
      * @return
-     *
      * @throws GeneralSecurityException
      * @throws XMLSignatureException
      * @throws MarshalException
@@ -445,7 +436,7 @@ public class XMLSignatureUtil {
         boolean signatureValid = true;
         for (int i = 0; i < nl.getLength(); i++) {
             Node signatureNode = nl.item(i);
-            logger.debug("Validating signature node #%d: %s".formatted((i + 1),  signatureNode.getLocalName()));
+            logger.debug("Validating signature node #%d: %s".formatted((i + 1), signatureNode.getLocalName()));
 
             boolean nodeSignatureValid = validateSingleNode(signatureNode, locator, signedNodes);
             if (nodeSignatureValid) {
@@ -563,7 +554,6 @@ public class XMLSignatureUtil {
      *
      * @param signature
      * @param os
-     *
      * @throws SAXException
      * @throws JAXBException
      */
@@ -580,7 +570,6 @@ public class XMLSignatureUtil {
      *
      * @param signedDocument
      * @param os
-     *
      * @throws TransformerException
      */
     public static void marshall(Document signedDocument, OutputStream os) throws TransformerException {
@@ -593,10 +582,8 @@ public class XMLSignatureUtil {
      * Given the X509Certificate in the keyinfo element, get a {@link X509Certificate}
      *
      * @param certificateString
-     *
      * @return
-     *
-     * @throws org.keycloak.saml.common.exceptions.ProcessingException
+     * @throws ProcessingException
      */
     public static X509Certificate getX509CertificateFromKeyInfoString(String certificateString) throws ProcessingException {
         X509Certificate cert = null;
@@ -622,9 +609,7 @@ public class XMLSignatureUtil {
      * Given a dsig:DSAKeyValue element, return {@link DSAKeyValueType}
      *
      * @param element
-     *
      * @return
-     *
      * @throws ProcessingException
      */
     public static DSAKeyValueType getDSAKeyValue(Element element) throws ParsingException {
@@ -663,9 +648,7 @@ public class XMLSignatureUtil {
      * Given a dsig:DSAKeyValue element, return {@link DSAKeyValueType}
      *
      * @param element
-     *
      * @return
-     *
      * @throws ProcessingException
      */
     public static RSAKeyValueType getRSAKeyValue(Element element) throws ParsingException {
@@ -698,9 +681,8 @@ public class XMLSignatureUtil {
      * </p>
      *
      * @param key the {@code PublicKey} that will be represented as a {@code KeyValueType}.
-     *
      * @return the constructed {@code KeyValueType} or {@code null} if the specified key is neither a DSA nor a RSA
-     *         key.
+     * key.
      */
     public static KeyValueType createKeyValue(PublicKey key) {
         if (key instanceof RSAPublicKey) {

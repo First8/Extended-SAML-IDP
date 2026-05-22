@@ -2,7 +2,8 @@ package nl.first8.keycloak.saml.processing.api.saml.v2.sig;
 
 import nl.first8.keycloak.saml.processing.core.util.XMLSignatureUtil;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ProcessingException;
@@ -24,7 +25,7 @@ import org.keycloak.rotation.KeyLocator;
 
 public class SAML2Signature {
 
-    private static final PicketLinkLogger picketLogger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger picketLogger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(SAML2Signature.class));
 
     private String signatureMethod = SignatureMethod.RSA_SHA1;
 
