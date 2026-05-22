@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     
     const hideLoginPage = document.getElementById("hideLoginPage");
-    hideLoginPage.value = pluginData.config.hideOnLoginPage ? pluginData.config.hideOnLoginPage : false;
+    hideLoginPage.value = pluginData.hideOnLogin ? pluginData.hideOnLogin : false;
     hideLoginPage.addEventListener("change", function () {
         handleCheckboxValue(hideLoginPage);
         
