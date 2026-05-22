@@ -24,7 +24,7 @@ import org.keycloak.rotation.KeyLocator;
 
 public class SAML2Signature {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger picketLogger = PicketLinkLoggerFactory.getLogger();
 
     private String signatureMethod = SignatureMethod.RSA_SHA1;
 
@@ -97,7 +97,7 @@ public class SAML2Signature {
      * @throws GeneralSecurityException
      */
     public Document sign(Document doc, String referenceID, String keyName, KeyPair keyPair, String canonicalizationMethodType) throws ParserConfigurationException,
-            GeneralSecurityException, MarshalException, XMLSignatureException {
+        GeneralSecurityException, MarshalException, XMLSignatureException {
         String referenceURI = "#" + referenceID;
 
         configureIdAttribute(doc);
@@ -132,7 +132,7 @@ public class SAML2Signature {
         try {
             sign(samlDocument, id, keyName, keypair, canonicalizationMethodType);
         } catch (ParserConfigurationException | GeneralSecurityException | MarshalException | XMLSignatureException e) {
-            throw new ProcessingException(logger.signatureError(e));
+            throw new ProcessingException(picketLogger.signatureError(e));
         }
     }
 
@@ -147,16 +147,11 @@ public class SAML2Signature {
      * @throws ProcessingException
      */
     public boolean validate(Document signedDocument, KeyLocator keyLocator) throws ProcessingException {
-        logger.warn("Called without configuration for Saml Advice Nodes: defaulting to false.");
-        return validate(signedDocument, keyLocator, false);
-    }
-
-    public boolean validate(Document signedDocument, KeyLocator keyLocator, boolean ignoreSamlAdviceNodes) throws ProcessingException {
         try {
             configureIdAttribute(signedDocument);
-            return XMLSignatureUtil.validate(signedDocument, keyLocator, ignoreSamlAdviceNodes);
+            return XMLSignatureUtil.validate(signedDocument, keyLocator);
         } catch (MarshalException | XMLSignatureException me) {
-            throw new ProcessingException(logger.signatureError(me));
+            throw new ProcessingException(picketLogger.signatureError(me));
         }
     }
 
@@ -188,11 +183,12 @@ public class SAML2Signature {
      * @param document SAML document to have its ID attribute configured.
      */
     public static void configureIdAttribute(Document document) {
+        picketLogger.trace("configureIdAttribute() begin");
         // Estabilish the IDness of the ID attribute.
         configureIdAttribute(document.getDocumentElement());
 
         NodeList nodes = document.getElementsByTagNameNS(JBossSAMLURIConstants.ASSERTION_NSURI.get(),
-                JBossSAMLConstants.ASSERTION.get());
+            JBossSAMLConstants.ASSERTION.get());
 
         for (int i = 0; i < nodes.getLength(); i++) {
             configureIdAttribute((Element) nodes.item(i));
