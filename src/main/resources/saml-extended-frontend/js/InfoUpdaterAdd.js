@@ -306,13 +306,14 @@ if (storedData) {
         updateField('assertionConsumingServiceIndex', pluginData.config.assertionConsumingServiceIndex);
     }
     
-    if (pluginData.config.attributeConsumingServiceName) {
-        updateField('attributeConsumingServiceName', pluginData.config.attributeConsumingServiceName);
+    if (pluginData.config.attributeConsumingServiceIndex) {
+        updateField('attributeConsumingServiceIndex', pluginData.config.attributeConsumingServiceIndex);
     }
     
     if (pluginData.config.attributeConsumingServiceName) {
         updateField('attributeConsumingServiceName', pluginData.config.attributeConsumingServiceName);
     }
+    
     if (pluginData.config.authnContextComparisonType) {
         updateField('comparison', pluginData.config.authnContextComparisonType);
     }
