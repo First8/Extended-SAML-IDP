@@ -608,6 +608,13 @@
             <span class="slider round"></span>
         </label>
 
+        <h5>Assertion Consuming Service Index
+            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                 onclick="alert('Index of the Assertion Consuming Service URL to request during authentication and to make default in the metadata.')">
+        </h5>
+
+        <input type="number" min="1" name="assertionConsumingServiceIndex"
+               id="assertionConsumingServiceIndex">
 
         <h5>Force Authentication
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -914,15 +921,6 @@
             <span class="slider round"></span>
         </label>
 
-        <h5>ArtifactResolution via HTTP-ARTIFACT
-            <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
-                 onclick="alert('Use HTTP-Artifact binding instead of the default HTTP-POST binding')">
-        </h5>
-        <label class="switch">
-            <input type="checkbox" name="ArtifactResolution_via_HTTP-ARTIFACT "
-                   id="ArtifactResolution_via_HTTP_ARTIFACT" value="false">
-            <span class="slider round"></span>
-        </label>
         <h5>Artifact Resolution with SOAP
             <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                  onclick="alert('indicates whether to use Artifact Resloution with SOAP envelope.')">

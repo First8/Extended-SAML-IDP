@@ -319,14 +319,6 @@ Sign_Artifact_Resolution_Request.addEventListener("change", function () {
     
 });
 
-const ArtifactResolution_via_HTTP_ARTIFACT = document.getElementById("ArtifactResolution_via_HTTP_ARTIFACT");
-ArtifactResolution_via_HTTP_ARTIFACT.addEventListener("change", function () {
-    handleCheckboxValue(ArtifactResolution_via_HTTP_ARTIFACT);
-    
-});
-
-
-
 const Artifact_Resolution_with_SOAP = document.getElementById("Artifact_Resolution_with_SOAP");
 Artifact_Resolution_with_SOAP.addEventListener("change", function () {
     handleCheckboxValue(Artifact_Resolution_with_SOAP);

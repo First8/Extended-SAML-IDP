@@ -312,15 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
     });
     
-    const ArtifactResolution_via_HTTP_ARTIFACT = document.getElementById("ArtifactResolution_via_HTTP_ARTIFACT");
-    ArtifactResolution_via_HTTP_ARTIFACT.value = pluginData.config.artifactResolutionHTTPArtifact ? pluginData.config.artifactResolutionHTTPArtifact : false;
-    ArtifactResolution_via_HTTP_ARTIFACT.addEventListener("change", function () {
-        handleCheckboxValue(ArtifactResolution_via_HTTP_ARTIFACT);
-        
-    });
-    
-    
-    
     
     const Artifact_Resolution_with_SOAP = document.getElementById("Artifact_Resolution_with_SOAP");
     Artifact_Resolution_with_SOAP.value = pluginData.config.artifactResolutionSOAP ? pluginData.config.artifactResolutionSOAP : false;
