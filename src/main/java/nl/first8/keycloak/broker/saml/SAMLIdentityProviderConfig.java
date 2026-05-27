@@ -62,7 +62,6 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     public static final String METADATA_VALID_UNTIL_PERIOD = "metadataValidUntilPeriod";
     public static final String ARTIFACT_BINDING_RESPONSE = "artifactBindingResponse";
     public static final String ARTIFACT_RESOLUTION_MUTUAL_TLS = "mutualTls";
-    public static final String IGNORE_SAML_ADVICE_NODES = "ignoreSamlAdviceNodes";
     public static final String AUTHN_REQUEST_SCOPING = "scoping";
     public static final String LINKED_PROVIDERS = "linkedProviders";
     public static final String SERVICE_NAME = "serviceName";
@@ -185,14 +184,6 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
 
     public void setMutualTls(boolean mutualTls) {
         getConfig().put(ARTIFACT_RESOLUTION_MUTUAL_TLS, String.valueOf(mutualTls));
-    }
-
-    public void setIgnoreSamlAdviceNodes(boolean ignoreSamlAdviceNodes) {
-        getConfig().put(IGNORE_SAML_ADVICE_NODES, String.valueOf(ignoreSamlAdviceNodes));
-    }
-
-    public boolean isIgnoreSamlAdviceNodes() {
-        return Boolean.parseBoolean(getConfig().get(IGNORE_SAML_ADVICE_NODES));
     }
 
     public String getScoping() {

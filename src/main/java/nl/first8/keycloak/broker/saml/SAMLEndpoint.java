@@ -445,8 +445,8 @@ public class SAMLEndpoint {
                     logger.debug("Verify and get assertion!");
                     assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(JBossSAMLConstants.ASSERTION.get()));
                 }
-                logger.trace("before Validate the response Issuer");
 
+                logger.trace("Validating the response Issuer");
                 // Validate the response Issuer
                 final String responseIssuer = responseType.getIssuer() != null ? responseType.getIssuer().getValue() : null;
                 final boolean responseIssuerValidationSuccess = config.getIdpEntityId() == null ||
@@ -457,8 +457,6 @@ public class SAMLEndpoint {
                     event.error(Errors.INVALID_SAML_RESPONSE);
                     return ErrorPage.error(session, authSession, Response.Status.BAD_REQUEST, Messages.INVALID_REQUESTER);
                 }
-
-                logger.trace("before Validate InResponseTo attribute");
 
                 // Validate InResponseTo attribute: must match the generated request ID
                 String expectedRequestId = authSession.getClientNote(SamlProtocol.SAML_REQUEST_ID_BROKER);
@@ -475,7 +473,6 @@ public class SAMLEndpoint {
                 final boolean signatureNotValid = signed && config.isValidateSignature() && !AssertionUtil.isSignatureValid(assertionElement, getIDPKeyLocator());
                 final boolean hasNoSignatureWhenRequired = !signed && config.isValidateSignature() && !containsUnencryptedSignature(holder);
 
-                logger.trace("before if (assertionSignatureNotExistsWhenRequired || (...)");
 
                 if (assertionSignatureNotExistsWhenRequired || signatureNotValid || hasNoSignatureWhenRequired) {
                     logger.error("validation failed");
@@ -483,8 +480,6 @@ public class SAMLEndpoint {
                     event.error(Errors.INVALID_SIGNATURE);
                     return ErrorPage.error(session, authSession, Response.Status.BAD_REQUEST, Messages.INVALID_REQUESTER);
                 }
-
-                logger.trace("after if (assertionSignatureNotExistsWhenRequired || (...)");
 
                 if (AssertionUtil.isIdEncrypted(responseType)) {
                     try {
@@ -498,8 +493,7 @@ public class SAMLEndpoint {
 
                 AssertionType assertion = responseType.getAssertions().get(0).getAssertion();
 
-                logger.trace("before Validate the assertion issuer");
-
+                logger.trace("Validating the assertion issuer");
                 // Validate the assertion Issuer
                 final String assertionIssuer = assertion.getIssuer() != null ? assertion.getIssuer().getValue() : null;
                 final boolean assertionIssuerValidationSuccess = config.getIdpEntityId() == null ||
@@ -513,8 +507,6 @@ public class SAMLEndpoint {
 
                 NameIDType subjectNameID = getSubjectNameID(assertion);
                 String principal = getPrincipal(assertion);
-
-                logger.trace("before if (principal == null)");
 
                 if (principal == null) {
                     logger.errorf("no principal in assertion; expected: %s", expectedPrincipalType());
@@ -530,7 +522,6 @@ public class SAMLEndpoint {
 
                 identity.setUsername(principal);
 
-                logger.trace("before if (subjectNameID != null && (...)");
                 //SAML Spec 2.2.2 Format is optional
                 if (subjectNameID != null && subjectNameID.getFormat() != null && subjectNameID.getFormat().toString().equals(JBossSAMLURIConstants.NAMEID_FORMAT_EMAIL.get())) {
                     identity.setEmail(subjectNameID.getValue());
@@ -540,7 +531,6 @@ public class SAMLEndpoint {
                     identity.setToken(samlResponse);
                 }
 
-                logger.trace("before if (subjectNameID != null && (...)");
 
                 ConditionsValidator.Builder cvb = new ConditionsValidator.Builder(assertion.getID(), assertion.getConditions(), destinationValidator)
                     .clockSkewInMillis(1000 * config.getAllowedClockSkew());
@@ -554,15 +544,12 @@ public class SAMLEndpoint {
                 } catch (IllegalArgumentException ex) {
                     // warning has been already emitted in DeploymentBuilder
                 }
-                logger.trace("before if (! cvb.build().isValid())");
                 if (!cvb.build().isValid()) {
                     logger.error("Assertion expired.");
                     event.event(EventType.IDENTITY_PROVIDER_RESPONSE);
                     event.error(Errors.INVALID_SAML_RESPONSE);
                     return ErrorPage.error(session, authSession, Response.Status.BAD_REQUEST, Messages.EXPIRED_CODE);
                 }
-
-                logger.trace("before for (Object statement : (...)");
 
                 AuthnStatementType authn = null;
                 for (Object statement : assertion.getStatements()) {
@@ -573,8 +560,6 @@ public class SAMLEndpoint {
                         break;
                     }
                 }
-
-                logger.trace("before if (assertion.getAttributeStatements() != null");
 
                 if (assertion.getAttributeStatements() != null) {
                     String email = getX500Attribute(assertion, X500SAMLProfileConstants.EMAIL);
@@ -588,7 +573,6 @@ public class SAMLEndpoint {
                 identity.setBrokerUserId(brokerUserId);
                 identity.setIdp(provider);
 
-                logger.trace("before if (authn != null && (...)");
 
                 if (authn != null && authn.getSessionIndex() != null) {
                     String brokerSessionId = config.getAlias() + "." + authn.getSessionIndex();
@@ -596,6 +580,7 @@ public class SAMLEndpoint {
                     identity.setBrokerSessionId(brokerSessionId);
                 }
 
+                logger.trace("handleLoginResponse finished succesfully.");
                 return callback.authenticated(identity);
             } catch (WebApplicationException e) {
                 return e.getResponse();

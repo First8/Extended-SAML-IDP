@@ -125,7 +125,6 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             if (protocol.requireReauthentication(null, request.getAuthenticationSession()))
                 forceAuthn = Boolean.TRUE;
             SAML2AuthnRequestBuilder authnRequestBuilder = new SAML2AuthnRequestBuilder()
-                .assertionConsumerUrl(assertionConsumerServiceUrl)
                 .destination(destinationUrl)
                 .issuer(issuerURL)
                 .forceAuthn(forceAuthn)
