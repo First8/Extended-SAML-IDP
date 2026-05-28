@@ -1,12 +1,12 @@
 const relativePath = window.location.pathname.substring(0,window.location.pathname.indexOf("/realm"));
-const serverUrl = window.location.protocol+"//" + window.location.host + relativePath;
+const ServerUrl = window.location.protocol+"//" + window.location.host + relativePath;
 const clientid = 'saml-extended';
-const postLogoutRedirect = `${serverUrl}/realms/master/samlconfig/pages/realm`;
-const redirectUri = `${serverUrl}/realms/master/samlconfig/pages/list`;
-const editprovider=`${serverUrl}/realms/master/samlconfig/pages/editprovider`;
-const addprovider=`${serverUrl}/realms/master/samlconfig/pages/addprovider`;
+const postLogoutRedirect = `${ServerUrl}/realms/master/samlconfig/pages/realm`;
+const redirectUri = `${ServerUrl}/realms/master/samlconfig/pages/list`;
+const editprovider=`${ServerUrl}/realms/master/samlconfig/pages/editprovider`;
+const addprovider=`${ServerUrl}/realms/master/samlconfig/pages/addprovider`;
 const realm = localStorage.getItem('realm_input');
-localStorage.setItem('serverUrl', serverUrl);
+localStorage.setItem('ServerUrl', ServerUrl);
 localStorage.setItem('postLogoutRedirect', postLogoutRedirect);
 localStorage.setItem('redirectUri', redirectUri);
 localStorage.setItem('addprovider', addprovider);
