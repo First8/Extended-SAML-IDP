@@ -167,3 +167,10 @@ buildNumber.properties
 .classpath
 
 # End of https://www.toptal.com/developers/gitignore/api/maven,intellij+all,eclipse
+
+# E2E test credentials
+src/test/e2e/frontend/.env
+src/test/e2e/frontend/node_modules/
+
+# Claude Code
+.claude/

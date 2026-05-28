@@ -12,7 +12,8 @@ import org.keycloak.dom.saml.v2.assertion.SubjectType;
 import org.keycloak.dom.saml.v2.metadata.LocalizedNameType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.KeyInfoType;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.StaxUtil;
@@ -38,7 +39,7 @@ import org.w3c.dom.Node;
 
 public class BaseWriter {
 
-    protected static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    protected static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(BaseWriter.class));
 
     protected static String PROTOCOL_PREFIX = "samlp";
 
@@ -176,7 +177,7 @@ public class BaseWriter {
 
     private void writeElementAttributeValue(Element attributeValue) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.ATTRIBUTE_VALUE.get(),
-                ASSERTION_NSURI.get());
+            ASSERTION_NSURI.get());
         StaxUtil.writeDOMElement(writer, attributeValue);
         StaxUtil.writeEndElement(writer);
     }
@@ -221,7 +222,7 @@ public class BaseWriter {
 
     public void writeLocalizedNameType(LocalizedNameType localizedNameType, QName startElement) throws ProcessingException {
         StaxUtil.writeStartElement(writer, startElement.getPrefix(), startElement.getLocalPart(),
-                startElement.getNamespaceURI());
+            startElement.getNamespaceURI());
         StaxUtil.writeAttribute(writer, new QName(JBossSAMLURIConstants.XML.get(), "lang", "xml"), localizedNameType.getLang());
         StaxUtil.writeCharacters(writer, localizedNameType.getValue());
         StaxUtil.writeEndElement(writer);
@@ -290,7 +291,7 @@ public class BaseWriter {
 
     private void write(SubjectConfirmationType subjectConfirmationType) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.SUBJECT_CONFIRMATION.get(),
-                ASSERTION_NSURI.get());
+            ASSERTION_NSURI.get());
 
         StaxUtil.writeAttribute(writer, JBossSAMLConstants.METHOD.get(), subjectConfirmationType.getMethod());
 
@@ -311,7 +312,7 @@ public class BaseWriter {
 
     private void write(SubjectConfirmationDataType subjectConfirmationData) throws ProcessingException {
         StaxUtil.writeStartElement(writer, ASSERTION_PREFIX, JBossSAMLConstants.SUBJECT_CONFIRMATION_DATA.get(),
-                ASSERTION_NSURI.get());
+            ASSERTION_NSURI.get());
 
         // Let us look at attributes
         String inResponseTo = subjectConfirmationData.getInResponseTo();

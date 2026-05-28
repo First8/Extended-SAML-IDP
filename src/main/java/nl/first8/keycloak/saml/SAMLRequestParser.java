@@ -7,7 +7,7 @@ import org.jboss.logging.Logger;
 
 import org.keycloak.common.util.StreamUtil;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
 import org.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
 import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
 import org.keycloak.saml.processing.web.util.PostBindingUtil;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class SAMLRequestParser {
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(SAMLRequestParser.class));
     protected static Logger log = Logger.getLogger(SAMLRequestParser.class);
 
     public static SAMLDocumentHolder parseRequestRedirectBinding(String samlMessage) {
