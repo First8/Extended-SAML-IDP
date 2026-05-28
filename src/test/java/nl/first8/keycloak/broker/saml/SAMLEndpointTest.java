@@ -1,5 +1,6 @@
 package nl.first8.keycloak.broker.saml;
 
+import io.opentelemetry.api.trace.Span;
 import jakarta.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -28,6 +29,7 @@ import org.keycloak.models.RealmProvider;
 import org.keycloak.saml.validators.DestinationValidator;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.tracing.TracingProvider;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -230,6 +232,7 @@ class SAMLEndpointTest {
     /**
      * Assembles the full Keycloak session graph. Notable stubs:
      * - sessionFactory / innerSession: Keycloak spawns a child session for certain operations
+     * - TracingProvider: SAMLEndpoint calls getCurrentSpan(), also on the error path
      * - LoginFormsProvider: used by failure tests to assert on the error message rendered;
      * returned via session.getProvider(LoginFormsProvider.class) so tests can verify it
      */
@@ -261,6 +264,10 @@ class SAMLEndpointTest {
         when(innerSession.getKeycloakSessionFactory()).thenReturn(sessionFactory);
         when(sessionFactory.create()).thenReturn(innerSession);
 
+        TracingProvider tracingProvider = mock(TracingProvider.class);
+        Span span = mock(Span.class);
+        when(tracingProvider.getCurrentSpan()).thenReturn(span);
+
         LoginFormsProvider loginFormsProvider = mock(LoginFormsProvider.class);
         when(loginFormsProvider.setAuthenticationSession(any())).thenReturn(loginFormsProvider);
         when(loginFormsProvider.setError(anyString())).thenReturn(loginFormsProvider);
@@ -273,6 +280,7 @@ class SAMLEndpointTest {
         when(session.getContext()).thenReturn(context);
         when(session.keys()).thenReturn(keyManager);
         when(session.getKeycloakSessionFactory()).thenReturn(sessionFactory);
+        when(session.getProvider(TracingProvider.class)).thenReturn(tracingProvider);
         when(session.getProvider(LoginFormsProvider.class)).thenReturn(loginFormsProvider);
         return session;
     }
