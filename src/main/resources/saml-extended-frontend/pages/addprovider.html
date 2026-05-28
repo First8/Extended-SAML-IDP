@@ -356,8 +356,8 @@
     <script src="../../samlconfig/js/Config"></script>
     </h1>
     <script>document.getElementById('List').addEventListener('click', function () {
-        var redirectUri = localStorage.getItem('redirectUri')
-        window.location.href = `${redirectUri}`;
+      var redirectUri = localStorage.getItem('redirectUri')
+      window.location.href = `${redirectUri}`;
     });
     </script>
     <div>
@@ -378,9 +378,9 @@
            value="http://localhost:8080/realms/master/broker/saml-extended/endpoint" id="redirectUri" readonly>
 
     <script>
-        var selectedrealm = localStorage.getItem('selectedRealm');
-        var ServerUrl1 = localStorage.getItem('ServerUrl');
-        document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/saml-extended/endpoint`
+      var selectedrealm = localStorage.getItem('selectedRealm');
+      var ServerUrl1 = localStorage.getItem('serverUrl');
+      document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/saml-extended/endpoint`
     </script>
     <h5>Alias *
         <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -389,20 +389,20 @@
     <span class="error-message" id="errorMessage"></span>
     <input type="text" name="alias" id="alias" class="input_text" oninput="copyValue(event)" required>
     <script>
-        var selectedrealm = localStorage.getItem('selectedRealm');
-        var ServerUrl1 = localStorage.getItem('ServerUrl')
-        document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/saml-extended/endpoint`
+      var selectedrealm = localStorage.getItem('selectedRealm');
+      var ServerUrl1 = localStorage.getItem('serverUrl')
+      document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/saml-extended/endpoint`
 
-        function copyValue(event) {
-            var alias = event.target.value;
-            var selectedrealm = localStorage.getItem('selectedRealm');
-            localStorage.setItem('alias_for_endpoint', alias)
-            var ServerUrl1 = localStorage.getItem('ServerUrl')
-            document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/${alias}/endpoint`
-            document.getElementById('metadataLink').onclick = function(event) {
-                event.preventDefault();
-                window.open(`${serverUrl}/realms/${selectedRealm}/broker/${alias}/endpoint/descriptor`, '_blank');}
-        }
+      function copyValue(event) {
+        var alias = event.target.value;
+        var selectedrealm = localStorage.getItem('selectedRealm');
+        localStorage.setItem('alias_for_endpoint', alias)
+        var ServerUrl1 = localStorage.getItem('serverUrl')
+        document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/${alias}/endpoint`
+        document.getElementById('metadataLink').onclick = function(event) {
+          event.preventDefault();
+          window.open(`${serverUrl}/realms/${selectedRealm}/broker/${alias}/endpoint/descriptor`, '_blank');}
+      }
     </script>
     <h5>Display Name
         <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -426,12 +426,12 @@
         SAML 2.0 Service Provider Metadata </a>
     </section>
     <script>
-        var selectedRealm = localStorage.getItem('selectedRealm');
-        var serverUrl = localStorage.getItem('ServerUrl');
-        var alias_for_endpoint = localStorage.getItem('alias_for_endpoint');
-        document.getElementById('metadataLink').onclick = function(event) {
-            event.preventDefault();
-            window.open(`${serverUrl}/realms/${selectedRealm}/broker/${alias_for_endpoint}/endpoint/descriptor`, '_blank');}  </script>
+      var selectedRealm = localStorage.getItem('selectedRealm');
+      var serverUrl = localStorage.getItem('serverUrl');
+      var alias_for_endpoint = localStorage.getItem('alias_for_endpoint');
+      document.getElementById('metadataLink').onclick = function(event) {
+        event.preventDefault();
+        window.open(`${serverUrl}/realms/${selectedRealm}/broker/${alias_for_endpoint}/endpoint/descriptor`, '_blank');}  </script>
 
     <h2 id="SAMLSettings">SAML settings</h2>
     <h5>Service Provider Entity ID
@@ -563,18 +563,21 @@
                      onclick="alert('Indicates whether to respond to requests using HTTP-POST binding. If false, HTTP-REDIRECT binding will be used.')">
             </h5>
 
-
             <label class="switch">
                 <input type="checkbox" name="httpPostBindingResponse" value="false" id="httpPostBindingResponse">
                 <span class="slider round"></span>
             </label>
 
+            <h5>ARTIFACT binding response</h5>
+            <label class="switch">
+                <input type="checkbox" name="artifactBindingResponse" value="false" id="artifactBindingResponse">
+                <span class="slider round"></span>
+            </label>
 
             <h5>HTTP-POST Binding for AuthnRequest
                 <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                      onclick="alert('Indicates whether the AuthnRequest must be sent using HTTP-POST binding. If false, HTTP-REDIRECT binding will be used')">
             </h5>
-
 
             <label class="switch">
                 <input type="checkbox" name="httpPostBindingAuthnRequest" value="false"
@@ -651,6 +654,13 @@
                 <span class="slider round"></span>
             </label>
 
+            <h5>Assertion Consuming Service Index
+                <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                     onclick="alert('Index of the Assertion Consuming Service URL to request during authentication and to make default in the metadata.')">
+            </h5>
+
+            <input type="number" min="1" name="assertionConsumingServiceIndex"
+                   id="assertionConsumingServiceIndex">
 
             <h5>Force Authentication
                 <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
@@ -702,7 +712,6 @@
 
 
             <h5>Allowed Clock Skew
-
                 <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                      onclick="alert('Clock skew in seconds that is tolerated when validating identity provider tokens. Default value is zero')">
             </h5>
@@ -711,10 +720,10 @@
 
             <h5>Attribute Consuming Service Index
                 <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
-                     onclick="alert('Index of the Attribute Consuming Service profile to request during authentication.')">
+                     onclick="alert('Index of the Attribute Consuming Service profile to request during authentication. Use -1 to set no value.')">
             </h5>
 
-            <input type="number" min="0" value="0" name="attributeConsumingServiceIndex"
+            <input type="number" placeholder="-1" min="-1" name="attributeConsumingServiceIndex"
                    id="attributeConsumingServiceIndex">
 
             <h5>Attribute Consuming Service Name
@@ -750,7 +759,6 @@
                     <div class="col-md-4 margin-bottom">
                         <input id="authnContextClassRefs" name="authnContextClassRefs" class="input_text" type="text"
                                class="form-control input-md">
-
                     </div>
                 </div>
                 <!--        </form>-->
@@ -874,7 +882,7 @@
                     </h5>
                 </div>
                 <div class="quantity-container">
-                    <input type="number" id="Metadata_expires_in" value="0" min="0">
+                    <input type="number" id="Metadata_expires_in" min="0">
                     <i class="fas fa-arrow-down arrow-icon" onclick="changeQuantity(-1)"></i>
                     <select class="selector" id="metadataValidUntilPeriod">
                         <option value="6">Day(s)</option>
@@ -891,17 +899,17 @@
                 <input type="text" class="input_text" name="Linked Providers" id="Linked_Providers">
 
                 <script>
-                    var quantityField = document.getElementById("quantity");
+                  var quantityField = document.getElementById("quantity");
 
-                    function changeQuantity(change) {
-                        var currentValue = parseInt(quantityField.value);
+                  function changeQuantity(change) {
+                    var currentValue = parseInt(quantityField.value);
 
-                        if (!isNaN(currentValue)) {
-                            quantityField.value = currentValue + change >= 0 ? currentValue + change : 0;
-                        } else {
-                            quantityField.value = 0;
-                        }
+                    if (!isNaN(currentValue)) {
+                      quantityField.value = currentValue + change >= 0 ? currentValue + change : 0;
+                    } else {
+                      quantityField.value = 0;
                     }
+                  }
                 </script>
 
             </div>
@@ -947,15 +955,6 @@
                     <span class="slider round"></span>
                 </label>
 
-                <h5>ArtifactResolution via HTTP-ARTIFACT
-                    <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
-                         onclick="alert('Use HTTP-Artifact binding instead of the default HTTP-POST binding')">
-                </h5>
-                <label class="switch">
-                    <input type="checkbox" name="ArtifactResolution_via_HTTP-ARTIFACT "
-                           id="ArtifactResolution_via_HTTP_ARTIFACT" value="false">
-                    <span class="slider round"></span>
-                </label>
                 <h5>Artifact Resolution with SOAP
                     <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                          onclick="alert('indicates whether to use Artifact Resloution with SOAP envelope.')">
@@ -1001,14 +1000,14 @@
             <button onclick="addFields(event)" class="btn">Add Attribute Service</button>
 
             <script>
-                var attributeServicesArray = [];
+              var attributeServicesArray = [];
 
-                function addFields(event) {
-                    event.preventDefault();
-                    var attributeServicesDiv = document.getElementById('attributeServices');
-                    var newFieldsDiv = document.createElement('div');
-                    newFieldsDiv.classList.add('attribute-consuming-service'); // Add class 'attribute-consuming-service'
-                    newFieldsDiv.innerHTML = `
+              function addFields(event) {
+                event.preventDefault();
+                var attributeServicesDiv = document.getElementById('attributeServices');
+                var newFieldsDiv = document.createElement('div');
+                newFieldsDiv.classList.add('attribute-consuming-service'); // Add class 'attribute-consuming-service'
+                newFieldsDiv.innerHTML = `
             <label for="serviceName">Service Name:</label>
             <input type="text" class="serviceName" placeholder="Enter Service Name">
             <label for="friendlyName">Friendly Name:</label>
@@ -1019,41 +1018,41 @@
             <input type="text" class="attributeValue" placeholder="Enter Attribute Value">
             <button onclick="deleteForm(this.parentNode)" class="btn">Delete</button>
         `;
-                    attributeServicesDiv.appendChild(newFieldsDiv);
-                }
-                function deleteForm(form, index) {
-                    form.remove(); // Remove the form element from the DOM
-                    attributeServicesArray.splice(index, 1); // Remove the form data from the array
+                attributeServicesDiv.appendChild(newFieldsDiv);
+              }
+              function deleteForm(form, index) {
+                form.remove(); // Remove the form element from the DOM
+                attributeServicesArray.splice(index, 1); // Remove the form data from the array
 
-                    // Update the indices of remaining elements
-                    attributeServicesArray.forEach((element, i) => {
-                        element.querySelector('.btn').setAttribute('onclick', `deleteForm(this.parentNode, ${i})`);
-                     });}
-                // function deleteForm(form) {
-                //     form.remove(); // Remove the form element from the DOM
-                //     var index = Array.from(document.querySelectorAll('.attribute-consuming-service')).indexOf(form);
-                //     attributeServicesArray.splice(index, 1); // Remove the form data from the array
-                // }
+                // Update the indices of remaining elements
+                attributeServicesArray.forEach((element, i) => {
+                  element.querySelector('.btn').setAttribute('onclick', `deleteForm(this.parentNode, ${i})`);
+                });}
+              // function deleteForm(form) {
+              //     form.remove(); // Remove the form element from the DOM
+              //     var index = Array.from(document.querySelectorAll('.attribute-consuming-service')).indexOf(form);
+              //     attributeServicesArray.splice(index, 1); // Remove the form data from the array
+              // }
 
-                function addAttributeService(form) {
-                    var serviceName = form.querySelector('.serviceName').value.trim();
-                    var attributeValue = form.querySelector('.attributeValue').value.trim();
-                    var friendlyName = form.querySelector('.friendlyName').value.trim();
-                    var attributeName=form.querySelector('.attributeName').value.trim();
-                    if (serviceName !== "" && attributeValue !== "" && friendlyName !== "") {
-                        var index = Array.from(document.querySelectorAll('.attribute-consuming-service')).indexOf(form);
-                        if (index !== -1) {
-                            attributeServicesArray[index] = {
-                                serviceName: serviceName,
-                                attributeValue: attributeValue,
-                                friendlyName: friendlyName,
-                                attributeName:attributeName
-                            };
-                        }
-                    } else {
-                        alert("Please enter valid values for Service Name, Attribute Value, and Friendly Name.");
-                    }
+              function addAttributeService(form) {
+                var serviceName = form.querySelector('.serviceName').value.trim();
+                var attributeValue = form.querySelector('.attributeValue').value.trim();
+                var friendlyName = form.querySelector('.friendlyName').value.trim();
+                var attributeName=form.querySelector('.attributeName').value.trim();
+                if (serviceName !== "" && attributeValue !== "" && friendlyName !== "") {
+                  var index = Array.from(document.querySelectorAll('.attribute-consuming-service')).indexOf(form);
+                  if (index !== -1) {
+                    attributeServicesArray[index] = {
+                      serviceName: serviceName,
+                      attributeValue: attributeValue,
+                      friendlyName: friendlyName,
+                      attributeName:attributeName
+                    };
+                  }
+                } else {
+                  alert("Please enter valid values for Service Name, Attribute Value, and Friendly Name.");
                 }
+              }
             </script>
         </form>
         <div>
@@ -1062,11 +1061,11 @@
     </div>
 </div>
 <script>
-    const formElements = document.getElementById('GeneralSetting').elements;
-    for (var i = 0; i < formElements.length; i++) {
-        formElements[i].readOnly = true;
-        formElements[i].disabled = true; // for select elements
-    }
+  const formElements = document.getElementById('GeneralSetting').elements;
+  for (var i = 0; i < formElements.length; i++) {
+    formElements[i].readOnly = true;
+    formElements[i].disabled = true; // for select elements
+  }
 </script>
 <script src="../../samlconfig/js/Fielders"></script>
 <script src="../../samlconfig/js/inputValidation"></script>
