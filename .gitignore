@@ -178,3 +178,4 @@ src/test/e2e/frontend/node_modules/
 .claude/
 /patch-tool/.work/
 
+.logs
