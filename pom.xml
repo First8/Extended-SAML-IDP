@@ -7,11 +7,11 @@
 
     <groupId>nl.first8.keycloak.broker</groupId>
     <artifactId>idp-saml2-extended</artifactId>
-    <name>KeyCloak: SAML v2.0 - Extended</name>
+    <name>Keycloak: SAML v2.0 - Extended</name>
     <description>
         SAML v2.0 extensions that adds more configuration options to connect to SAML Service Providers.
     </description>
-    <version>1.1-SNAPSHOT-26</version>
+    <version>26.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -29,6 +29,7 @@
     </properties>
 
     <build>
+        <finalName>${project.artifactId}-${project.version}-${git.commit.id.abbrev}</finalName>
         <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
         <directory>${project.basedir}/target</directory>
         <resources>
@@ -46,6 +47,7 @@
                         <goals>
                             <goal>revision</goal>
                         </goals>
+                        <phase>validate</phase>
                     </execution>
                 </executions>
 
@@ -156,6 +158,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+                <configuration>
+                    <argLine>-Djava.util.logging.manager=org.jboss.logmanager.LogManager</argLine>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -168,6 +173,9 @@
                         <goals>
                             <goal>spotbugs</goal>
                         </goals>
+                        <configuration>
+                            <skip>${skipSpotBugs}</skip>
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>

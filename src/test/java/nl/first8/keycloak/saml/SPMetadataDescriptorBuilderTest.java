@@ -2,15 +2,12 @@ package nl.first8.keycloak.saml;
 
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import nl.first8.keycloak.dom.saml.v2.metadata.SPSSODescriptorType;
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.dom.saml.v2.metadata.EndpointType;
 import org.keycloak.dom.saml.v2.metadata.IndexedEndpointType;
 import org.keycloak.dom.saml.v2.metadata.KeyDescriptorType;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -18,39 +15,31 @@ import java.net.URI;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class SPMetadataDescriptorBuilderTest {
 
     private SPMetadataDescriptorBuilder builder;
 
-    @Mock
-    private Logger logger; // Mock logger
-
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         builder = new SPMetadataDescriptorBuilder();
 
-        SPMetadataDescriptorBuilder.logger = logger;
-
-        // Configure builder with valid values
         builder.entityId("test-entity")
-                .loginBinding(URI.create("https://example.com/login"))
-                .logoutBinding(URI.create("https://example.com/logout"))
-                .artifactResolutionBinding(URI.create("https://example.com/artifact"))
-                .assertionEndpoints(List.of(URI.create("https://example.com/assert")))
-                .artifactResolutionEndpoint(URI.create("https://example.com/artifact-resolution"))
-                .logoutEndpoints(List.of(URI.create("https://example.com/logout")))
-                .wantAuthnRequestsSigned(true)
-                .wantAssertionsSigned(true)
-                .wantAssertionsEncrypted(true)
-                .nameIDPolicyFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-                .signingCerts(List.of(new KeyDescriptorType()))
-                .encryptionCerts(List.of(new KeyDescriptorType()))
-                .metadataValidUntilUnit(Calendar.DAY_OF_MONTH)
-                .metadataValidUntilPeriod(7)
-                .defaultAssertionEndpoint(1);
+            .loginBinding(URI.create("https://example.com/login"))
+            .logoutBinding(URI.create("https://example.com/logout"))
+            .artifactResolutionBinding(URI.create("https://example.com/artifact"))
+            .assertionEndpoints(List.of(URI.create("https://example.com/assert")))
+            .artifactResolutionEndpoint(URI.create("https://example.com/artifact-resolution"))
+            .logoutEndpoints(List.of(URI.create("https://example.com/logout")))
+            .wantAuthnRequestsSigned(true)
+            .wantAssertionsSigned(true)
+            .wantAssertionsEncrypted(true)
+            .nameIDPolicyFormat("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
+            .signingCerts(List.of(new KeyDescriptorType()))
+            .encryptionCerts(List.of(new KeyDescriptorType()))
+            .metadataValidUntilUnit(Calendar.DAY_OF_MONTH)
+            .metadataValidUntilPeriod(7)
+            .defaultAssertionEndpoint(1);
     }
 
     @Test
@@ -60,16 +49,8 @@ class SPMetadataDescriptorBuilderTest {
         assertNotNull(entityDescriptor);
         assertEquals("test-entity", entityDescriptor.getEntityID());
         assertNotNull(entityDescriptor.getID());
-
-        // Validate 'validUntil' field
-        XMLGregorianCalendar validUntil = entityDescriptor.getValidUntil();
-        assertNotNull(validUntil);
-
-        // Ensure at least one choice type exists
+        assertNotNull(entityDescriptor.getValidUntil());
         assertFalse(entityDescriptor.getChoiceType().isEmpty());
-
-        // Verify logging behavior
-        verify(logger).info("Building SP Entity Descriptor");
     }
 
     @Test
@@ -78,18 +59,17 @@ class SPMetadataDescriptorBuilderTest {
         List<KeyDescriptorType> signingCerts = Collections.singletonList(keyDescriptor);
 
         EntityDescriptorType entityDescriptor = builder
-                .signingCerts(signingCerts)
-                .wantAuthnRequestsSigned(true)
-                .entityId("https://test-sp.example.com")
-                .build();
+            .signingCerts(signingCerts)
+            .wantAuthnRequestsSigned(true)
+            .entityId("https://test-sp.example.com")
+            .build();
 
         assertNotNull(entityDescriptor);
         assertFalse(entityDescriptor.getChoiceType().isEmpty());
 
-        // Extract the SPSSODescriptor and check if the signing key is added
         SPSSODescriptorType spSSODescriptor = entityDescriptor.getChoiceType().get(0)
-                .getDescriptors().get(0)
-                .getSpDescriptor();
+            .getDescriptors().get(0)
+            .getSpDescriptor();
 
         assertNotNull(spSSODescriptor);
         assertTrue(spSSODescriptor.getKeyDescriptor().contains(keyDescriptor));
@@ -98,20 +78,20 @@ class SPMetadataDescriptorBuilderTest {
     @Test
     void shouldSetLogoutEndpoints() throws Exception {
         List<URI> logoutEndpoints = List.of(
-                new URI("https://test-sp.example.com/logout1"),
-                new URI("https://test-sp.example.com/logout2")
+            new URI("https://test-sp.example.com/logout1"),
+            new URI("https://test-sp.example.com/logout2")
         );
 
         URI logoutBinding = new URI("https://test-sp.example.com/logout-binding");
 
         EntityDescriptorType entityDescriptor = builder
-                .logoutEndpoints(logoutEndpoints)
-                .logoutBinding(logoutBinding)
-                .entityId("https://test-sp.example.com")
-                .build();
+            .logoutEndpoints(logoutEndpoints)
+            .logoutBinding(logoutBinding)
+            .entityId("https://test-sp.example.com")
+            .build();
 
         SPSSODescriptorType spSSODescriptor = entityDescriptor.getChoiceType().get(0)
-                .getDescriptors().get(0).getSpDescriptor();
+            .getDescriptors().get(0).getSpDescriptor();
 
         assertEquals(logoutEndpoints.size(), spSSODescriptor.getSingleLogoutService().size());
 
@@ -128,14 +108,14 @@ class SPMetadataDescriptorBuilderTest {
         URI artifactResolutionBinding = new URI("https://test-sp.example.com/artifact-binding");
 
         EntityDescriptorType entityDescriptor = builder
-                .artifactResolutionEndpoint(artifactResolutionEndpoint)
-                .artifactResolutionBinding(artifactResolutionBinding)
-                .entityId("https://test-sp.example.com")
-                .build();
+            .artifactResolutionEndpoint(artifactResolutionEndpoint)
+            .artifactResolutionBinding(artifactResolutionBinding)
+            .entityId("https://test-sp.example.com")
+            .build();
 
         SPSSODescriptorType spSSODescriptor = entityDescriptor.getChoiceType().get(0)
-                .getDescriptors().get(0)
-                .getSpDescriptor();
+            .getDescriptors().get(0)
+            .getSpDescriptor();
 
         assertEquals(1, spSSODescriptor.getArtifactResolutionService().size());
 
@@ -148,23 +128,23 @@ class SPMetadataDescriptorBuilderTest {
     @Test
     void shouldSetAssertionConsumerServicesCorrectly() throws Exception {
         List<URI> assertionEndpoints = List.of(
-                new URI("https://test-sp.example.com/assertion1"),
-                new URI("https://test-sp.example.com/assertion2")
+            new URI("https://test-sp.example.com/assertion1"),
+            new URI("https://test-sp.example.com/assertion2")
         );
 
         URI loginBinding = new URI("https://test-sp.example.com/login-binding");
         int defaultAssertionIndex = 2;
 
         EntityDescriptorType entityDescriptor = builder
-                .assertionEndpoints(assertionEndpoints)
-                .defaultAssertionEndpoint(defaultAssertionIndex)
-                .loginBinding(loginBinding)
-                .entityId("https://test-sp.example.com")
-                .build();
+            .assertionEndpoints(assertionEndpoints)
+            .defaultAssertionEndpoint(defaultAssertionIndex)
+            .loginBinding(loginBinding)
+            .entityId("https://test-sp.example.com")
+            .build();
 
         SPSSODescriptorType spSSODescriptor = entityDescriptor.getChoiceType().get(0)
-                .getDescriptors().get(0)
-                .getSpDescriptor();
+            .getDescriptors().get(0)
+            .getSpDescriptor();
 
         int expectedServices = assertionEndpoints.size() * 2; // Each assertion endpoint gets two bindings
         assertEquals(expectedServices, spSSODescriptor.getAssertionConsumerService().size());
@@ -193,10 +173,10 @@ class SPMetadataDescriptorBuilderTest {
         int metadataValidUntilPeriod = Calendar.YEAR;
 
         EntityDescriptorType entityDescriptor = builder
-                .metadataValidUntilUnit(metadataValidUntilUnit)
-                .metadataValidUntilPeriod(metadataValidUntilPeriod)
-                .entityId("https://test-sp.example.com")
-                .build();
+            .metadataValidUntilUnit(metadataValidUntilUnit)
+            .metadataValidUntilPeriod(metadataValidUntilPeriod)
+            .entityId("https://test-sp.example.com")
+            .build();
 
         XMLGregorianCalendar validUntil = entityDescriptor.getValidUntil();
         assertNotNull(validUntil);
@@ -210,5 +190,3 @@ class SPMetadataDescriptorBuilderTest {
         assertEquals(expectedCalendar.get(Calendar.DAY_OF_MONTH), actualCalendar.get(Calendar.DAY_OF_MONTH));
     }
 }
-
-

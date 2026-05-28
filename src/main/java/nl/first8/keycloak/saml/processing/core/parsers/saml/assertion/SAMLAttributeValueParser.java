@@ -9,7 +9,8 @@ import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Namespace;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.parsers.StaxParser;
@@ -30,7 +31,7 @@ import javax.xml.stream.events.XMLEvent;
 
 public class SAMLAttributeValueParser implements StaxParser {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(SAMLAttributeValueParser.class));
 
     private static final SAMLAttributeValueParser INSTANCE = new SAMLAttributeValueParser();
     private static final QName NIL = new QName(JBossSAMLURIConstants.XSI_NSURI.get(), "nil", JBossSAMLURIConstants.XSI_PREFIX.get());
