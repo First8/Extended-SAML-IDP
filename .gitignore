@@ -146,6 +146,8 @@ fabric.properties
 
 !.idea/codeStyles
 !.idea/runConfigurations
+/.idea/codeStyles/codeStyleConfig.xml
+/.idea/codeStyles/Project.xml
 
 ### Maven ###
 target/
@@ -174,3 +176,5 @@ src/test/e2e/frontend/node_modules/
 
 # Claude Code
 .claude/
+/patch-tool/.work/
+
