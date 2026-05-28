@@ -2,6 +2,7 @@ package nl.first8.keycloak.broker.saml;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import java.util.stream.Collectors;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
