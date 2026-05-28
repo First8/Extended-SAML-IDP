@@ -1,0 +1,19 @@
+{
+  "name": "e2e-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node test-artifact-binding.js && node test-add-provider.js && node test-add-defaults.js && node test-bindings.js && node test-security.js && node test-artifact-resolution.js && node test-standard-options.js",
+    "test:edit": "node test-artifact-binding.js",
+    "test:add": "node test-add-provider.js",
+    "test:defaults": "node test-add-defaults.js",
+    "test:bindings": "node test-bindings.js",
+    "test:security": "node test-security.js",
+    "test:artifact-resolution": "node test-artifact-resolution.js",
+    "test:standard-options": "node test-standard-options.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "playwright": "1.59.1"
+  }
+}

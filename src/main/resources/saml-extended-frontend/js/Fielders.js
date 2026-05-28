@@ -11,6 +11,7 @@ const Single_Sign_On_Service_URL_input = document.getElementById("ssoServiceUrl"
 const Single_Sign_On_Service_URL_inpu_edit = document.getElementById("ssoServiceUrl_edit");
 const Single_Logout_Service_URL_input = document.getElementById("sloServiceUrl");
 const allowedClockSkew_input = document.getElementById("allowedClockSkew");
+const assertionConsumingServiceIndex_input = document.getElementById("assertionConsumingServiceIndex");
 const attributeConsumingServiceIndex_input = document.getElementById("attributeConsumingServiceIndex");
 const attributeConsumingServiceName_input = document.getElementById("attributeConsumingServiceName");
 const authnContextClassRefs_input = document.getElementById("authnContextClassRefs");
