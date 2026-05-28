@@ -1,6 +1,6 @@
 var accessToken;
 const keycloak =new Keycloak({
-    url: `${serverUrl}`,
+    url: `${ServerUrl}`,
     realm: `${realm}`,
     clientId: `${clientid}`,
     redirectUri: `${redirectUri}`,
@@ -9,7 +9,7 @@ const keycloak =new Keycloak({
 });
 
 document.getElementById('logout').addEventListener('click', () => {
-    window.location.href = `${serverUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirect}&client_id=${clientid}`;
+    window.location.href = `${ServerUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirect}&client_id=${clientid}`;
 });
 
 keycloak
@@ -23,7 +23,7 @@ keycloak
             const selectElement_postLoginFlow = document.getElementById('postLoginFlow');
             const selectElement_firstLoginFlow = document.getElementById('firstLoginFlow');
 
-            fetch(`${serverUrl}/admin/realms/${selectedrealm}/ui-ext/authentication-management/flows`, {
+            fetch(`${ServerUrl}/admin/realms/${selectedrealm}/ui-ext/authentication-management/flows`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -80,7 +80,7 @@ keycloak
             } else {
 
                 alert("User does not have admin role. Access denied.");
-                window.location.href = `${serverUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${post_logout_redirect_uri}&client_id=${clientid}`;
+                window.location.href = `${ServerUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${post_logout_redirect_uri}&client_id=${clientid}`;
 
             }
         }
