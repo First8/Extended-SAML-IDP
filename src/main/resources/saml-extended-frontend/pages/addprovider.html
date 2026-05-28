@@ -379,7 +379,7 @@
 
     <script>
       var selectedrealm = localStorage.getItem('selectedRealm');
-      var ServerUrl1 = localStorage.getItem('ServerUrl');
+      var ServerUrl1 = localStorage.getItem('serverUrl');
       document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/saml-extended/endpoint`
     </script>
     <h5>Alias *
@@ -390,14 +390,14 @@
     <input type="text" name="alias" id="alias" class="input_text" oninput="copyValue(event)" required>
     <script>
       var selectedrealm = localStorage.getItem('selectedRealm');
-      var ServerUrl1 = localStorage.getItem('ServerUrl')
+      var ServerUrl1 = localStorage.getItem('serverUrl')
       document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/saml-extended/endpoint`
 
       function copyValue(event) {
         var alias = event.target.value;
         var selectedrealm = localStorage.getItem('selectedRealm');
         localStorage.setItem('alias_for_endpoint', alias)
-        var ServerUrl1 = localStorage.getItem('ServerUrl')
+        var ServerUrl1 = localStorage.getItem('serverUrl')
         document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/${alias}/endpoint`
         document.getElementById('metadataLink').onclick = function(event) {
           event.preventDefault();
@@ -427,7 +427,7 @@
     </section>
     <script>
       var selectedRealm = localStorage.getItem('selectedRealm');
-      var serverUrl = localStorage.getItem('ServerUrl');
+      var serverUrl = localStorage.getItem('serverUrl');
       var alias_for_endpoint = localStorage.getItem('alias_for_endpoint');
       document.getElementById('metadataLink').onclick = function(event) {
         event.preventDefault();

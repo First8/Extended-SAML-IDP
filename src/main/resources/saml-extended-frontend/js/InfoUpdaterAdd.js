@@ -294,7 +294,7 @@ if (storedData) {
         
     }
     var selectedrealm = localStorage.getItem('selectedRealm');
-    var ServerUrl1 = localStorage.getItem('ServerUrl')
+    var ServerUrl1 = localStorage.getItem('serverUrl')
     var pluginalias=localStorage.setItem('pluginalias',`${pluginData.alias}`)
     document.getElementById('redirectUri').value = `${ServerUrl1}/realms/${selectedrealm}/broker/${pluginData.alias}/endpoint`
     

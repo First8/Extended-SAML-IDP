@@ -28,7 +28,7 @@ import_data.addEventListener('click', async (event) => {
             {return}
             var newAccessToken = keycloak.token;
             
-            const checkPluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {
+            const checkPluginResponse = await fetch(`${serverUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${newAccessToken}`
@@ -44,7 +44,7 @@ import_data.addEventListener('click', async (event) => {
                 // Add your logic for updating the existing plugin if needed
             } else if (checkPluginResponse.status === 404) {
                 // Plugin not found, add it using a POST request
-                const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/import-config`, {
+                const updatePluginResponse = await fetch(`${serverUrl}/admin/realms/${selectedrealm}/identity-provider/import-config`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${newAccessToken}`,
@@ -132,7 +132,7 @@ add.addEventListener('click', () => {
                 var newAccessToken = keycloak.token;
                 var selectedrealm = localStorage.getItem('selectedRealm');
                 
-                const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
+                const updatePluginResponse = await fetch(`${serverUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${newAccessToken}`,
@@ -301,7 +301,7 @@ add.addEventListener('click', () => {
                 var newAccessToken = keycloak.token;
                 var selectedrealm= localStorage.getItem('selectedRealm');
                 // Sending a GET request to check if the plugin exists
-                fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {
+                fetch(`${serverUrl}/admin/realms/${selectedrealm}/identity-provider/instances/${alias}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': ` Bearer ${newAccessToken}`, // Fix here
@@ -314,7 +314,7 @@ add.addEventListener('click', () => {
                           // Add your logic for updating the existing plugin if needed
                       } else if (checkPluginResponse.status === 404) {
                           // Plugin not found, add it using a POST request
-                          const updatePluginResponse = await fetch(`${ServerUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
+                          const updatePluginResponse = await fetch(`${serverUrl}/admin/realms/${selectedrealm}/identity-provider/instances`, {
                                 method: 'POST',
                                 headers: {
                                     'Authorization': ` Bearer ${newAccessToken}`, // Fix here
