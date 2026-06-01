@@ -71,7 +71,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class SAMLEndpoint {
     protected static final Logger logger = Logger.getLogger(SAMLEndpoint.class);
@@ -295,10 +294,9 @@ public class SAMLEndpoint {
                 }
             }
 
-            if (requestAbstractType instanceof LogoutRequestType) {
+            if (requestAbstractType instanceof LogoutRequestType logout) {
                 logger.debug("** logout request");
                 event.event(EventType.LOGOUT);
-                LogoutRequestType logout = (LogoutRequestType) requestAbstractType;
                 return logoutRequest(logout, relayState);
 
             } else {
@@ -315,7 +313,7 @@ public class SAMLEndpoint {
                 session.sessions().getUserSessionByBrokerUserIdStream(realm, brokerUserId)
                     .filter(userSession -> userSession.getState() != UserSessionModel.State.LOGGING_OUT &&
                         userSession.getState() != UserSessionModel.State.LOGGED_OUT)
-                    .collect(Collectors.toList()) // collect to avoid concurrent modification as backchannelLogout removes the user sessions.
+                        .toList() // collect to avoid concurrent modification as backchannelLogout removes the user sessions.
                     .forEach(processLogout(ref));
                 request = ref.get();
 
@@ -413,11 +411,14 @@ public class SAMLEndpoint {
                 if (!isSuccessfulSamlResponse(responseType)) {
                     String statusMessage = responseType.getStatus() == null || responseType.getStatus().getStatusMessage() == null ? Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR : responseType.getStatus().getStatusMessage();
                     logger.errorf("Not a successful SamlResponse: %s", statusMessage);
-                    return callback.error(statusMessage);
+                    var identityProviderModel = session.identityProviders().getByAlias(config.getAlias());
+                    return callback.error(identityProviderModel, statusMessage);
+
                 }
                 if (responseType.getAssertions() == null || responseType.getAssertions().isEmpty()) {
                     logger.error("No Assertions found");
-                    return callback.error(Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
+                    var identityProviderModel = session.identityProviders().getByAlias(config.getAlias());
+                    return callback.error(identityProviderModel, Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
                 }
 
                 boolean assertionIsEncrypted = AssertionUtil.isAssertionEncrypted(responseType);
@@ -443,7 +444,7 @@ public class SAMLEndpoint {
                     /* We verify the assertion using original document to handle cases where the IdP
                     includes whitespace and/or newlines inside tags. */
                     logger.debug("Verify and get assertion!");
-                    assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(JBossSAMLConstants.ASSERTION.get()));
+                    assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(Objects.requireNonNull(JBossSAMLConstants.ASSERTION.get())));
                 }
 
                 logger.trace("Validating the response Issuer");
@@ -605,7 +606,7 @@ public class SAMLEndpoint {
                 .searchClientsByAttributes(realm, Collections.singletonMap(SamlProtocol.SAML_IDP_INITIATED_SSO_URL_NAME, clientUrlName), 0, 1)
                 .findFirst();
 
-            if (!oClient.isPresent()) {
+            if (oClient.isEmpty()) {
                 event.error(Errors.CLIENT_NOT_FOUND);
                 Response response = ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.CLIENT_NOT_FOUND);
                 throw new WebApplicationException(response);
@@ -778,8 +779,7 @@ public class SAMLEndpoint {
 
         @Override
         protected void verifySignature(String key, SAMLDocumentHolder documentHolder) throws VerificationException {
-            if ((!containsUnencryptedSignature(documentHolder)) && (documentHolder.getSamlObject() instanceof ResponseType)) {
-                ResponseType responseType = (ResponseType) documentHolder.getSamlObject();
+            if ((!containsUnencryptedSignature(documentHolder)) && (documentHolder.getSamlObject() instanceof ResponseType responseType)) {
                 List<ResponseType.RTChoiceType> assertions = responseType.getAssertions();
                 if (!assertions.isEmpty()) {
                     // Only relax verification if the response is an authnresponse and contains (encrypted/plaintext) assertion.

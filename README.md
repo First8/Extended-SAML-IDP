@@ -28,36 +28,58 @@ with a custom frontend.
 
 The steps are as follows:
 
-1. Before you start make sure the latest release available in the plugin repo is up to date with master.
+1. Pull the branch corresponding to the most recent Keycloak minor version that already exists in the repository.
 
-2. Checkout the SAML-extended plugin and go to the `keycloak` branch
+2. Create a new branch from there, corresponding to the next minor version: `upgrade-to-{a}.{b+1}`, e.g. `upgrade-to-27.2`.
 
-3. Checkout the Keycloak source code and go to the correct release branch
+3. Update `<keycloak.version>` in the pom.xml to the most recent patch version of the relevant minor version.
 
-4. For every class in the keycloak branch of the SAML-plugin, look up this class in the keycloak source code and paste it in the plugin.
-Note that the packages in de saml plugin are the packages from the Keycloak codebase. For those that can run bash scripts there is an script that can do this for you. Simply run it with:
-
-```
-./copy-source.sh -k <keycloak-dir> -d <plugin-dir>
-```
-
-*Note: both dirs should not end in a /*
-
-5. Next, rebase the `keycloak` branch onto `main` and address conflicts if they arise. 
+4. Create a patch for the `.java` files corresponding to those in this repository, based on the [official Keycloak repository's](https://github.com/keycloak/keycloak) files and branches:
 
 ```
-git checkout master
-git rebase keycloak
+cd patch-tool
+./patch.sh archive/release/{a}.{b} archive/release/{a}.{b+1} 
+#E.g. a=27, b=1. Could be {a+1}.0 instead of {a}.{b+1}, or (one of) the releases may not be archived yet.
 ```
 
-6. Make sure it compiles.
+If you have trouble creating the patch, consult the Readme in the `/patch-tool` directory for more details.
 
-7. Make a release branch for this new version
+5. Apply the patch.
 
-```
-git checkout -b release/<version>.x
-```
+    * Many manual actions are needed, as the line numbers do not correspond.
+    * If a change introduces a references a Keycloak class that isn't in the repository, just import it, instead of adding it to this repository.
+    * If a method (/signature) is changed, it is probably due to deprecation. You could look up the documentation for the method that got replaced to make sure.
+    * You might understand the rationale for changes in the commit message corresponding to that change, and/or the issue that is linked from that commit message.
 
+6. (Optionally) verify that your SAML IDP connections work with the old Keycloak version and/or old jar.
+
+7. (Optionally) do the same tests as the PR reviewer will in steps
+
+8. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
+
+9. Push both new branches: `{a}.{b+1}.x-once-PR-merged` and `upgrade-to-{a}.{b+1}`
+
+10. Make a PR from `upgrade-to-{a}.{b+1}` into `{a}.{b+1}.x-once-PR-merged`.
+
+
+
+### For the Pull Request Reviewer
+
+11. Run the new code from the PR through Test classes, not only `<Response>` but also `<ArtifactResponse>`.
+
+    * (Preferably) don't just test the auto-generated mock (Artifact)Responses, 
+      but also real-world (Artifact)Responses that you can copy into the test resource folder and reference in Test classes (don't commit those changes).
+
+12. Build the jar from your new branch and try logging in with the SAML IDP connections in your test environment.
+
+    * A Keycloak upgrade might be needed beforehand.
+    * If you normally only receive `<Response>` or `<ArtifactResponse>`, set up a connection to test the other type (you may skip this if you already tested real-world examples of that type in Test classes)
+    * Also test with mappers and encryption.
+
+### After the PR merge
+
+    * Rename branch `{a}.{b+1}.x-once-PR-merged` to just `{a}.{b+1}.x`, e.g. `27.2.x`.
+    * Remove branch `upgrade-to-{a}.{b+1}`.
 
 ## Building
 
@@ -111,9 +133,9 @@ CMD [\
   - Valid Post Logout Redirect URIs: `{keycloak-server}/realms/master/samlconfig/pages/realm`
   - Web Origins: `*`
 - Click "Save".
-  - Front channel logout: on
+  - Front channel logout: On
   - Front-channel logout URL: `{keycloak-server}/realms/master/samlconfig/pages/realm`
-  - Backchannel logout session required: on
+  - Front-channel logout session required: On
 - Click "Save".
 
 ### Add Saml Theme to Keycloak(optional)
