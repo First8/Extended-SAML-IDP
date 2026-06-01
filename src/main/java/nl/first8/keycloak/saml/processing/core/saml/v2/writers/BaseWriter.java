@@ -8,6 +8,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamWriter;
 
+import nl.first8.keycloak.dom.saml.v2.assertion.SamlEncryptedId;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
 
 import org.keycloak.dom.saml.v2.assertion.*;
