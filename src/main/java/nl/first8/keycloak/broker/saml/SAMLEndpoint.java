@@ -1,7 +1,39 @@
 package nl.first8.keycloak.broker.saml;
 
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import java.io.IOException;
+import java.net.URI;
+import java.security.Key;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import javax.xml.crypto.dsig.XMLSignature;
+import javax.xml.namespace.QName;
+
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
@@ -15,7 +47,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.NoCache;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
-import org.keycloak.broker.provider.IdentityProvider;
+import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.common.VerificationException;
 import org.keycloak.common.util.Base64;
@@ -35,7 +67,14 @@ import org.keycloak.keys.PublicKeyStorageUtils;
 import org.keycloak.models.*;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.LoginProtocolFactory;
-import org.keycloak.protocol.saml.*;
+import org.keycloak.protocol.saml.SAMLDecryptionKeysLocator;
+import org.keycloak.protocol.saml.SamlMetadataKeyLocator;
+import org.keycloak.protocol.saml.SamlMetadataPublicKeyLoader;
+import org.keycloak.protocol.saml.SamlPrincipalType;
+import org.keycloak.protocol.saml.SamlProtocol;
+import org.keycloak.protocol.saml.SamlProtocolUtils;
+import org.keycloak.protocol.saml.SamlService;
+import org.keycloak.protocol.saml.SamlSessionUtils;
 import org.keycloak.protocol.saml.preprocessor.SamlAuthenticationPreprocessor;
 import org.keycloak.rotation.HardcodedKeyLocator;
 import org.keycloak.rotation.KeyLocator;
@@ -56,22 +95,11 @@ import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.util.CacheControlUtil;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.util.Booleans;
 import org.keycloak.utils.StringUtil;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import javax.xml.crypto.dsig.XMLSignature;
-import javax.xml.namespace.QName;
-import java.io.IOException;
-import java.net.URI;
-import java.security.Key;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class SAMLEndpoint {
     protected static final Logger logger = Logger.getLogger(SAMLEndpoint.class);
@@ -87,7 +115,7 @@ public class SAMLEndpoint {
     protected final RealmModel realm;
     protected EventBuilder event;
     protected final SAMLIdentityProviderConfig config;
-    protected final IdentityProvider.AuthenticationCallback callback;
+    protected final UserAuthenticationIdentityProvider.AuthenticationCallback callback;
     protected final SAMLIdentityProvider provider;
     private final DestinationValidator destinationValidator;
 
@@ -101,7 +129,7 @@ public class SAMLEndpoint {
     public SAMLEndpoint(KeycloakSession session,
                         SAMLIdentityProvider provider,
                         SAMLIdentityProviderConfig config,
-                        IdentityProvider.AuthenticationCallback callback,
+                        UserAuthenticationIdentityProvider.AuthenticationCallback callback,
                         DestinationValidator destinationValidator) {
         this.realm = session.getContext().getRealm();
         this.config = config;
@@ -271,7 +299,7 @@ public class SAMLEndpoint {
             RequestAbstractType requestAbstractType = (RequestAbstractType) holder.getSamlObject();
             // validate destination
             if (isDestinationRequired() &&
-                requestAbstractType.getDestination() == null && containsUnencryptedSignature(holder)) {
+                    requestAbstractType.getDestination() == null && containsUnencryptedSignature(holder)) {
                 event.event(EventType.IDENTITY_PROVIDER_RESPONSE);
                 event.detail(Details.REASON, Errors.MISSING_REQUIRED_DESTINATION);
                 event.error(Errors.INVALID_REQUEST);
@@ -295,10 +323,9 @@ public class SAMLEndpoint {
                 }
             }
 
-            if (requestAbstractType instanceof LogoutRequestType) {
+            if (requestAbstractType instanceof LogoutRequestType logout) {
                 logger.debug("** logout request");
                 event.event(EventType.LOGOUT);
-                LogoutRequestType logout = (LogoutRequestType) requestAbstractType;
                 return logoutRequest(logout, relayState);
 
             } else {
@@ -347,14 +374,14 @@ public class SAMLEndpoint {
             builder.destination(config.getSingleLogoutServiceUrl());
             builder.issuer(issuerURL);
             org.keycloak.protocol.saml.JaxrsSAML2BindingBuilder binding = new org.keycloak.protocol.saml.JaxrsSAML2BindingBuilder(session)
-                .relayState(relayState);
+                    .relayState(relayState);
             boolean postBinding = config.isPostBindingLogout();
             if (config.isWantAuthnRequestsSigned()) {
                 KeyManager.ActiveRsaKey keys = session.keys().getActiveRsaKey(realm);
                 String keyName = config.getXmlSigKeyInfoKeyNameTransformer().getKeyName(keys.getKid(), keys.getCertificate());
                 binding.signWith(keyName, keys.getPrivateKey(), keys.getPublicKey(), keys.getCertificate())
-                    .signatureAlgorithm(provider.getSignatureAlgorithm())
-                    .signDocument();
+                        .signatureAlgorithm(provider.getSignatureAlgorithm())
+                        .signDocument();
                 if (!postBinding && config.isAddExtensionsElementWithKeyInfo()) {    // Only include extension if REDIRECT binding and signing whole SAML protocol message
                     builder.addExtension(new KeycloakKeySamlExtensionGenerator(keyName));
                 }
@@ -413,11 +440,14 @@ public class SAMLEndpoint {
                 if (!isSuccessfulSamlResponse(responseType)) {
                     String statusMessage = responseType.getStatus() == null || responseType.getStatus().getStatusMessage() == null ? Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR : responseType.getStatus().getStatusMessage();
                     logger.errorf("Not a successful SamlResponse: %s", statusMessage);
-                    return callback.error(statusMessage);
+                    var identityProviderModel = session.identityProviders().getByAlias(config.getAlias());
+                    return callback.error(identityProviderModel, statusMessage);
+
                 }
                 if (responseType.getAssertions() == null || responseType.getAssertions().isEmpty()) {
                     logger.error("No Assertions found");
-                    return callback.error(Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
+                    var identityProviderModel = session.identityProviders().getByAlias(config.getAlias());
+                    return callback.error(identityProviderModel, Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
                 }
 
                 boolean assertionIsEncrypted = AssertionUtil.isAssertionEncrypted(responseType);
@@ -443,14 +473,14 @@ public class SAMLEndpoint {
                     /* We verify the assertion using original document to handle cases where the IdP
                     includes whitespace and/or newlines inside tags. */
                     logger.debug("Verify and get assertion!");
-                    assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(JBossSAMLConstants.ASSERTION.get()));
+                    assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(Objects.requireNonNull(JBossSAMLConstants.ASSERTION.get())));
                 }
 
                 logger.trace("Validating the response Issuer");
                 // Validate the response Issuer
                 final String responseIssuer = responseType.getIssuer() != null ? responseType.getIssuer().getValue() : null;
                 final boolean responseIssuerValidationSuccess = config.getIdpEntityId() == null ||
-                    (responseIssuer != null && responseIssuer.equals(config.getIdpEntityId()));
+                        (responseIssuer != null && responseIssuer.equals(config.getIdpEntityId()));
                 if (!responseIssuerValidationSuccess) {
                     logger.errorf("Response Issuer validation failed: expected %s, actual %s", config.getIdpEntityId(), responseIssuer);
                     event.event(EventType.IDENTITY_PROVIDER_RESPONSE);
@@ -472,7 +502,6 @@ public class SAMLEndpoint {
                 final boolean assertionSignatureNotExistsWhenRequired = config.isWantAssertionsSigned() && !signed;
                 final boolean signatureNotValid = signed && config.isValidateSignature() && !AssertionUtil.isSignatureValid(assertionElement, getIDPKeyLocator());
                 final boolean hasNoSignatureWhenRequired = !signed && config.isValidateSignature() && !containsUnencryptedSignature(holder);
-
 
                 if (assertionSignatureNotExistsWhenRequired || signatureNotValid || hasNoSignatureWhenRequired) {
                     logger.error("validation failed");
@@ -497,7 +526,7 @@ public class SAMLEndpoint {
                 // Validate the assertion Issuer
                 final String assertionIssuer = assertion.getIssuer() != null ? assertion.getIssuer().getValue() : null;
                 final boolean assertionIssuerValidationSuccess = config.getIdpEntityId() == null ||
-                    (assertionIssuer != null && assertionIssuer.equals(config.getIdpEntityId()));
+                        (assertionIssuer != null && assertionIssuer.equals(config.getIdpEntityId()));
                 if (!assertionIssuerValidationSuccess) {
                     logger.errorf("Assertion Issuer validation failed: expected %s, actual %s", config.getIdpEntityId(), assertionIssuer);
                     event.event(EventType.IDENTITY_PROVIDER_RESPONSE);
@@ -527,13 +556,12 @@ public class SAMLEndpoint {
                     identity.setEmail(subjectNameID.getValue());
                 }
 
-                if (config.isStoreToken()) {
+                if (Booleans.isTrue(config.isStoreToken())) {
                     identity.setToken(samlResponse);
                 }
 
-
                 ConditionsValidator.Builder cvb = new ConditionsValidator.Builder(assertion.getID(), assertion.getConditions(), destinationValidator)
-                    .clockSkewInMillis(1000 * config.getAllowedClockSkew());
+                        .clockSkewInMillis(1000 * config.getAllowedClockSkew());
                 try {
                     String issuerURL = getEntityId(session.getContext().getUri(), realm);
                     cvb.addAllowedAudience(URI.create(issuerURL));
@@ -572,8 +600,6 @@ public class SAMLEndpoint {
                 String brokerUserId = config.getAlias() + "." + principal;
                 identity.setBrokerUserId(brokerUserId);
                 identity.setIdp(provider);
-
-
                 if (authn != null && authn.getSessionIndex() != null) {
                     String brokerSessionId = config.getAlias() + "." + authn.getSessionIndex();
                     logger.debugf("Set broker SessionID to \"%s\".", brokerSessionId);
@@ -602,10 +628,10 @@ public class SAMLEndpoint {
             event.event(EventType.LOGIN);
             CacheControlUtil.noBackButtonCacheControlHeader(session);
             Optional<ClientModel> oClient = SAMLEndpoint.this.session.clients()
-                .searchClientsByAttributes(realm, Collections.singletonMap(SamlProtocol.SAML_IDP_INITIATED_SSO_URL_NAME, clientUrlName), 0, 1)
-                .findFirst();
+                    .searchClientsByAttributes(realm, Collections.singletonMap(SamlProtocol.SAML_IDP_INITIATED_SSO_URL_NAME, clientUrlName), 0, 1)
+                    .findFirst();
 
-            if (!oClient.isPresent()) {
+            if (oClient.isEmpty()) {
                 event.error(Errors.CLIENT_NOT_FOUND);
                 Response response = ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.CLIENT_NOT_FOUND);
                 throw new WebApplicationException(response);
@@ -626,10 +652,10 @@ public class SAMLEndpoint {
 
         private boolean isSuccessfulSamlResponse(ResponseType responseType) {
             return responseType != null
-                && responseType.getStatus() != null
-                && responseType.getStatus().getStatusCode() != null
-                && responseType.getStatus().getStatusCode().getValue() != null
-                && Objects.equals(responseType.getStatus().getStatusCode().getValue().toString(), JBossSAMLURIConstants.STATUS_SUCCESS.get());
+                    && responseType.getStatus() != null
+                    && responseType.getStatus().getStatusCode() != null
+                    && responseType.getStatus().getStatusCode().getValue() != null
+                    && Objects.equals(responseType.getStatus().getStatusCode().getValue().toString(), JBossSAMLURIConstants.STATUS_SUCCESS.get());
         }
 
 
@@ -656,7 +682,7 @@ public class SAMLEndpoint {
 
             // validate destination
             if (isDestinationRequired()
-                && statusResponse.getDestination() == null && containsUnencryptedSignature(holder)) {
+                    && statusResponse.getDestination() == null && containsUnencryptedSignature(holder)) {
                 logger.warnf("Destination %s required, destination (%s) is NULL or Holder contains unencrypted signature (%s)", (isDestinationRequired()) ? "is" : "is not", statusResponse.getDestination(), containsUnencryptedSignature(holder));
                 event.event(EventType.IDENTITY_PROVIDER_RESPONSE);
                 event.detail(Details.REASON, Errors.MISSING_REQUIRED_DESTINATION);
@@ -672,7 +698,6 @@ public class SAMLEndpoint {
             }
             logger.trace("Right before handleSamlResponse's  if (config.isValidateSignature())");
             if (config.isValidateSignature()) {
-                logger.trace("TRUE: if (config.isValidateSignature())");
                 try {
                     if (isArtifactResponse) {
                         logger.debugf("Verifying signature for %s", GeneralConstants.SAML_ARTIFACT_RESPONSE_KEY);
@@ -702,7 +727,7 @@ public class SAMLEndpoint {
             ResponseType responseType;
             if (statusResponse instanceof org.keycloak.dom.saml.v2.protocol.ResponseType) {
                 org.keycloak.dom.saml.v2.protocol.ResponseType kcResponseType =
-                    (org.keycloak.dom.saml.v2.protocol.ResponseType) ((ArtifactResponseType) statusResponse).getAny();
+                        (org.keycloak.dom.saml.v2.protocol.ResponseType) ((ArtifactResponseType) statusResponse).getAny();
                 responseType = new ResponseType(kcResponseType.getID(), kcResponseType.getIssueInstant());
                 responseType.setExtensions(kcResponseType.getExtensions());
                 responseType.setInResponseTo(kcResponseType.getInResponseTo());
@@ -778,8 +803,7 @@ public class SAMLEndpoint {
 
         @Override
         protected void verifySignature(String key, SAMLDocumentHolder documentHolder) throws VerificationException {
-            if ((!containsUnencryptedSignature(documentHolder)) && (documentHolder.getSamlObject() instanceof ResponseType)) {
-                ResponseType responseType = (ResponseType) documentHolder.getSamlObject();
+            if ((!containsUnencryptedSignature(documentHolder)) && (documentHolder.getSamlObject() instanceof ResponseType responseType)) {
                 List<ResponseType.RTChoiceType> assertions = responseType.getAssertions();
                 if (!assertions.isEmpty()) {
                     // Only relax verification if the response is an authnresponse and contains (encrypted/plaintext) assertion.
@@ -901,15 +925,15 @@ public class SAMLEndpoint {
 
     private String getFirstMatchingAttribute(AssertionType assertion, Predicate<AttributeType> predicate) {
         return assertion.getAttributeStatements().stream()
-            .map(AttributeStatementType::getAttributes)
-            .flatMap(Collection::stream)
-            .map(AttributeStatementType.ASTChoiceType::getAttribute)
-            .filter(predicate)
-            .map(AttributeType::getAttributeValue)
-            .flatMap(Collection::stream)
-            .findFirst()
-            .map(Object::toString)
-            .orElse(null);
+                .map(AttributeStatementType::getAttributes)
+                .flatMap(Collection::stream)
+                .map(AttributeStatementType.ASTChoiceType::getAttribute)
+                .filter(predicate)
+                .map(AttributeType::getAttributeValue)
+                .flatMap(Collection::stream)
+                .findFirst()
+                .map(Object::toString)
+                .orElse(null);
     }
 
     private String expectedPrincipalType() {
@@ -987,6 +1011,7 @@ public class SAMLEndpoint {
                 }
             }
         }
+
         return true;
     }
 }

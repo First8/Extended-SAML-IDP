@@ -1,6 +1,17 @@
 package nl.first8.keycloak.saml.processing.api.saml.v2.sig;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import javax.xml.crypto.MarshalException;
+import javax.xml.crypto.dsig.DigestMethod;
+import javax.xml.crypto.dsig.SignatureMethod;
+import javax.xml.crypto.dsig.XMLSignatureException;
+import javax.xml.parsers.ParserConfigurationException;
+
 import nl.first8.keycloak.saml.processing.core.util.XMLSignatureUtil;
+
+import org.keycloak.rotation.KeyLocator;
 import org.keycloak.saml.common.PicketLinkLogger;
 import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
 import org.jboss.logging.Logger;
@@ -8,6 +19,7 @@ import org.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.processing.core.util.SignatureUtilTransferObject;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

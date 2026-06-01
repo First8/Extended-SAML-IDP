@@ -1,11 +1,20 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml;
 
+import java.util.HashMap;
+import java.util.Map;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
+
 import nl.first8.keycloak.saml.processing.core.parsers.saml.assertion.SAMLAssertionParser;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.metadata.SAMLEntitiesDescriptorParser;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.metadata.SAMLEntityDescriptorParser;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.protocol.SAMLArtifactResponseParser;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.protocol.SAMLResponseParser;
+
 import org.jboss.logging.Logger;
+
 import org.keycloak.saml.common.ErrorCodes;
 import org.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.saml.common.exceptions.ParsingException;
@@ -21,13 +30,6 @@ import org.keycloak.saml.processing.core.parsers.saml.assertion.SAMLEncryptedAss
 import org.keycloak.saml.processing.core.parsers.saml.metadata.SAMLMetadataQNames;
 import org.keycloak.saml.processing.core.parsers.saml.protocol.*;
 import org.keycloak.saml.processing.core.saml.v1.SAML11Constants;
-
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SAMLParser extends AbstractParser {
     protected static final Logger logger = Logger.getLogger(SAMLParser.class);

@@ -1,6 +1,5 @@
 package nl.first8.keycloak.saml.processing.api.saml.v2.request;
 
-import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,7 +8,10 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import nl.first8.keycloak.saml.processing.core.saml.v2.writers.SAMLRequestWriter;
+
 import org.keycloak.dom.saml.v2.SAML2Object;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.saml.v2.protocol.*;

@@ -15,6 +15,19 @@ package nl.first8.keycloak.saml.processing.core.saml.v2.util;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.stream.XMLEventReader;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
@@ -22,12 +35,9 @@ import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.SAMLParser;
 import nl.first8.keycloak.saml.processing.core.saml.v2.writers.SAMLAssertionWriter;
 import nl.first8.keycloak.saml.processing.core.util.XMLSignatureUtil;
+
+import org.keycloak.dom.saml.v1.assertion.*;
 import org.keycloak.dom.saml.v2.assertion.*;
-import org.keycloak.dom.saml.v1.assertion.SAML11AssertionType;
-import org.keycloak.dom.saml.v1.assertion.SAML11AttributeStatementType;
-import org.keycloak.dom.saml.v1.assertion.SAML11AttributeType;
-import org.keycloak.dom.saml.v1.assertion.SAML11ConditionsType;
-import org.keycloak.dom.saml.v1.assertion.SAML11StatementAbstractType;
 import org.keycloak.dom.saml.v2.assertion.AttributeStatementType.ASTChoiceType;
 import org.keycloak.dom.saml.v2.assertion.SubjectType.STSubType;
 import org.keycloak.rotation.HardcodedKeyLocator;
@@ -49,21 +59,10 @@ import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
 import org.keycloak.saml.processing.core.saml.v2.util.XMLTimeUtil;
 import org.keycloak.saml.processing.core.util.JAXPValidationUtil;
 import org.keycloak.saml.processing.core.util.XMLEncryptionUtil;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.stream.XMLEventReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 public class AssertionUtil {
 

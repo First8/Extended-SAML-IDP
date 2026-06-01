@@ -1,4 +1,24 @@
 package nl.first8.keycloak.broker.saml;
+
+import java.net.URI;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingService;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -8,15 +28,14 @@ import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import nl.first8.keycloak.protocol.saml.JaxrsSAML2BindingBuilder;
+import org.keycloak.protocol.saml.SAMLEncryptionAlgorithms;
 import nl.first8.keycloak.saml.SAML2ArtifactResolutionBuilder;
 import nl.first8.keycloak.saml.SPMetadataDescriptorBuilder;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
 import nl.first8.keycloak.saml.processing.core.saml.v2.writers.SAMLMetadataWriter;
 import nl.first8.keycloak.saml.SAML2AuthnRequestBuilder;
-import org.jboss.logging.Logger;
 import org.keycloak.broker.provider.*;
-import org.keycloak.broker.provider.util.SimpleHttp;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyUse;
@@ -29,6 +48,7 @@ import org.keycloak.dom.saml.v2.metadata.LocalizedNameType;
 import org.keycloak.dom.saml.v2.metadata.RequestedAttributeType;
 import org.keycloak.dom.saml.v2.protocol.*;
 import org.keycloak.events.EventBuilder;
+import org.keycloak.http.simple.SimpleHttp;
 import org.keycloak.keys.PublicKeyStorageProvider;
 import org.keycloak.keys.PublicKeyStorageUtils;
 import org.keycloak.models.*;
@@ -47,22 +67,19 @@ import org.keycloak.saml.processing.api.saml.v2.sig.SAML2Signature;
 import org.keycloak.saml.processing.core.util.KeycloakKeySamlExtensionGenerator;
 import org.keycloak.saml.validators.DestinationValidator;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.util.Booleans;
 import org.keycloak.util.JsonSerialization;
+
+import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC;
 
@@ -116,7 +133,7 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
 
             Integer attributeConsumingServiceIndex = getConfig().getAttributeConsumingServiceIndex();
 
-            String loginHint = getConfig().isLoginHint() ? request.getAuthenticationSession().getClientNote(OIDCLoginProtocol.LOGIN_HINT_PARAM) : null;
+            String loginHint = Booleans.isTrue(getConfig().isLoginHint()) ? request.getAuthenticationSession().getClientNote(OIDCLoginProtocol.LOGIN_HINT_PARAM) : null;
             Boolean allowCreate = null;
             if (getConfig().getConfig().get(org.keycloak.broker.saml.SAMLIdentityProviderConfig.ALLOW_CREATE) == null || getConfig().isAllowCreate())
                 allowCreate = Boolean.TRUE;
@@ -251,9 +268,9 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             if (logoutRequest.getDestination() != null) {
                 singleLogoutServiceUrl = logoutRequest.getDestination().toString();
             }
-            int status = SimpleHttp.doPost(singleLogoutServiceUrl, session)
-                .param(GeneralConstants.SAML_REQUEST_KEY, binding.postBinding(SAML2Request.convert(logoutRequest)).encoded())
-                .param(GeneralConstants.RELAY_STATE, userSession.getId()).asStatus();
+            int status = SimpleHttp.create(session).doPost(singleLogoutServiceUrl)
+                    .param(GeneralConstants.SAML_REQUEST_KEY, binding.postBinding(SAML2Request.convert(logoutRequest)).encoded())
+                    .param(GeneralConstants.RELAY_STATE, userSession.getId()).asStatus();
             boolean success = status >= 200 && status < 400;
             if (!success) {
                 logger.warn("Failed saml backchannel broker logout to: " + singleLogoutServiceUrl);

@@ -1,8 +1,14 @@
 package nl.first8.keycloak.saml.processing.core.saml.v2.writers;
 
+import java.net.URI;
+import java.util.List;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamWriter;
+
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
+
 import org.keycloak.dom.saml.v2.assertion.EncryptedAssertionType;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.saml.v2.protocol.*;
@@ -11,14 +17,11 @@ import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.StaxUtil;
 import org.keycloak.saml.common.util.StringUtil;
 import org.keycloak.saml.processing.core.saml.v2.writers.BaseWriter;
+
 import org.w3c.dom.Element;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamWriter;
-import java.net.URI;
-import java.util.List;
-
 import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.PROTOCOL_NSURI;
+
 
 public class SAMLResponseWriter extends BaseWriter {
 
@@ -33,7 +36,6 @@ public class SAMLResponseWriter extends BaseWriter {
      * Write a {@code ResponseType} to stream
      *
      * @param response
-     * @param out
      *
      * @throws org.keycloak.saml.common.exceptions.ProcessingException
      */
@@ -130,7 +132,6 @@ public class SAMLResponseWriter extends BaseWriter {
      *
      * @param response
      * @param qname QName of the starting element
-     * @param out
      *
      * @throws ProcessingException
      */
@@ -171,7 +172,6 @@ public class SAMLResponseWriter extends BaseWriter {
      * Write a {@code StatusType} to stream
      *
      * @param status
-     * @param out
      *
      * @throws ProcessingException
      */
@@ -200,7 +200,6 @@ public class SAMLResponseWriter extends BaseWriter {
      * Write a {@code StatusCodeType} to stream
      *
      * @param statusCodeType
-     * @param out
      *
      * @throws ProcessingException
      */
@@ -223,7 +222,6 @@ public class SAMLResponseWriter extends BaseWriter {
      * Write a {@code StatusDetailType} to stream
      *
      * @param statusDetailType
-     * @param out
      *
      * @throws ProcessingException
      */

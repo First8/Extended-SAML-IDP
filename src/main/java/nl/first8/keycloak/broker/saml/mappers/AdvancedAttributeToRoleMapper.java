@@ -1,5 +1,13 @@
 package nl.first8.keycloak.broker.saml.mappers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import nl.first8.keycloak.broker.saml.SAMLEndpoint;
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderFactory;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
@@ -11,9 +19,6 @@ import org.keycloak.broker.saml.mappers.AbstractAttributeToRoleMapper;
 import org.keycloak.models.IdentityProviderMapperModel;
 import org.keycloak.models.IdentityProviderSyncMode;
 import org.keycloak.provider.ProviderConfigProperty;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.keycloak.utils.RegexUtils.valueMatchesRegex;
 

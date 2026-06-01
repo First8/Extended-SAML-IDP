@@ -1,5 +1,9 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.protocol;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.StartElement;
+
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType.RTChoiceType;
 import nl.first8.keycloak.saml.processing.core.parsers.saml.assertion.SAMLAssertionParser;
@@ -10,13 +14,12 @@ import org.keycloak.saml.processing.core.parsers.saml.protocol.SAMLProtocolQName
 import org.keycloak.saml.processing.core.parsers.saml.protocol.SAMLStatusParser;
 import org.keycloak.saml.processing.core.parsers.saml.protocol.SAMLStatusResponseTypeParser;
 import org.keycloak.saml.processing.core.parsers.util.SAMLParserUtil;
-import org.w3c.dom.Element;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
 import org.keycloak.saml.processing.core.parsers.saml.assertion.SAMLEncryptedAssertionParser;
 import org.keycloak.saml.processing.core.saml.v2.util.XMLTimeUtil;
-import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.w3c.dom.Element;
+
+
 
 public class SAMLResponseParser extends SAMLStatusResponseTypeParser<ResponseType> {
 

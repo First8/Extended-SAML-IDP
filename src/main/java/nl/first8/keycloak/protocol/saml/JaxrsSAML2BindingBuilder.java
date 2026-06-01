@@ -1,5 +1,9 @@
 package nl.first8.keycloak.protocol.saml;
 
+import jakarta.ws.rs.core.*;
+import java.io.IOException;
+import java.net.URI;
+
 import nl.first8.keycloak.broker.saml.SAMLIdentityProviderConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -36,14 +40,11 @@ import jakarta.xml.soap.MessageFactory;
 import jakarta.xml.soap.SOAPEnvelope;
 import jakarta.xml.soap.SOAPException;
 import jakarta.xml.soap.SOAPMessage;
-import jakarta.ws.rs.core.*;
 import javax.xml.XMLConstants;
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;

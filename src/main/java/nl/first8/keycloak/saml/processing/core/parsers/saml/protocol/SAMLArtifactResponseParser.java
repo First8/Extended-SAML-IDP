@@ -1,5 +1,9 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.protocol;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.StartElement;
+
 import org.keycloak.dom.saml.v2.protocol.ArtifactResponseType;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.util.StaxParserUtil;
@@ -7,10 +11,6 @@ import org.keycloak.saml.processing.core.parsers.saml.protocol.*;
 import org.keycloak.saml.processing.core.parsers.util.SAMLParserUtil;
 import org.keycloak.saml.processing.core.saml.v2.util.XMLTimeUtil;
 import org.w3c.dom.Element;
-
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
 
 public class SAMLArtifactResponseParser extends SAMLStatusResponseTypeParser<ArtifactResponseType> {
 

@@ -1,14 +1,20 @@
 package nl.first8.keycloak.saml.processing.core.parsers.saml.assertion;
 
-import org.keycloak.dom.saml.v2.assertion.AttributeType;
-import org.keycloak.saml.common.exceptions.ParsingException;
-import org.keycloak.saml.common.util.StaxParserUtil;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
-import java.util.*;
+
+import org.keycloak.dom.saml.v2.assertion.AttributeType;
+import org.keycloak.saml.common.exceptions.ParsingException;
+import org.keycloak.saml.common.util.StaxParserUtil;
 
 public class SAMLAttributeParser extends AbstractStaxSamlAssertionParser<AttributeType> {
 
