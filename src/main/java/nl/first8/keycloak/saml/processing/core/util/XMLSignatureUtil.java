@@ -53,6 +53,7 @@ import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
 import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
 
+import org.jboss.logging.Logger;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.dom.xmlsec.w3.xmldsig.DSAKeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.KeyValueType;

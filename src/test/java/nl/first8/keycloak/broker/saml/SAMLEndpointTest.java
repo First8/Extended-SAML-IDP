@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
-import org.keycloak.broker.provider.IdentityProvider;
+import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.common.enums.SslRequired;
 import org.keycloak.forms.login.LoginFormsProvider;
@@ -50,7 +50,7 @@ class SAMLEndpointTest {
         KeycloakSession session = getMockKeycloakSession();
         SAMLIdentityProvider provider = getMockSamlIdentityProvider();
         SAMLIdentityProviderConfig config = getMockConfig();
-        IdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
         DestinationValidator validator = getMockDestinationValidator();
 
         SAMLEndpoint endpoint = new SAMLEndpoint(session, provider, config, callback, validator);
@@ -97,7 +97,7 @@ class SAMLEndpointTest {
         when(provider.resolveArtifact(anyString(), anyString(), any(RealmModel.class))).thenReturn(expiredArtifactResponse);
 
         SAMLIdentityProviderConfig config = getMockConfig();
-        IdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
         DestinationValidator validator = getMockDestinationValidator();
 
         SAMLEndpoint endpoint = new SAMLEndpoint(session, provider, config, callback, validator);
@@ -118,7 +118,7 @@ class SAMLEndpointTest {
         when(provider.resolveArtifact(anyString(), anyString(), any(RealmModel.class))).thenReturn(wrongSigArtResponse);
 
         SAMLIdentityProviderConfig config = getMockConfigWithSignatureValidation();
-        IdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
         DestinationValidator validator = getMockDestinationValidator();
 
         SAMLEndpoint endpoint = new SAMLEndpoint(session, provider, config, callback, validator);
@@ -152,10 +152,10 @@ class SAMLEndpointTest {
      * Returns a redirect from authenticated() - used with ArgumentCaptor in the happy-path
      * test to assert on the BrokeredIdentityContext that was handed to Keycloak.
      */
-    private IdentityProvider.AuthenticationCallback getMockAuthenticationCallback() {
+    private UserAuthenticationIdentityProvider.AuthenticationCallback getMockAuthenticationCallback() {
         AuthenticationSessionModel authSession = mock(AuthenticationSessionModel.class);
 
-        IdentityProvider.AuthenticationCallback callback = mock(IdentityProvider.AuthenticationCallback.class);
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = mock(UserAuthenticationIdentityProvider.AuthenticationCallback.class);
         when(callback.getAndVerifyAuthenticationSession(anyString())).thenReturn(authSession);
         Response redirectResponse = mock(Response.class);
         when(redirectResponse.getStatusInfo()).thenReturn(Response.Status.FOUND);
@@ -196,6 +196,7 @@ class SAMLEndpointTest {
         when(config.getAlias()).thenReturn("test-alias");
         when(config.isValidateSignature()).thenReturn(false);
         when(config.getAllowedClockSkew()).thenReturn(15);
+        when(config.isEnabled()).thenReturn(true);
         return config;
     }
 

@@ -72,7 +72,6 @@ public class SamlProtocolUtils {
      * @throws VerificationException
      */
 
-    // @TODO check whether this change was right
     public static void verifyDocumentSignature(KeycloakSession session, ClientModel client, Document document) throws VerificationException {
         verifyDocumentSignature(document, createKeyLocatorForClient(session, new SamlClient(client), KeyUse.SIG));
     }
