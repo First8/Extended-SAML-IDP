@@ -11,6 +11,7 @@ import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import org.apache.xml.security.encryption.XMLCipher;
+import nl.first8.keycloak.saml.processing.api.saml.v2.sig.SAML2Signature;
 import org.jboss.logging.Logger;
 import org.keycloak.common.VerificationException;
 import org.keycloak.common.util.PemUtils;
@@ -45,7 +46,6 @@ import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.common.util.DocumentUtil;
 import org.keycloak.saml.common.util.StaxUtil;
 import org.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
-import org.keycloak.saml.processing.api.saml.v2.sig.SAML2Signature;
 import org.keycloak.saml.processing.core.saml.v2.common.IDGenerator;
 import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
 import org.keycloak.saml.processing.core.saml.v2.util.XMLTimeUtil;
@@ -56,10 +56,8 @@ import org.keycloak.saml.processing.web.util.RedirectBindingUtil;
 import org.keycloak.utils.StringUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 public class SamlProtocolUtils {
-
-    private static final Logger logger = Logger.getLogger(org.keycloak.protocol.saml.SamlProtocolUtils.class);
-
     /**
      * Verifies a signature of the given SAML document using settings for the given client.
      * Throws an exception if the client signature is expected to be present as per the client
@@ -262,7 +260,7 @@ public class SamlProtocolUtils {
      */
     public static ArtifactResponseType buildArtifactResponse(SAML2Object samlObject, NameIDType issuer, URI statusCode) throws ConfigurationException, ProcessingException {
         ArtifactResponseType artifactResponse = new ArtifactResponseType(IDGenerator.create("ID_"),
-                XMLTimeUtil.getIssueInstant());
+            XMLTimeUtil.getIssueInstant());
 
         // Status
         StatusType statusType = new StatusType();
@@ -317,7 +315,7 @@ public class SamlProtocolUtils {
      * @throws ProcessingException
      */
     public static Document convert(ArtifactResponseType responseType) throws ProcessingException, ConfigurationException,
-            ParsingException {
+        ParsingException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         SAMLResponseWriter writer = new SAMLResponseWriter(StaxUtil.getXMLStreamWriter(bos));
         writer.write(responseType);
