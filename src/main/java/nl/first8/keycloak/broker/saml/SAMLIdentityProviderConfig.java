@@ -60,8 +60,8 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     public static final String CHAR_SET = "charSet";
     public static final String METADATA_VALID_UNTIL_UNIT = "metadataValidUntilUnit";
     public static final String METADATA_VALID_UNTIL_PERIOD = "metadataValidUntilPeriod";
+    public static final String ARTIFACT_BINDING_RESPONSE = "artifactBindingResponse";
     public static final String ARTIFACT_RESOLUTION_MUTUAL_TLS = "mutualTls";
-    public static final String IGNORE_SAML_ADVICE_NODES = "ignoreSamlAdviceNodes";
     public static final String AUTHN_REQUEST_SCOPING = "scoping";
     public static final String LINKED_PROVIDERS = "linkedProviders";
     public static final String SERVICE_NAME = "serviceName";
@@ -112,6 +112,14 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
 
     public void setArtifactResolution(boolean artifactResolution) {
         getConfig().put(ARTIFACT_RESOLUTION, String.valueOf(artifactResolution));
+    }
+
+    public boolean isArtifactBindingResponse() {
+        return Boolean.parseBoolean(getConfig().get(ARTIFACT_BINDING_RESPONSE));
+    }
+
+    public void setArtifactBindingResponse(boolean artifactBindingResponse) {
+        getConfig().put(ARTIFACT_BINDING_RESPONSE, String.valueOf(artifactBindingResponse));
     }
 
     public boolean isIncludeArtifactResolutionServiceMetadata() {
@@ -167,7 +175,7 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     }
 
     public void setMetadataValidUntilPeriod(Integer period) {
-        getConfig().put(METADATA_VALID_UNTIL_UNIT, String.valueOf(period));
+        getConfig().put(METADATA_VALID_UNTIL_PERIOD, String.valueOf(period));
     }
 
     public boolean isMutualTLS() {
@@ -176,14 +184,6 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
 
     public void setMutualTls(boolean mutualTls) {
         getConfig().put(ARTIFACT_RESOLUTION_MUTUAL_TLS, String.valueOf(mutualTls));
-    }
-
-    public void setIgnoreSamlAdviceNodes(boolean ignoreSamlAdviceNodes) {
-        getConfig().put(IGNORE_SAML_ADVICE_NODES, String.valueOf(ignoreSamlAdviceNodes));
-    }
-
-    public boolean isIgnoreSamlAdviceNodes() {
-        return Boolean.parseBoolean(getConfig().get(IGNORE_SAML_ADVICE_NODES));
     }
 
     public String getScoping() {
@@ -245,8 +245,6 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
             }
         }
         return result;
-
-
     }
 
     public void setAttributeConsumingServiceIndex(Integer attributeConsumingServiceIndex) {

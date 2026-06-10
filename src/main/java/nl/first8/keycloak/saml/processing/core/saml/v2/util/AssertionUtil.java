@@ -44,7 +44,8 @@ import org.keycloak.rotation.HardcodedKeyLocator;
 import org.keycloak.rotation.KeyLocator;
 import org.keycloak.saml.common.ErrorCodes;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.exceptions.ProcessingException;
@@ -65,7 +66,7 @@ import org.w3c.dom.Node;
 
 public class AssertionUtil {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(AssertionUtil.class));
 
     /**
      * Given {@code AssertionType}, convert it into a String
@@ -188,7 +189,7 @@ public class AssertionUtil {
      *      </p>
      */
     public static void createTimedConditions(AssertionType assertion, long durationInMilis) throws ConfigurationException,
-            IssueInstantMissingException {
+        IssueInstantMissingException {
         XMLGregorianCalendar issueInstant = assertion.getIssueInstant();
         if (issueInstant == null)
             throw new IssueInstantMissingException(ErrorCodes.NULL_ISSUE_INSTANT);
@@ -210,7 +211,7 @@ public class AssertionUtil {
      * @throws IssueInstantMissingException
      */
     public static void createTimedConditions(AssertionType assertion, long durationInMilis, long clockSkew)
-            throws ConfigurationException, IssueInstantMissingException {
+        throws ConfigurationException, IssueInstantMissingException {
         XMLGregorianCalendar issueInstant = assertion.getIssueInstant();
         if (issueInstant == null)
             throw logger.samlIssueInstantMissingError();
@@ -236,7 +237,7 @@ public class AssertionUtil {
      * @throws IssueInstantMissingException
      */
     public static void createSAML11TimedConditions(SAML11AssertionType assertion, long durationInMilis, long clockSkew)
-            throws ConfigurationException, IssueInstantMissingException {
+        throws ConfigurationException, IssueInstantMissingException {
         XMLGregorianCalendar issueInstant = assertion.getIssueInstant();
         if (issueInstant == null)
             throw new IssueInstantMissingException(ErrorCodes.NULL_ISSUE_INSTANT);
@@ -578,11 +579,11 @@ public class AssertionUtil {
      */
     public static Element decryptAssertion(ResponseType responseType, XMLEncryptionUtil.DecryptionKeyLocator decryptionKeyLocator) throws ParsingException, ProcessingException, ConfigurationException {
         Element enc = responseType.getAssertions().stream()
-                .map(ResponseType.RTChoiceType::getEncryptedAssertion)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .map(EncryptedElementType::getEncryptedElement)
-                .orElseThrow(() -> new ProcessingException("No encrypted assertion found."));
+            .map(ResponseType.RTChoiceType::getEncryptedAssertion)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .map(EncryptedElementType::getEncryptedElement)
+            .orElseThrow(() -> new ProcessingException("No encrypted assertion found."));
 
         String oldID = enc.getAttribute(JBossSAMLConstants.ID.get());
         Document newDoc = DocumentUtil.createDocument();
@@ -594,7 +595,7 @@ public class AssertionUtil {
 
         JAXPValidationUtil.checkSchemaValidation(decryptedDocumentElement);
         AssertionType assertion = (AssertionType) parser.parse(parser.createEventReader(DocumentUtil
-                .getNodeAsStream(decryptedDocumentElement)));
+            .getNodeAsStream(decryptedDocumentElement)));
 
         responseType.replaceAssertion(oldID, new ResponseType.RTChoiceType(assertion));
 

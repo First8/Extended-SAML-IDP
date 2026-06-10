@@ -27,7 +27,8 @@ import org.keycloak.dom.saml.v2.protocol.ResponseType.RTChoiceType;
 import org.keycloak.dom.saml.v2.protocol.StatusCodeType;
 import org.keycloak.dom.saml.v2.protocol.StatusType;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
 import org.keycloak.saml.processing.core.saml.v2.holders.IssuerInfoHolder;
@@ -43,7 +44,7 @@ import org.w3c.dom.Element;
  */
 public class JBossSAMLAuthnResponseFactory {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(JBossSAMLAuthnResponseFactory.class));
 
     /**
      * Create a StatusType given the status code uri

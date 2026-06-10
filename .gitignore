@@ -170,3 +170,10 @@ buildNumber.properties
 /patch-tool/.work/
 
 .logs
+
+# E2E test credentials
+src/test/e2e/frontend/.env
+src/test/e2e/frontend/node_modules/
+
+# Claude Code
+.claude/

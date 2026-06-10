@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.namespace.QName;
 
@@ -36,6 +37,7 @@ import jakarta.ws.rs.core.UriInfo;
 import nl.first8.keycloak.dom.saml.v2.assertion.AssertionType;
 import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
+import nl.first8.keycloak.protocol.saml.SamlProtocolUtils;
 import nl.first8.keycloak.saml.SAMLRequestParser;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.common.constants.JBossSAMLConstants;
@@ -70,7 +72,6 @@ import org.keycloak.protocol.saml.SamlMetadataKeyLocator;
 import org.keycloak.protocol.saml.SamlMetadataPublicKeyLoader;
 import org.keycloak.protocol.saml.SamlPrincipalType;
 import org.keycloak.protocol.saml.SamlProtocol;
-import org.keycloak.protocol.saml.SamlProtocolUtils;
 import org.keycloak.protocol.saml.SamlService;
 import org.keycloak.protocol.saml.SamlSessionUtils;
 import org.keycloak.protocol.saml.preprocessor.SamlAuthenticationPreprocessor;
@@ -338,10 +339,10 @@ public class SAMLEndpoint {
             if (request.getSessionIndex() == null || request.getSessionIndex().isEmpty()) {
                 AtomicReference<LogoutRequestType> ref = new AtomicReference<>(request);
                 session.sessions().getUserSessionByBrokerUserIdStream(realm, brokerUserId)
-                        .filter(userSession -> userSession.getState() != UserSessionModel.State.LOGGING_OUT &&
-                                userSession.getState() != UserSessionModel.State.LOGGED_OUT)
-                        .toList() // collect to avoid concurrent modification as backchannelLogout removes the user sessions.
-                        .forEach(processLogout(ref));
+                    .filter(userSession -> userSession.getState() != UserSessionModel.State.LOGGING_OUT &&
+                        userSession.getState() != UserSessionModel.State.LOGGED_OUT)
+                    .collect(Collectors.toList()) // collect to avoid concurrent modification as backchannelLogout removes the user sessions.
+                    .forEach(processLogout(ref));
                 request = ref.get();
 
             } else {
@@ -419,7 +420,6 @@ public class SAMLEndpoint {
         }
 
         protected Response handleLoginResponse(String samlResponse, SAMLDocumentHolder holder, ResponseType responseType, String relayState, String clientId) {
-
             try {
                 AuthenticationSessionModel authSession;
                 if (StringUtil.isNotBlank(clientId)) {
@@ -475,6 +475,7 @@ public class SAMLEndpoint {
                     assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(Objects.requireNonNull(JBossSAMLConstants.ASSERTION.get())));
                 }
 
+                logger.trace("Validating the response Issuer");
                 // Validate the response Issuer
                 final String responseIssuer = responseType.getIssuer() != null ? responseType.getIssuer().getValue() : null;
                 final boolean responseIssuerValidationSuccess = config.getIdpEntityId() == null ||
@@ -520,6 +521,7 @@ public class SAMLEndpoint {
 
                 AssertionType assertion = responseType.getAssertions().get(0).getAssertion();
 
+                logger.trace("Validating the assertion issuer");
                 // Validate the assertion Issuer
                 final String assertionIssuer = assertion.getIssuer() != null ? assertion.getIssuer().getValue() : null;
                 final boolean assertionIssuerValidationSuccess = config.getIdpEntityId() == null ||
@@ -541,7 +543,7 @@ public class SAMLEndpoint {
                     return ErrorPage.error(session, authSession, Response.Status.BAD_REQUEST, Messages.INVALID_REQUESTER);
                 }
 
-                BrokeredIdentityContext identity = new BrokeredIdentityContext(principal,config);
+                BrokeredIdentityContext identity = new BrokeredIdentityContext(principal, config);
                 identity.getContextData().put(SAML_LOGIN_RESPONSE, responseType);
                 identity.getContextData().put(SAML_ASSERTION, assertion);
                 identity.setAuthenticationSession(authSession);
@@ -585,6 +587,7 @@ public class SAMLEndpoint {
                         break;
                     }
                 }
+
                 if (assertion.getAttributeStatements() != null) {
                     String email = getX500Attribute(assertion, X500SAMLProfileConstants.EMAIL);
                     if (email != null) {
@@ -602,6 +605,7 @@ public class SAMLEndpoint {
                     identity.setBrokerSessionId(brokerSessionId);
                 }
 
+                logger.trace("handleLoginResponse finished succesfully.");
                 return callback.authenticated(identity);
             } catch (WebApplicationException e) {
                 return e.getResponse();
@@ -691,6 +695,7 @@ public class SAMLEndpoint {
                 event.error(Errors.INVALID_SAML_RESPONSE);
                 return ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.INVALID_REQUEST);
             }
+            logger.trace("Right before handleSamlResponse's  if (config.isValidateSignature())");
             if (config.isValidateSignature()) {
                 try {
                     if (isArtifactResponse) {
@@ -715,8 +720,6 @@ public class SAMLEndpoint {
                 logger.debug("SAML Response was NOT of type ResponseType so calling logout.");
                 return handleLogoutResponse(holder, statusResponse, relayState);
             }
-
-
         }
 
         private ResponseType convertToResponseType(StatusResponseType statusResponse) {
@@ -814,6 +817,7 @@ public class SAMLEndpoint {
         protected SAMLDocumentHolder extractRequestDocument(String samlRequest) {
             return SAMLRequestParser.parseRequestPostBinding(samlRequest);
         }
+
         @Override
         protected SAMLDocumentHolder extractResponseDocument(String response) {
             byte[] samlBytes = response.getBytes();

@@ -1,4 +1,5 @@
-const ServerUrl = window.location.protocol+"//" + window.location.host;
+const relativePath = window.location.pathname.substring(0,window.location.pathname.indexOf("/realm"));
+const ServerUrl = window.location.protocol+"//" + window.location.host + relativePath;
 const clientid = 'saml-extended';
 const postLogoutRedirect = `${ServerUrl}/realms/master/samlconfig/pages/realm`;
 const redirectUri = `${ServerUrl}/realms/master/samlconfig/pages/list`;

@@ -16,7 +16,8 @@ import org.keycloak.dom.saml.v2.SAML2Object;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.saml.v2.protocol.*;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.constants.GeneralConstants;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
@@ -40,7 +41,7 @@ import org.w3c.dom.Document;
  */
 public class SAML2Request {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(SAML2Request.class));
 
     private SAMLDocumentHolder samlDocumentHolder = null;
     private String nameIDFormat = JBossSAMLURIConstants.NAMEID_FORMAT_TRANSIENT.get();
@@ -120,7 +121,7 @@ public class SAML2Request {
      *                                  is null
      */
     public AuthnRequestType getAuthnRequestType(String fileName) throws ConfigurationException, ProcessingException,
-            ParsingException {
+        ParsingException {
         if (fileName == null)
             throw logger.nullArgumentError("fileName");
         URL resourceURL = SecurityActions.loadResource(getClass(), fileName);
@@ -145,7 +146,7 @@ public class SAML2Request {
      * @throws ParsingException
      */
     public static SAMLDocumentHolder getSAML2ObjectFromStream(InputStream is) throws ConfigurationException, ParsingException,
-            ProcessingException {
+        ProcessingException {
         if (is == null)
             throw logger.nullArgumentError("InputStream");
 
@@ -180,7 +181,7 @@ public class SAML2Request {
      * @throws IllegalArgumentException inputstream is null
      */
     public RequestAbstractType getRequestType(InputStream is) throws ParsingException, ConfigurationException,
-            ProcessingException {
+        ProcessingException {
         if (is == null)
             throw logger.nullArgumentError("InputStream");
 
@@ -205,7 +206,7 @@ public class SAML2Request {
      * @throws IllegalArgumentException inputstream is null
      */
     public AuthnRequestType getAuthnRequestType(InputStream is) throws ConfigurationException, ProcessingException,
-            ParsingException {
+        ParsingException {
         if (is == null)
             throw logger.nullArgumentError("InputStream");
 

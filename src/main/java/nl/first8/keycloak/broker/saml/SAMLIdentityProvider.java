@@ -34,6 +34,7 @@ import nl.first8.keycloak.saml.SPMetadataDescriptorBuilder;
 import nl.first8.keycloak.saml.common.constants.GeneralConstants;
 import nl.first8.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
 import nl.first8.keycloak.saml.processing.core.saml.v2.writers.SAMLMetadataWriter;
+import nl.first8.keycloak.saml.SAML2AuthnRequestBuilder;
 import org.keycloak.broker.provider.*;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.Algorithm;
@@ -121,8 +122,8 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             }
 
             SAML2RequestedAuthnContextBuilder requestedAuthnContext =
-                    new SAML2RequestedAuthnContextBuilder()
-                            .setComparison(getConfig().getAuthnContextComparisonType());
+                new SAML2RequestedAuthnContextBuilder()
+                    .setComparison(getConfig().getAuthnContextComparisonType());
 
             for (String authnContextClassRef : getAuthnContextClassRefUris())
                 requestedAuthnContext.addAuthnContextClassRef(authnContextClassRef);
@@ -141,20 +142,25 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             if (protocol.requireReauthentication(null, request.getAuthenticationSession()))
                 forceAuthn = Boolean.TRUE;
             SAML2AuthnRequestBuilder authnRequestBuilder = new SAML2AuthnRequestBuilder()
-                    .assertionConsumerUrl(assertionConsumerServiceUrl)
-                    .destination(destinationUrl)
-                    .issuer(issuerURL)
-                    .forceAuthn(forceAuthn)
-                    .protocolBinding(protocolBinding)
-                    .nameIdPolicy(SAML2NameIDPolicyBuilder
-                            .format(nameIDPolicyFormat)
-                            .setAllowCreate(allowCreate))
-                    .attributeConsumingServiceIndex(attributeConsumingServiceIndex)
-                    .requestedAuthnContext(requestedAuthnContext)
-                    .subject(loginHint);
+                .destination(destinationUrl)
+                .issuer(issuerURL)
+                .forceAuthn(forceAuthn)
+                .protocolBinding(protocolBinding)
+                .nameIdPolicy(SAML2NameIDPolicyBuilder
+                    .format(nameIDPolicyFormat)
+                    .setAllowCreate(allowCreate))
+                .attributeConsumingServiceIndex(attributeConsumingServiceIndex)
+                .requestedAuthnContext(requestedAuthnContext)
+                .subject(loginHint);
+            Integer assertionConsumingServiceIndex = getConfig().getAssertionConsumingServiceIndex();
+            if(assertionConsumingServiceIndex != null) {
+                authnRequestBuilder.assertionConsumerIndex(assertionConsumingServiceIndex);
+            } else {
+                authnRequestBuilder.assertionConsumerUrl(assertionConsumerServiceUrl);
+            }
 
             org.keycloak.protocol.saml.JaxrsSAML2BindingBuilder binding = new org.keycloak.protocol.saml.JaxrsSAML2BindingBuilder(session)
-                    .relayState(request.getState().getEncoded());
+                .relayState(request.getState().getEncoded());
             boolean postBinding = getConfig().isPostBindingAuthnRequest();
 
             logger.debugf("Use %s for AuthNRequest", (postBinding ? "PostBinding" : "RedirectBinding"));
@@ -165,8 +171,8 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                 String keyName = getConfig().getXmlSigKeyInfoKeyNameTransformer().getKeyName(keys.getKid(), keys.getCertificate());
                 logger.debugf("Signing using key: %s", keyName);
                 binding.signWith(keyName, keys.getPrivateKey(), keys.getPublicKey(), keys.getCertificate())
-                        .signatureAlgorithm(getSignatureAlgorithm())
-                        .signDocument();
+                    .signatureAlgorithm(getSignatureAlgorithm())
+                    .signDocument();
                 if (! postBinding && getConfig().isAddExtensionsElementWithKeyInfo()) {    // Only include extension if REDIRECT binding and signing whole SAML protocol message
                     authnRequestBuilder.addExtension(new KeycloakKeySamlExtensionGenerator(keyName));
                 }
@@ -307,11 +313,11 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                                                    String singleLogoutServiceUrl,
                                                    NodeGenerator... extensions) throws ConfigurationException {
         SAML2LogoutRequestBuilder logoutBuilder = new SAML2LogoutRequestBuilder()
-                .assertionExpiration(realm.getAccessCodeLifespan())
-                .issuer(getEntityId(uriInfo, realm))
-                .sessionIndex(userSession.getNote(SAMLEndpoint.SAML_FEDERATED_SESSION_INDEX))
-                .nameId(NameIDType.deserializeFromString(userSession.getNote(SAMLEndpoint.SAML_FEDERATED_SUBJECT_NAMEID)))
-                .destination(singleLogoutServiceUrl);
+            .assertionExpiration(realm.getAccessCodeLifespan())
+            .issuer(getEntityId(uriInfo, realm))
+            .sessionIndex(userSession.getNote(SAMLEndpoint.SAML_FEDERATED_SESSION_INDEX))
+            .nameId(NameIDType.deserializeFromString(userSession.getNote(SAMLEndpoint.SAML_FEDERATED_SUBJECT_NAMEID)))
+            .destination(singleLogoutServiceUrl);
         LogoutRequestType logoutRequest = logoutBuilder.createLogoutRequest();
         for (NodeGenerator extension : extensions) {
             logoutBuilder.addExtension(extension);
@@ -324,13 +330,13 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
 
     private JaxrsSAML2BindingBuilder buildLogoutBinding(KeycloakSession session, UserSessionModel userSession, RealmModel realm) {
         JaxrsSAML2BindingBuilder binding = new JaxrsSAML2BindingBuilder(session, getConfig())
-                .relayState(userSession.getId());
+            .relayState(userSession.getId());
         if (getConfig().isWantAuthnRequestsSigned()) {
             KeyManager.ActiveRsaKey keys = session.keys().getActiveRsaKey(realm);
             String keyName = getConfig().getXmlSigKeyInfoKeyNameTransformer().getKeyName(keys.getKid(), keys.getCertificate());
             binding.signWith(keyName, keys.getPrivateKey(), keys.getPublicKey(), keys.getCertificate())
-                    .signatureAlgorithm(getSignatureAlgorithm())
-                    .signDocument();
+                .signatureAlgorithm(getSignatureAlgorithm())
+                .signDocument();
         }
         return binding;
     }
@@ -341,8 +347,8 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
         String response = "";
         try {
             SAML2ArtifactResolutionBuilder builder = new SAML2ArtifactResolutionBuilder()
-                    .artifact(artifact)
-                    .issuer(issuerURL);
+                .artifact(artifact)
+                .issuer(issuerURL);
 
             JaxrsSAML2BindingBuilder binding = new JaxrsSAML2BindingBuilder(session, getConfig());
             logger.debugf("Sign ArtifactResolve request? -> %s", getConfig().isSignArtifactResolutionRequest());
@@ -387,30 +393,30 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
 
             List<URI> endpoints = new ArrayList();
             endpoints.add(uriInfo.getBaseUriBuilder()
-                    .path("realms").path(realm.getName())
-                    .path("broker")
-                    .path(getConfig().getAlias())
-                    .path("endpoint")
-                    .build());
+                .path("realms").path(realm.getName())
+                .path("broker")
+                .path(getConfig().getAlias())
+                .path("endpoint")
+                .build());
             List<String> linkedProviders = getConfig().getLinkedProviders();
             logger.debugf("Found %d number of linked providers.", linkedProviders.size());
             if (!linkedProviders.isEmpty()) {
                 for (String linkedProvider : linkedProviders) {
                     endpoints.add(uriInfo.getBaseUriBuilder()
-                            .path("realms").path(realm.getName())
-                            .path("broker")
-                            .path(linkedProvider)
-                            .path("endpoint")
-                            .build());
+                        .path("realms").path(realm.getName())
+                        .path("broker")
+                        .path(linkedProvider)
+                        .path("endpoint")
+                        .build());
                 }
             }
 
             URI artifactEndpoint = uriInfo.getBaseUriBuilder()
-                    .path("realms").path(realm.getName())
-                    .path("broker")
-                    .path(getConfig().getAlias())
-                    .path("endpoint")
-                    .build();
+                .path("realms").path(realm.getName())
+                .path("broker")
+                .path(getConfig().getAlias())
+                .path("endpoint")
+                .build();
 
             boolean wantAuthnRequestsSigned = getConfig().isWantAuthnRequestsSigned();
             boolean wantAssertionsSigned = getConfig().isWantAssertionsSigned();
@@ -421,39 +427,39 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             // We export all keys for algorithm RS256, both active and passive so IDP is able to verify signature even
             //  if a key rotation happens in the meantime
             List<KeyDescriptorType> signingKeys = session.keys().getKeysStream(realm, KeyUse.SIG, Algorithm.RS256)
-                    .filter(key -> key.getCertificate() != null)
-                    .sorted(SamlService::compareKeys)
-                    .map(key -> {
-                        try {
-                            return SPMetadataDescriptor.buildKeyInfoElement(key.getKid(), PemUtils.encodeCertificate(key.getCertificate()));
-                        } catch (ParserConfigurationException e) {
-                            logger.warn("Failed to export SAML SP Metadata!", e);
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .map(key -> SPMetadataDescriptor.buildKeyDescriptorType(key, KeyTypes.SIGNING, null))
-                    .collect(Collectors.toList());
+                .filter(key -> key.getCertificate() != null)
+                .sorted(SamlService::compareKeys)
+                .map(key -> {
+                    try {
+                        return SPMetadataDescriptor.buildKeyInfoElement(key.getKid(), PemUtils.encodeCertificate(key.getCertificate()));
+                    } catch (ParserConfigurationException e) {
+                        logger.warn("Failed to export SAML SP Metadata!", e);
+                        throw new RuntimeException(e);
+                    }
+                })
+                .map(key -> SPMetadataDescriptor.buildKeyDescriptorType(key, KeyTypes.SIGNING, null))
+                .collect(Collectors.toList());
 
             // We export only active ENC keys so IDP uses different key as soon as possible if a key rotation happens
             String encAlg = getConfig().getEncryptionAlgorithm();
             List<KeyDescriptorType> encryptionKeys = session.keys().getKeysStream(realm)
-                    .filter(key -> key.getStatus().isActive() && KeyUse.ENC.equals(key.getUse())
-                            && (encAlg == null || Objects.equals(encAlg, key.getAlgorithmOrDefault()))
-                            && SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()) != null
-                            && key.getCertificate() != null)
-                    .sorted(SamlService::compareKeys)
-                    .map(key -> {
-                        Element keyInfo;
-                        try {
-                            keyInfo = SPMetadataDescriptor.buildKeyInfoElement(key.getKid(), PemUtils.encodeCertificate(key.getCertificate()));
-                        } catch (ParserConfigurationException e) {
-                            logger.warn("Failed to export SAML SP Metadata!", e);
-                            throw new RuntimeException(e);
-                        }
+                .filter(key -> key.getStatus().isActive() && KeyUse.ENC.equals(key.getUse())
+                    && (encAlg == null || Objects.equals(encAlg, key.getAlgorithmOrDefault()))
+                    && SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()) != null
+                    && key.getCertificate() != null)
+                .sorted(SamlService::compareKeys)
+                .map(key -> {
+                    Element keyInfo;
+                    try {
+                        keyInfo = SPMetadataDescriptor.buildKeyInfoElement(key.getKid(), PemUtils.encodeCertificate(key.getCertificate()));
+                    } catch (ParserConfigurationException e) {
+                        logger.warn("Failed to export SAML SP Metadata!", e);
+                        throw new RuntimeException(e);
+                    }
 
-                        return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifiers());
-                    })
-                    .collect(Collectors.toList());
+                    return SPMetadataDescriptor.buildKeyDescriptorType(keyInfo, KeyTypes.ENCRYPTION, SAMLEncryptionAlgorithms.forKeycloakIdentifier(key.getAlgorithm()).getXmlEncIdentifiers());
+                })
+                .collect(Collectors.toList());
             // Prepare the metadata descriptor model
             StringWriter sw = new StringWriter();
             XMLStreamWriter writer = StaxUtil.getXMLStreamWriter(sw);
@@ -465,28 +471,28 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             }
 
             SPMetadataDescriptorBuilder spMetadataDescriptorBuilder = new SPMetadataDescriptorBuilder()
-                    .loginBinding(authnResponseBinding)
-                    .logoutBinding(logoutBinding)
-                    .assertionEndpoints(endpoints)
-                    .defaultAssertionEndpoint(defaultAssertionEndpointIndex)
-                    .logoutEndpoints(endpoints)
-                    .wantAuthnRequestsSigned(wantAuthnRequestsSigned)
-                    .wantAssertionsSigned(wantAssertionsSigned)
-                    .wantAssertionsEncrypted(wantAssertionsEncrypted)
-                    .entityId(entityId)
-                    .nameIDPolicyFormat(nameIDPolicyFormat)
-                    .signingCerts(signingKeys)
-                    .encryptionCerts(encryptionKeys);
+                .loginBinding(authnResponseBinding)
+                .logoutBinding(logoutBinding)
+                .assertionEndpoints(endpoints)
+                .defaultAssertionEndpoint(defaultAssertionEndpointIndex)
+                .logoutEndpoints(endpoints)
+                .wantAuthnRequestsSigned(wantAuthnRequestsSigned)
+                .wantAssertionsSigned(wantAssertionsSigned)
+                .wantAssertionsEncrypted(wantAssertionsEncrypted)
+                .entityId(entityId)
+                .nameIDPolicyFormat(nameIDPolicyFormat)
+                .signingCerts(signingKeys)
+                .encryptionCerts(encryptionKeys);
             if (getConfig().isIncludeArtifactResolutionServiceMetadata()) {
                 spMetadataDescriptorBuilder.artifactResolutionBinding(artifactBinding)
-                        .artifactResolutionEndpoint(artifactEndpoint);
+                    .artifactResolutionEndpoint(artifactEndpoint);
             }
             if (getConfig().getMetadataValidUntilUnit() != null && getConfig().getMetadataValidUntilPeriod() != null) {
                 logger.debugf("Valid Until set for Metadata. Setting valid until current date + %s %s",
-                        getConfig().getMetadataValidUntilUnit(), getConfig().getMetadataValidUntilPeriod());
+                    getConfig().getMetadataValidUntilUnit(), getConfig().getMetadataValidUntilPeriod());
                 spMetadataDescriptorBuilder
-                        .metadataValidUntilUnit(getConfig().getMetadataValidUntilUnit())
-                        .metadataValidUntilPeriod(getConfig().getMetadataValidUntilPeriod());
+                    .metadataValidUntilUnit(getConfig().getMetadataValidUntilUnit())
+                    .metadataValidUntilPeriod(getConfig().getMetadataValidUntilPeriod());
             }
             EntityDescriptorType entityDescriptor = spMetadataDescriptorBuilder.build();
 
@@ -527,8 +533,8 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
                     }
 
                     boolean alreadyPresent = attributeConsumingService.getRequestedAttribute().stream()
-                            .anyMatch(t -> (attributeName == null || attributeName.equalsIgnoreCase(t.getName())) &&
-                                    (attributeFriendlyName == null || attributeFriendlyName.equalsIgnoreCase(t.getFriendlyName())));
+                        .anyMatch(t -> (attributeName == null || attributeName.equalsIgnoreCase(t.getName())) &&
+                            (attributeFriendlyName == null || attributeFriendlyName.equalsIgnoreCase(t.getFriendlyName())));
 
                     if (!alreadyPresent) {
                         logger.debugf("%s not present adding to Attribute Consuming Service", attributeName);

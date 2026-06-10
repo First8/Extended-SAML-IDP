@@ -19,7 +19,8 @@ import org.keycloak.dom.saml.v2.assertion.*;
 import org.keycloak.dom.saml.v2.protocol.ResponseType;
 import org.keycloak.dom.saml.v2.protocol.StatusResponseType;
 import org.keycloak.saml.common.PicketLinkLogger;
-import org.keycloak.saml.common.PicketLinkLoggerFactory;
+import nl.first8.keycloak.saml.common.PicketLinkLoggerFactory;
+import org.jboss.logging.Logger;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
 import org.keycloak.saml.common.exceptions.ParsingException;
@@ -47,7 +48,7 @@ import static org.keycloak.saml.common.constants.JBossSAMLURIConstants.PROTOCOL_
 
 public class SAML2Response {
 
-    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger();
+    private static final PicketLinkLogger logger = PicketLinkLoggerFactory.getLogger(Logger.getLogger(SAML2Response.class));
     private final long ASSERTION_VALIDITY = 5000; // 5secs in milis
 
     private final long CLOCK_SKEW = 2000; // 2secs
@@ -127,7 +128,7 @@ public class SAML2Response {
      * @throws ProcessingException
      */
     public ResponseType createResponseType(String ID, SPInfoHolder sp, IDPInfoHolder idp, IssuerInfoHolder issuerInfo)
-            throws ProcessingException {
+        throws ProcessingException {
         String responseDestinationURI = sp.getResponseDestinationURI();
 
         XMLGregorianCalendar issueInstant = XMLTimeUtil.getIssueInstant();
@@ -167,7 +168,7 @@ public class SAML2Response {
         String assertionID = IDGenerator.create("ID_");
 
         assertionType = SAMLAssertionFactory.createAssertion(assertionID, issuerID, issueInstant, conditions,
-                subjectType, statements);
+            subjectType, statements);
 
         try {
             AssertionUtil.createTimedConditions(assertionType, ASSERTION_VALIDITY, CLOCK_SKEW);
@@ -218,7 +219,7 @@ public class SAML2Response {
      * @throws ConfigurationException
      */
     public ResponseType createResponseType(String ID, IssuerInfoHolder issuerInfo, Element encryptedAssertion)
-            throws ConfigurationException {
+        throws ConfigurationException {
         return JBossSAMLAuthnResponseFactory.createResponseType(ID, issuerInfo, encryptedAssertion);
     }
 
@@ -231,7 +232,7 @@ public class SAML2Response {
      * @throws IssueInstantMissingException
      */
     public void createTimedConditions(AssertionType assertion, long durationInMilis) throws ConfigurationException,
-            IssueInstantMissingException {
+        IssueInstantMissingException {
         AssertionUtil.createTimedConditions(assertion, durationInMilis);
     }
 
@@ -245,7 +246,7 @@ public class SAML2Response {
      * @throws ConfigurationException
      */
     public EncryptedAssertionType getEncryptedAssertion(InputStream is) throws ParsingException, ConfigurationException,
-            ProcessingException {
+        ProcessingException {
         if (is == null)
             throw logger.nullArgumentError("InputStream");
 
@@ -318,7 +319,7 @@ public class SAML2Response {
      * @throws ProcessingException
      */
     public SAML2Object getSAML2ObjectFromStream(InputStream is) throws ParsingException, ConfigurationException,
-            ProcessingException {
+        ProcessingException {
         if (is == null)
             throw logger.nullArgumentError("InputStream");
 
@@ -381,7 +382,7 @@ public class SAML2Response {
      * @throws ProcessingException
      */
     public static Document convert(StatusResponseType responseType) throws ProcessingException, ConfigurationException,
-            ParsingException {
+        ParsingException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         SAMLResponseWriter writer = new SAMLResponseWriter(StaxUtil.getXMLStreamWriter(bos));
