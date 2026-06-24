@@ -48,6 +48,7 @@ class UserAttributeValueMapperTest {
         when(brokeredIdentityContext.getContextData()).thenReturn(context);
 
         mapper.preprocessFederatedIdentity(session, realm, mapperModel, brokeredIdentityContext);
+        verify(brokeredIdentityContext, times(1)).setUserAttribute(USER_ATTRIBUTE_NAME, List.of(ATTRIBUTE_VALUE_ATTRIBUTE_STATEMENT));
     }
 
     @Test

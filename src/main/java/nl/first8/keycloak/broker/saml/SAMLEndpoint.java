@@ -475,8 +475,8 @@ public class SAMLEndpoint {
                     assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(Objects.requireNonNull(JBossSAMLConstants.ASSERTION.get())));
                 }
 
-                logger.trace("Validating the response Issuer");
                 // Validate the response Issuer
+                logger.trace("Validating the response Issuer");
                 final String responseIssuer = responseType.getIssuer() != null ? responseType.getIssuer().getValue() : null;
                 final boolean responseIssuerValidationSuccess = config.getIdpEntityId() == null ||
                         (responseIssuer != null && responseIssuer.equals(config.getIdpEntityId()));
@@ -521,8 +521,8 @@ public class SAMLEndpoint {
 
                 AssertionType assertion = responseType.getAssertions().get(0).getAssertion();
 
-                logger.trace("Validating the assertion issuer");
                 // Validate the assertion Issuer
+                logger.trace("Validating the assertion issuer");
                 final String assertionIssuer = assertion.getIssuer() != null ? assertion.getIssuer().getValue() : null;
                 final boolean assertionIssuerValidationSuccess = config.getIdpEntityId() == null ||
                         (assertionIssuer != null && assertionIssuer.equals(config.getIdpEntityId()));
