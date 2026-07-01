@@ -71,6 +71,8 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     public static final String DESCRIPTOR_CACHE_SECONDS = "descriptorCacheSeconds";
 
     public static final String CUSTOM_ERROR_REDIRECT_ENABLED = "customErrorRedirectEnabled";
+    public static final String ERROR_CALLBACK_URL = "errorCallbackUrl";
+    public static final String CANCELLED_CALLBACK_URL = "cancelledCallbackUrl";
     public static final String ERROR_CALLBACK_PATH = "errorCallbackPath";
     public static final String CANCELLED_CALLBACK_PATH = "cancelledCallbackPath";
 
@@ -287,6 +289,22 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
         getConfig().put(CUSTOM_ERROR_REDIRECT_ENABLED, String.valueOf(enabled));
     }
 
+    public String getErrorCallbackUrl() {
+        return getConfig().get(ERROR_CALLBACK_URL);
+    }
+
+    public void setErrorCallbackUrl(String url) {
+        getConfig().put(ERROR_CALLBACK_URL, url);
+    }
+
+    public String getCancelledCallbackUrl() {
+        return getConfig().get(CANCELLED_CALLBACK_URL);
+    }
+
+    public void setCancelledCallbackUrl(String url) {
+        getConfig().put(CANCELLED_CALLBACK_URL, url);
+    }
+
     public String getErrorCallbackPath() {
         String path = getConfig().get(ERROR_CALLBACK_PATH);
         return path != null && !path.isEmpty() ? path : "/signin-callback/error";
@@ -321,6 +339,12 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
         }
         if (StringUtil.isNotBlank(getArtifactResolutionServiceUrl())) {
             checkUrl(sslRequired, getArtifactResolutionServiceUrl(), ARTIFACT_RESOLUTION_SERVICE_URL);
+        }
+        if (StringUtil.isNotBlank(getErrorCallbackUrl())) {
+            checkUrl(sslRequired, getErrorCallbackUrl(), ERROR_CALLBACK_URL);
+        }
+        if (StringUtil.isNotBlank(getCancelledCallbackUrl())) {
+            checkUrl(sslRequired, getCancelledCallbackUrl(), CANCELLED_CALLBACK_URL);
         }
         //transient name id format is not accepted together with principaltype SubjectnameId
         if (JBossSAMLURIConstants.NAMEID_FORMAT_TRANSIENT.get().equals(getNameIDPolicyFormat()) && SamlPrincipalType.SUBJECT == getPrincipalType())

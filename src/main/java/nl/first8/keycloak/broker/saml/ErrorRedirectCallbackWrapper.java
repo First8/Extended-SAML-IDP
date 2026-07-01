@@ -39,7 +39,7 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
 
     @Override
     public Response cancelled(IdentityProviderModel idpConfig) {
-        Response redirect = buildRedirectResponse(config.getCancelledCallbackPath());
+        Response redirect = buildRedirectResponse(config.getCancelledCallbackUrl(), config.getCancelledCallbackPath());
         if (redirect != null) {
             return redirect;
         }
@@ -50,8 +50,7 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
     public Response error(IdentityProviderModel idpConfig, String message) {
         logger.warnf("Error callback intercepted with message: %s", message);
 
-        String callbackPath = determineCallbackPath(message);
-        Response redirect = buildRedirectResponse(callbackPath);
+        Response redirect = buildRedirectResponse(determineCallbackUrl(message), determineCallbackPath(message));
         if (redirect != null) {
             return redirect;
         }
@@ -80,24 +79,72 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
         return config.getCancelledCallbackPath();
     }
 
-    private Response buildRedirectResponse(String callbackPath) {
-        AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
-        if (authSession == null) {
-            logger.warn("No authentication session available for error redirect");
-            return null;
+    String determineCallbackUrl(String message) {
+        if (message != null) {
+            if (message.contains("RequestDenied") || message.contains("denied") || message.contains("Denied")) {
+                return config.getErrorCallbackUrl();
+            }
+        }
+        // Default: treat as cancelled (AuthnFailed, cancelled, or unknown)
+        return config.getCancelledCallbackUrl();
+    }
+
+    private Response buildRedirectResponse(String callbackUrl, String callbackPath) {
+        String resolvedCallbackUrl = normalizeCallbackUrl(callbackUrl);
+        if (resolvedCallbackUrl == null) {
+            AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
+            if (authSession == null) {
+                logger.warn("No authentication session available for error redirect");
+                return null;
+            }
+
+            resolvedCallbackUrl = buildCallbackUrl(authSession.getRedirectUri(), callbackPath);
+            if (resolvedCallbackUrl == null) {
+                resolvedCallbackUrl = buildCallbackUrl(authSession.getClient().getBaseUrl(), callbackPath);
+            }
         }
 
-        String callbackUrl = buildCallbackUrl(authSession.getRedirectUri(), callbackPath);
-        if (callbackUrl == null) {
-            callbackUrl = buildCallbackUrl(authSession.getClient().getBaseUrl(), callbackPath);
-        }
-
-        if (callbackUrl != null) {
-            logger.infof("Redirecting to: %s", callbackUrl);
-            return Response.status(Response.Status.FOUND).location(URI.create(callbackUrl)).build();
+        if (resolvedCallbackUrl != null) {
+            logger.infof("Redirecting to: %s", resolvedCallbackUrl);
+            return Response.status(Response.Status.FOUND).location(URI.create(resolvedCallbackUrl)).build();
         }
 
         return null;
+    }
+
+    /**
+     * Validates and normalizes a configured absolute callback URL.
+     * Returns null if the callback URL is invalid or blank.
+     */
+    static String normalizeCallbackUrl(String callbackUrl) {
+        if (callbackUrl == null || callbackUrl.isBlank()) {
+            return null;
+        }
+
+        try {
+            URI uri = new URI(callbackUrl);
+            String scheme = uri.getScheme();
+            String host = uri.getHost();
+
+            if (scheme == null || host == null) {
+                return null;
+            }
+
+            if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
+                logger.warnf("Rejected redirect with unsupported scheme: %s", scheme);
+                return null;
+            }
+
+            if (uri.getUserInfo() != null || uri.getFragment() != null) {
+                logger.warnf("Rejected invalid callback URL: %s", callbackUrl);
+                return null;
+            }
+
+            return uri.toASCIIString();
+        } catch (URISyntaxException e) {
+            logger.warnf("Failed to parse callback URL for error redirect: %s", e.getMessage());
+            return null;
+        }
     }
 
     /**
