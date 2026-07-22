@@ -70,7 +70,9 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
     public static final String ATTRIBUTE_VALUE = "attributeValue";
     public static final String DESCRIPTOR_CACHE_SECONDS = "descriptorCacheSeconds";
 
-
+    public static final String CUSTOM_ERROR_REDIRECT_ENABLED = "customErrorRedirectEnabled";
+    public static final String ERROR_CALLBACK = "errorCallback";
+    public static final String CANCELLED_CALLBACK = "cancelledCallback";
 
     public SAMLIdentityProviderConfig() {
         super();
@@ -273,6 +275,32 @@ public class SAMLIdentityProviderConfig extends org.keycloak.broker.saml.SAMLIde
 
     public boolean isUseMetadataDescriptorUrl() {
         return Boolean.parseBoolean(getConfig().get(USE_METADATA_DESCRIPTOR_URL));
+    }
+
+    public boolean isCustomErrorRedirectEnabled() {
+        return Boolean.parseBoolean(getConfig().get(CUSTOM_ERROR_REDIRECT_ENABLED));
+    }
+
+    public void setCustomErrorRedirectEnabled(boolean enabled) {
+        getConfig().put(CUSTOM_ERROR_REDIRECT_ENABLED, String.valueOf(enabled));
+    }
+
+    public String getErrorCallback() {
+        String callback = getConfig().get(ERROR_CALLBACK);
+        return StringUtil.isNotBlank(callback) ? callback : "/signin-callback/error";
+    }
+
+    public void setErrorCallback(String callback) {
+        getConfig().put(ERROR_CALLBACK, callback);
+    }
+
+    public String getCancelledCallback() {
+        String callback = getConfig().get(CANCELLED_CALLBACK);
+        return StringUtil.isNotBlank(callback) ? callback : "/signin-callback/cancelled";
+    }
+
+    public void setCancelledCallback(String callback) {
+        getConfig().put(CANCELLED_CALLBACK, callback);
     }
 
     @Override
