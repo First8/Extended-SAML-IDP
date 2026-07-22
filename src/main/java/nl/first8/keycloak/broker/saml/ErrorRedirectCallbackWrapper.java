@@ -39,7 +39,7 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
 
     @Override
     public Response cancelled(IdentityProviderModel idpConfig) {
-        Response redirect = buildRedirectResponse(config.getCancelledCallbackUrl(), config.getCancelledCallbackPath());
+        Response redirect = buildRedirectResponse(config.getCancelledCallback());
         if (redirect != null) {
             return redirect;
         }
@@ -50,7 +50,7 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
     public Response error(IdentityProviderModel idpConfig, String message) {
         logger.warnf("Error callback intercepted with message: %s", message);
 
-        Response redirect = buildRedirectResponse(determineCallbackUrl(message), determineCallbackPath(message));
+        Response redirect = buildRedirectResponse(determineCallback(message));
         if (redirect != null) {
             return redirect;
         }
@@ -69,28 +69,18 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
         return delegate.retryLogin(identityProvider, authSession);
     }
 
-    String determineCallbackPath(String message) {
+    String determineCallback(String message) {
         if (message != null) {
             if (message.contains("RequestDenied") || message.contains("denied") || message.contains("Denied")) {
-                return config.getErrorCallbackPath();
+                return config.getErrorCallback();
             }
         }
         // Default: treat as cancelled (AuthnFailed, cancelled, or unknown)
-        return config.getCancelledCallbackPath();
+        return config.getCancelledCallback();
     }
 
-    String determineCallbackUrl(String message) {
-        if (message != null) {
-            if (message.contains("RequestDenied") || message.contains("denied") || message.contains("Denied")) {
-                return config.getErrorCallbackUrl();
-            }
-        }
-        // Default: treat as cancelled (AuthnFailed, cancelled, or unknown)
-        return config.getCancelledCallbackUrl();
-    }
-
-    private Response buildRedirectResponse(String callbackUrl, String callbackPath) {
-        String resolvedCallbackUrl = normalizeCallbackUrl(callbackUrl);
+    private Response buildRedirectResponse(String callback) {
+        String resolvedCallbackUrl = normalizeCallbackUrl(callback);
         if (resolvedCallbackUrl == null) {
             AuthenticationSessionModel authSession = session.getContext().getAuthenticationSession();
             if (authSession == null) {
@@ -98,9 +88,9 @@ public class ErrorRedirectCallbackWrapper implements UserAuthenticationIdentityP
                 return null;
             }
 
-            resolvedCallbackUrl = buildCallbackUrl(authSession.getRedirectUri(), callbackPath);
+            resolvedCallbackUrl = buildCallbackUrl(authSession.getRedirectUri(), callback);
             if (resolvedCallbackUrl == null) {
-                resolvedCallbackUrl = buildCallbackUrl(authSession.getClient().getBaseUrl(), callbackPath);
+                resolvedCallbackUrl = buildCallbackUrl(authSession.getClient().getBaseUrl(), callback);
             }
         }
 
