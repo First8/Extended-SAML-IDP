@@ -29,7 +29,7 @@ if (storedData) {
             
         }
         
-        
+        //Note: Here, the checkboxes are populated from the realm data.
         toggleCheckbox('backchannelSupported', backchannel)
         toggleCheckbox('allowCreate', allowCreate)
         toggleCheckbox('postBindingResponse', httpPostBindingResponse)
@@ -53,6 +53,7 @@ if (storedData) {
         toggleCheckbox1('enabled', enabled)
         toggleCheckbox('sendIdTokenOnLogout', id_token_hint)
         toggleCheckbox('sendClientIdOnLogout', client_id_in_logout_requests)
+        toggleCheckbox('customErrorRedirectEnabled', customErrorRedirectEnabled)
         if (pluginData.config && pluginData.config.wantAuthnRequestsSigned) {
             
             
@@ -68,6 +69,14 @@ if (storedData) {
                 wantAuthnRequestsSigned.checked = false;
                 
             }
+        }
+        
+        if(pluginData.config && pluginData.config.errorCallback) {
+            updateField('errorCallback', pluginData.config.errorCallback);
+        }
+
+        if(pluginData.config && pluginData.config.cancelledCallback) {
+            updateField('cancelledCallback', pluginData.config.cancelledCallback);
         }
         
         var additionalField1 = document.getElementById("ValidatingX509Certificates");

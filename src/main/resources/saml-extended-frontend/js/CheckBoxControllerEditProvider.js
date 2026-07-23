@@ -274,18 +274,18 @@ document.addEventListener('DOMContentLoaded', function () {
   
   var CustomErrorRedirectEnabled = document.getElementById("customErrorRedirectEnabled");
   var CustomCallbackHiddenConfig = document.getElementById("custom_callback_hidden_config");
-  CustomErrorRedirectEnabled.checked = !!pluginData.config.customErrorRedirectEnabled;
+  CustomErrorRedirectEnabled.checked = pluginData.config.customErrorRedirectEnabled === true || pluginData.config.customErrorRedirectEnabled === 'true' ;
   CustomErrorRedirectEnabled.addEventListener("change", function () {
       if (CustomErrorRedirectEnabled.checked) {
         CustomErrorRedirectEnabled.value = true;
-        CustomCallbackHiddenConfig.style.display = 'block'
+        CustomCallbackHiddenConfig.style.display = 'block';
       } else {
         CustomErrorRedirectEnabled.value = false;
-        CustomCallbackHiddenConfig.style.display = 'none'
-        ;
+        CustomCallbackHiddenConfig.style.display = 'none';
       }
     }
   );
+  CustomErrorRedirectEnabled.dispatchEvent(new Event("change"));
   
   var Artifact_Resolution = document.getElementById("Artifact_Resolution");
   Artifact_Resolution.value = pluginData.config.artifactResolution ? pluginData.config.artifactResolution : false;
