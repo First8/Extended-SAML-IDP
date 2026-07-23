@@ -88,8 +88,10 @@ edit.addEventListener('click', () => {
                     "sendClientIdOnLogout":client_id_in_logout_requests.value,
                     "metadataDescriptorUrl":samlEntityDescriptor_input.value,
                     "useMetadataDescriptorUrl":UseMetadataDescriptorURL.value,
-                    "attributeConsumingServiceMetadata":attributeServicesArray.length > 0 ? JSON.stringify(attributeServicesArray) : undefined
-                    
+                    "attributeConsumingServiceMetadata":attributeServicesArray.length > 0 ? JSON.stringify(attributeServicesArray) : undefined,
+                    "customErrorRedirectEnabled": customErrorRedirectEnabled.value,
+                    "errorCallback": errorCallback_input.value,
+                    "cancelledCallback": cancelledCallback_input.value
                 }
             };
             

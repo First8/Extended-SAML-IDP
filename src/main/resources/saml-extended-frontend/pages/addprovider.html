@@ -835,6 +835,31 @@
                 </label>
 
 
+                <h5>Custom Callback Behavior
+                    <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                         onclick="alert('Configure custom behavior in case the user returns from the provider/broker with an error, or if they cancelled the external login.')">
+                </h5>
+                <label class="switch">
+                    <input type="checkbox" name="customErrorRedirectEnabled" id="customErrorRedirectEnabled" value="false">
+                    <span class="slider round"></span>
+                </label>
+
+                <div id="custom_callback_hidden_config" style="display:none">
+                    <h5>Error Callback
+                        <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                             onclick="alert('Configure a custom callback URL (or relative path from Keycloak\'s host) for when the user returns from the provider/broker with an error.')">
+                    </h5>
+                    <input type="text" class="input_text" name="Error Callback URL/path" id="errorCallback">
+
+                    <h5>Cancelled Callback
+                        <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
+                             onclick="alert('Configure a custom callback URL (or relative path from Keycloak\'s host) for when the user cancels out of a login at the provider/broker.')">
+                    </h5>
+                    <input type="text" class="input_text" name="Cancelled Callback URL/path" id="cancelledCallback">
+                </div>
+
+
+
                 <h5>First Login Flow
                     <img src="../../samlconfig/images/question.png" class="image" alt="question mark"
                          onclick="alert('Alias of authentication flow, which is triggered after first login with this identity provider. Term *First Login* means that no Keycloak account is currently linked to the authenticated identity provider account.')">
