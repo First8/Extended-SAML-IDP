@@ -43,7 +43,10 @@ var encryption_algorithm=document.getElementById("encryption_algorithm");
 var client_id_in_logout_requests_input=document.getElementById("client_id_in_logout_requests");
 var samlEntityDescriptor_input=document.getElementById("samlEntityDescriptor");
 var storedData;
-var UseMetadataDescriptorURL=document.getElementById("UseMetadataDescriptorURL")
+var UseMetadataDescriptorURL=document.getElementById("UseMetadataDescriptorURL");
+var customErrorRedirectEnabled=document.getElementById("customErrorRedirectEnabled");
+var errorCallback_input=document.getElementById("errorCallback");
+var cancelledCallback_input=document.getElementById("cancelledCallback");
 
 
 function handleCheckboxValue(checkbox) {
