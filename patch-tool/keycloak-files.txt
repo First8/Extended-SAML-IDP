@@ -18,6 +18,8 @@ services/src/main/java/org/keycloak/protocol/saml/mappers/SamlMetadataDescriptor
 services/src/main/java/org/keycloak/protocol/saml/JaxrsSAML2BindingBuilder.java
 services/src/main/java/org/keycloak/protocol/saml/SamlProtocolUtils.java
 saml-core-api/src/main/java/org/keycloak/saml/common/constants/JBossSAMLConstants.java
+saml-core/src/main/java/org/keycloak/saml/common/DefaultPicketLinkLogger.java
+saml-core/src/main/java/org/keycloak/saml/common/PicketLinkLoggerFactory.java
 saml-core/src/main/java/org/keycloak/saml/processing/api/saml/v2/request/SAML2Request.java
 saml-core/src/main/java/org/keycloak/saml/processing/api/saml/v2/request/SecurityActions.java
 saml-core/src/main/java/org/keycloak/saml/processing/api/saml/v2/response/SAML2Response.java

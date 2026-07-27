@@ -30,10 +30,12 @@ The main command is:
 ./patch.sh [--apply] OLD_BRANCH NEW_BRANCH
 ```
 
+***Note: The patch process will ask for your SSH passhprase many times***
+
 ### Arguments
 
-* `OLD_BRANCH` – The base branch in the Keycloak repo (e.g., `archive/release/26.1`)
-* `NEW_BRANCH` – The comparison branch in the Keycloak repo (e.g., `archive/release/26.0`)
+* `OLD_BRANCH` – The base branch in the Keycloak repo (e.g., `archive/release/27.0`)
+* `NEW_BRANCH` – The comparison branch in the Keycloak repo (e.g., `archive/release/27.1`)
 * `--apply` – Optional flag to **apply** the generated patch to the parent directory
 
 ### Examples
