@@ -15,7 +15,7 @@ In addition, the Extended SAML Identity Provider adds support for Encrypted Attr
 
 ## Configuration
 
-For keycloak up to version 20.x, the Extended SAML Identity Provider can be added to a realm using the standard keycloak
+For Keycloak up to version 20.x, the Extended SAML Identity Provider can be added to a realm using the standard keycloak
 Admin Console, provided you set the Admin Theme to `keycloak` to indicate you want to use the v1 (legacy) UI.
 
 In keycloak versions 21.x and higher, the legacy UI is no longer available; you can still edit most settings of the
@@ -24,9 +24,9 @@ provider in the Admin Console if it was created using the legacy UI, but some of
 To manage the Extended SAML IDP in new keycloak releases you can use the REST API provided by keycloak in combination
 with a custom frontend.
 
-## Updating/adding release branches
+## Upgrading
 
-The steps are as follows:
+The steps to upgrade to a new Keycloak minor version are as follows (also: the steps are analogous in case of a new major version):
 
 1. Pull the branch corresponding to the most recent Keycloak minor version that already exists in the repository.
 
