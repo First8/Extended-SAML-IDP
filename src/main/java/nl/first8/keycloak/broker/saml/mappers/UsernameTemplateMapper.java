@@ -38,9 +38,14 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.provider.ProviderConfigProperty;
 
+import org.jboss.logging.Logger;
+
+
 public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
 
     protected static final Logger logger = Logger.getLogger(UsernameTemplateMapper.class);
+
+    private static final Logger logger = Logger.getLogger(UsernameTemplateMapper.class);
 
     public static final String[] COMPATIBLE_PROVIDERS = {SAMLIdentityProviderFactory.PROVIDER_ID};
 
@@ -184,6 +189,7 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
         logger.debugf("Searching for template: `%s`", template);
         Matcher m = SUBSTITUTION.matcher(template);
         StringBuffer sb = new StringBuffer();
+        boolean hasUnresolvedVariable = false;
         while (m.find()) {
             String variable = m.group(1).trim();
             String transformerKey = m.group(2);
@@ -215,7 +221,12 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
                         }
                     }
                 }
-                m.appendReplacement(sb, (String) transformer.apply(value));
+                if (value == null) {
+                    hasUnresolvedVariable = true;
+                    m.appendReplacement(sb, "");
+                } else {
+                    m.appendReplacement(sb, transformer.apply(value));
+                }
             } else {
                 m.appendReplacement(sb, m.group(1));
             }
@@ -223,8 +234,13 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
         }
         m.appendTail(sb);
 
+        if (hasUnresolvedVariable) {
+            logger.warnf("Username template '%s' for identity provider '%s' contains unresolved attributes. Check that the identity provider is sending the expected SAML attributes.",
+                template, context.getIdpConfig().getAlias());
+        }
+
         UsernameTemplateMapper.Target t = getTarget(mapperModel.getConfig().get(TARGET));
-        t.set(context, sb.toString());
+        t.set(context, hasUnresolvedVariable ? "" : sb.toString());
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.saml.*;
 import org.keycloak.protocol.saml.preprocessor.SamlAuthenticationPreprocessor;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.saml.*;
 import org.keycloak.saml.SamlProtocolExtensionsAwareBuilder.NodeGenerator;
 import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
@@ -69,6 +71,7 @@ import org.keycloak.saml.validators.DestinationValidator;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.util.Booleans;
 import org.keycloak.util.JsonSerialization;
+import org.keycloak.util.TokenUtil;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
@@ -254,11 +257,35 @@ public class SAMLIdentityProvider extends AbstractIdentityProvider<SAMLIdentityP
             authSession.setUserSessionNote(SAMLEndpoint.SAML_FEDERATED_SESSION_INDEX, authn.getSessionIndex());
 
         }
+        if (context.getContextData().containsKey(FEDERATED_ACCESS_TOKEN)) {
+            authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, (String) context.getContextData().get(FEDERATED_ACCESS_TOKEN));
+        }
     }
 
     @Override
     public Response retrieveToken(KeycloakSession session, FederatedIdentityModel identity) {
         return Response.ok(identity.getToken()).type(MediaType.TEXT_PLAIN_TYPE).build();
+    }
+
+    @Override
+    public Response retrieveToken(KeycloakSession session, FederatedIdentityModel identity, UserSessionModel userSession, UserModel user) {
+        String token = null;
+        if (userSession != null && getConfig().isStoreTokenInSession()) {
+            token = getFederatedAccessToken(userSession);
+        }
+
+        if (token == null && Booleans.isTrue(getConfig().isStoreToken())) {
+            token = identity.getToken();
+        }
+
+        if (token == null) {
+            return exchangeErrorResponse(session.getContext().getUri(), null, userSession, "token_expired", "No token stored.");
+        }
+
+        AccessTokenResponse tokenResponse = new AccessTokenResponse();
+        tokenResponse.setToken(Base64.getUrlEncoder().withoutPadding().encodeToString(token.getBytes(GeneralConstants.SAML_CHARSET)));
+        tokenResponse.setTokenType(TokenUtil.TOKEN_TYPE_BEARER);
+        return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
 
     @Override

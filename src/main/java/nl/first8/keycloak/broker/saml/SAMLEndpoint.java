@@ -49,6 +49,7 @@ import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
 import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
 import org.keycloak.common.ClientConnection;
+import org.keycloak.common.Profile;
 import org.keycloak.common.VerificationException;
 import org.keycloak.common.util.Base64;
 import org.keycloak.crypto.KeyUse;
@@ -410,7 +411,7 @@ public class SAMLEndpoint {
             };
         }
 
-        private String getEntityId(UriInfo uriInfo, RealmModel realm) {
+        protected final String getEntityId(UriInfo uriInfo, RealmModel realm) {
             String configEntityId = config.getEntityId();
 
             if (configEntityId == null || configEntityId.isEmpty())
@@ -555,7 +556,16 @@ public class SAMLEndpoint {
                     identity.setEmail(subjectNameID.getValue());
                 }
 
-                if (Booleans.isTrue(config.isStoreToken())) {
+                // set the token in session and model depending the brokering api version
+                if (Profile.isFeatureEnabled(Profile.Feature.IDENTITY_BROKERING_API_V2)) {
+                    final String assertionString = DocumentUtil.getNodeAsString(assertionElement);
+                    if (config.isStoreTokenInSession()) {
+                        identity.getContextData().put(UserAuthenticationIdentityProvider.FEDERATED_ACCESS_TOKEN, assertionString);
+                    }
+                    if (Booleans.isTrue(config.isStoreToken())) {
+                        identity.setToken(assertionString);
+                    }
+                } else if (Booleans.isTrue(config.isStoreToken())) {
                     identity.setToken(samlResponse);
                 }
 
@@ -623,7 +633,7 @@ public class SAMLEndpoint {
          * @param clientUrlName
          * @return see description
          */
-        private AuthenticationSessionModel samlIdpInitiatedSSO(final String clientUrlName) {
+        protected final AuthenticationSessionModel samlIdpInitiatedSSO(final String clientUrlName) {
             event.event(EventType.LOGIN);
             CacheControlUtil.noBackButtonCacheControlHeader(session);
             Optional<ClientModel> oClient = SAMLEndpoint.this.session.clients()
@@ -649,7 +659,7 @@ public class SAMLEndpoint {
         }
 
 
-        private boolean isSuccessfulSamlResponse(ResponseType responseType) {
+        protected final boolean isSuccessfulSamlResponse(ResponseType responseType) {
             return responseType != null
                     && responseType.getStatus() != null
                     && responseType.getStatus().getStatusCode() != null
@@ -895,20 +905,20 @@ public class SAMLEndpoint {
 
     }
 
-    private String getX500Attribute(AssertionType assertion, X500SAMLProfileConstants attribute) {
+    protected final String getX500Attribute(AssertionType assertion, X500SAMLProfileConstants attribute) {
         return getFirstMatchingAttribute(assertion, attribute::correspondsTo);
     }
 
-    private String getAttributeByName(AssertionType assertion, String name) {
+    protected final String getAttributeByName(AssertionType assertion, String name) {
         return getFirstMatchingAttribute(assertion, attribute -> Objects.equals(attribute.getName(), name));
     }
 
-    private String getAttributeByFriendlyName(AssertionType assertion, String friendlyName) {
+    protected final String getAttributeByFriendlyName(AssertionType assertion, String friendlyName) {
         return getFirstMatchingAttribute(assertion, attribute -> Objects.equals(attribute.getFriendlyName(), friendlyName));
     }
 
-    private String getPrincipal(AssertionType assertion) {
 
+    protected final String getPrincipal(AssertionType assertion) {
         SamlPrincipalType principalType = config.getPrincipalType();
 
         if (principalType == null || principalType.equals(SamlPrincipalType.SUBJECT)) {
@@ -922,7 +932,7 @@ public class SAMLEndpoint {
 
     }
 
-    private String getFirstMatchingAttribute(AssertionType assertion, Predicate<AttributeType> predicate) {
+    protected final String getFirstMatchingAttribute(AssertionType assertion, Predicate<AttributeType> predicate) {
         return assertion.getAttributeStatements().stream()
                 .map(AttributeStatementType::getAttributes)
                 .flatMap(Collection::stream)
@@ -935,7 +945,7 @@ public class SAMLEndpoint {
                 .orElse(null);
     }
 
-    private String expectedPrincipalType() {
+    protected final String expectedPrincipalType() {
         SamlPrincipalType principalType = config.getPrincipalType();
         switch (principalType) {
             case SUBJECT:
@@ -948,13 +958,13 @@ public class SAMLEndpoint {
         }
     }
 
-    private NameIDType getSubjectNameID(final AssertionType assertion) {
+    protected final NameIDType getSubjectNameID(final AssertionType assertion) {
         SubjectType subject = assertion.getSubject();
         SubjectType.STSubType subType = subject.getSubType();
         return subType != null ? (NameIDType) subType.getBaseID() : null;
     }
 
-    private boolean validateInResponseToAttribute(ResponseType responseType, String expectedRequestId) {
+    protected final boolean validateInResponseToAttribute(ResponseType responseType, String expectedRequestId) {
         // If we are not expecting a request ID, do not validate.
         if (expectedRequestId == null || expectedRequestId.isEmpty())
             return true;
