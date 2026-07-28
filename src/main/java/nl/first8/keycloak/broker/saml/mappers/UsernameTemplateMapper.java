@@ -38,12 +38,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.provider.ProviderConfigProperty;
 
-import org.jboss.logging.Logger;
-
-
 public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
-
-    protected static final Logger logger = Logger.getLogger(UsernameTemplateMapper.class);
 
     private static final Logger logger = Logger.getLogger(UsernameTemplateMapper.class);
 
@@ -58,11 +53,11 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
         BROKER_USERNAME    { public void set(BrokeredIdentityContext context, String value) { context.setUsername(value); } };
         public abstract void set(BrokeredIdentityContext context, String value);
     }
-    public static final List<String> TARGETS = Arrays.asList(UsernameTemplateMapper.Target.LOCAL.toString(), UsernameTemplateMapper.Target.BROKER_ID.toString(), UsernameTemplateMapper.Target.BROKER_USERNAME.toString());
+    public static final List<String> TARGETS = Arrays.asList(Target.LOCAL.toString(), Target.BROKER_ID.toString(), Target.BROKER_USERNAME.toString());
 
-    public static final Map<String, UnaryOperator<Object>> TRANSFORMERS = new HashMap<>();
+    public static final Map<String, UnaryOperator<String>> TRANSFORMERS = new HashMap<>();
 
-    private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
+    private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
     private static final Set<IdentityProviderSyncMode> IDENTITY_PROVIDER_SYNC_MODES = new HashSet<>(Arrays.asList(IdentityProviderSyncMode.values()));
 
     private static KeyWrapper keys;
@@ -169,7 +164,7 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
         logger.info("Update Brokered User setting username from template");
         // preprocessFederatedIdentity gets called anyways, so we only need to set the username if necessary.
         // However, we don't want to set the username when the email is used as username
-        if (getTarget(mapperModel.getConfig().get(TARGET)) == UsernameTemplateMapper.Target.LOCAL && !realm.isRegistrationEmailAsUsername()) {
+        if (getTarget(mapperModel.getConfig().get(TARGET)) == Target.LOCAL && !realm.isRegistrationEmailAsUsername()) {
             user.setUsername(context.getModelUsername());
         }
     }
@@ -194,20 +189,20 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
             String variable = m.group(1).trim();
             String transformerKey = m.group(2);
             logger.debugf("Searching for transformer `%s`.", transformerKey);
-            UnaryOperator<Object> transformer = Optional.ofNullable(transformerKey).map(TRANSFORMERS::get).orElse(UnaryOperator.identity());
+            UnaryOperator<String> transformer = Optional.ofNullable(transformerKey).map(TRANSFORMERS::get).orElse(UnaryOperator.identity());
 
             if (variable.equals("ALIAS")) {
-                m.appendReplacement(sb, (String) transformer.apply(context.getIdpConfig().getAlias()));
+                m.appendReplacement(sb, transformer.apply(context.getIdpConfig().getAlias()));
             } else if (variable.equals("UUID")) {
-                m.appendReplacement(sb, (String) transformer.apply(KeycloakModelUtils.generateId()));
+                m.appendReplacement(sb, transformer.apply(KeycloakModelUtils.generateId()));
             } else if (variable.equals("NAMEID")) {
                 SubjectType subject = assertion.getSubject();
                 SubjectType.STSubType subType = subject.getSubType();
                 NameIDType subjectNameID = (NameIDType) subType.getBaseID();
-                m.appendReplacement(sb, (String) transformer.apply(subjectNameID.getValue()));
+                m.appendReplacement(sb, transformer.apply(subjectNameID.getValue()));
             } else if (variable.startsWith("ATTRIBUTE.")) {
                 String name = variable.substring("ATTRIBUTE.".length());
-                Object value = null;
+                String value = null;
                 for (AttributeStatementType statement : assertion.getAttributeStatements()) {
                     for (AttributeStatementType.ASTChoiceType choice : statement.getAttributes()) {
                         AttributeType attr = choice.getAttribute();
@@ -215,7 +210,7 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
                         if (name.equals(attr.getName()) || name.equals(attr.getFriendlyName())) {
                             List<Object> attributeValue = attr.getAttributeValue();
                             if (attributeValue != null && !attributeValue.isEmpty()) {
-                                value = attributeValue.get(0);
+                                value = attributeValue.get(0).toString();
                             }
                             break;
                         }
@@ -239,7 +234,7 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
                 template, context.getIdpConfig().getAlias());
         }
 
-        UsernameTemplateMapper.Target t = getTarget(mapperModel.getConfig().get(TARGET));
+        Target t = getTarget(mapperModel.getConfig().get(TARGET));
         t.set(context, hasUnresolvedVariable ? "" : sb.toString());
     }
 
@@ -248,11 +243,11 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
         return "Format the username to import.";
     }
 
-    public static UsernameTemplateMapper.Target getTarget(String value) {
+    public static Target getTarget(String value) {
         try {
-            return value == null ? UsernameTemplateMapper.Target.LOCAL : UsernameTemplateMapper.Target.valueOf(value);
+            return value == null ? Target.LOCAL : Target.valueOf(value);
         } catch (IllegalArgumentException ex) {
-            return UsernameTemplateMapper.Target.LOCAL;
+            return Target.LOCAL;
         }
     }
 

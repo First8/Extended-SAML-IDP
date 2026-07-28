@@ -12,10 +12,13 @@ import org.bouncycastle.operator.OperatorCreationException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
 import org.keycloak.common.ClientConnection;
+import org.keycloak.common.Profile;
 import org.keycloak.common.enums.SslRequired;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeyManager;
@@ -44,6 +47,18 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 
 class SAMLEndpointTest {
 
+    // SAMLEndpoint reads Profile.isFeatureEnabled(IDENTITY_BROKERING_API_V2). Profile.getInstance()
+    // is only populated by Keycloak's server bootstrap, which these unit tests don't run, so it
+    // must be initialized manually - otherwise Profile.getInstance() is null and NPEs.
+    @BeforeEach
+    public void initProfile() {
+        Profile.defaults();
+    }
+
+    @AfterEach
+    public void resetProfile() {
+        Profile.reset();
+    }
 
     @Test
     public void testHandleSamlResponse() throws URISyntaxException, IllegalAccessException, MarshallingException, SignatureException, EncryptionException {
