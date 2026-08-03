@@ -7,7 +7,7 @@ import nl.first8.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import nl.first8.keycloak.dom.saml.v2.metadata.AttributeConsumingServiceType;
 import nl.first8.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import nl.first8.keycloak.dom.saml.v2.metadata.RequestedAttributeValueType;
-import nl.first8.keycloak.protocol.saml.SamlMetadataDescriptorUpdater;
+import nl.first8.keycloak.protocol.saml.mappers.SamlMetadataDescriptorUpdater;
 import org.keycloak.broker.provider.AbstractIdentityProviderMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.common.util.CollectionUtil;

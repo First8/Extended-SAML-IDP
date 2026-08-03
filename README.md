@@ -15,7 +15,7 @@ In addition, the Extended SAML Identity Provider adds support for Encrypted Attr
 
 ## Configuration
 
-For keycloak up to version 20.x, the Extended SAML Identity Provider can be added to a realm using the standard keycloak
+For Keycloak up to version 20.x, the Extended SAML Identity Provider can be added to a realm using the standard keycloak
 Admin Console, provided you set the Admin Theme to `keycloak` to indicate you want to use the v1 (legacy) UI.
 
 In keycloak versions 21.x and higher, the legacy UI is no longer available; you can still edit most settings of the
@@ -24,9 +24,9 @@ provider in the Admin Console if it was created using the legacy UI, but some of
 To manage the Extended SAML IDP in new keycloak releases you can use the REST API provided by keycloak in combination
 with a custom frontend.
 
-## Updating/adding release branches
+## Upgrading
 
-The steps are as follows:
+The steps to upgrade to a new Keycloak minor version are as follows (also: the steps are analogous in case of a new major version):
 
 1. Pull the branch corresponding to the most recent Keycloak minor version that already exists in the repository.
 
@@ -47,30 +47,33 @@ If you have trouble creating the patch, consult the Readme in the `/patch-tool` 
 5. Apply the patch.
 
     * Many manual actions are needed, as the line numbers do not correspond.
-    * If a change introduces a references a Keycloak class that isn't in the repository, just import it, instead of adding it to this repository.
+    * Don't remove our custom code unless 100% sure that it is unnecessary. Preferably keep that sort of clean-up out of this upgrade-PR though, to retain overview.
+    * If a change references a Keycloak class that doesn't have an equivalent (same name) in this repository, just import it, instead of adding it to this repository.
     * If a method (/signature) is changed, it is probably due to deprecation. You could look up the documentation for the method that got replaced to make sure.
     * You might understand the rationale for changes in the commit message corresponding to that change, and/or the issue that is linked from that commit message.
 
-6. (Optionally) verify that your SAML IDP connections work with the old Keycloak version and/or old jar.
+6. Fix bugs until you can build a jar normally with `mvn clean package`.
 
-7. (Optionally) do the same tests as the PR reviewer will in steps
+7. (Optionally) first verify that your SAML IDP connections work with the old Keycloak version and/or old jar.
 
-8. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
+8. (Optionally) do the same tests as the PR reviewer will do in their steps below.
 
-9. Push both new branches: `{a}.{b+1}.x-once-PR-merged` and `upgrade-to-{a}.{b+1}`
+9. Create a branch, e.g. `27.2.x-once-PR-merged`, from the previous minor, e.g. `27.1` here.
 
-10. Make a PR from `upgrade-to-{a}.{b+1}` into `{a}.{b+1}.x-once-PR-merged`.
+10. Push both new branches: `{a}.{b+1}.x-once-PR-merged` and `upgrade-to-{a}.{b+1}`
+
+11. Make a PR from `upgrade-to-{a}.{b+1}` into `{a}.{b+1}.x-once-PR-merged`.
 
 
 
 ### For the Pull Request Reviewer
 
-11. Run the new code from the PR through Test classes, not only `<Response>` but also `<ArtifactResponse>`.
+12. Run the new code from the PR through Test classes, not only `<Response>` but also `<ArtifactResponse>`.
 
     * (Preferably) don't just test the auto-generated mock (Artifact)Responses, 
       but also real-world (Artifact)Responses that you can copy into the test resource folder and reference in Test classes (don't commit those changes).
 
-12. Build the jar from your new branch and try logging in with the SAML IDP connections in your test environment.
+13. Build the jar from your new branch and try logging in with the SAML IDP connections in your test environment.
 
     * A Keycloak upgrade might be needed beforehand.
     * If you normally only receive `<Response>` or `<ArtifactResponse>`, set up a connection to test the other type (you may skip this if you already tested real-world examples of that type in Test classes)
