@@ -557,26 +557,48 @@ public class AssertionUtil {
 
     public static Element getAssertionElement(SAMLDocumentHolder holder) throws ProcessingException {
         Document doc = holder.getSamlDocument();
-        Element response = doc.getDocumentElement();
-        if (!org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL.getNsUri().get().equals(response.getNamespaceURI())
-            || !org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL.get().equals(response.getLocalName())) {
+        Element root = doc.getDocumentElement();
+        Element response;
+        if (isElement(root, org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL)) {
+            response = root;
+        } else if (isElement(root, org.keycloak.saml.common.constants.JBossSAMLConstants.ARTIFACT_RESPONSE)) {
+            // Artifact binding: the Response is a direct child of the ArtifactResponse.
+            response = getFirstChildElement(root, org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL);
+            if (response == null) {
+                throw new ProcessingException("No response type.");
+            }
+        } else {
+            throw new ProcessingException("No response type.");
+        }
+        return getAssertionElement(response);
+    }
+
+    public static Element getAssertionElement(Element response) throws ProcessingException {
+        if (!isElement(response, org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL)) {
             throw new ProcessingException("No response type.");
         }
 
         // get the first assertion in the response
-        NodeList children = response.getChildNodes();
+        Element assertion = getFirstChildElement(response, org.keycloak.saml.common.constants.JBossSAMLConstants.ASSERTION);
+        if (assertion == null) {
+            throw new ProcessingException("No assertion from response.");
+        }
+        return assertion;
+    }
+
+    private static Element getFirstChildElement(Element parent, org.keycloak.saml.common.constants.JBossSAMLConstants type) {
+        NodeList children = parent.getChildNodes();
         for(int i = 0; i < children.getLength(); i++) {
-            Node childNode = children.item(i);
-            if (childNode instanceof Element) {
-                Element childElement = (Element) childNode;
-                if (org.keycloak.saml.common.constants.JBossSAMLConstants.ASSERTION.getNsUri().get().equals(childElement.getNamespaceURI())
-                    && org.keycloak.saml.common.constants.JBossSAMLConstants.ASSERTION.get().equals(childElement.getLocalName())) {
-                    return childElement;
-                }
+            if (children.item(i) instanceof Element childElement && isElement(childElement, type)) {
+                return childElement;
             }
         }
+        return null;
+    }
 
-        throw new ProcessingException("No assertion from response.");
+    private static boolean isElement(Element element, org.keycloak.saml.common.constants.JBossSAMLConstants type) {
+        return type.getNsUri().get().equals(element.getNamespaceURI())
+            && type.get().equals(element.getLocalName());
     }
 
     public static boolean isAssertionEncrypted(ResponseType responseType) throws ProcessingException {
