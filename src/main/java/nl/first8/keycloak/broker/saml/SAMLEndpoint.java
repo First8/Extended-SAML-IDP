@@ -473,7 +473,7 @@ public class SAMLEndpoint {
                     /* We verify the assertion using original document to handle cases where the IdP
                     includes whitespace and/or newlines inside tags. */
                     logger.debug("Verify and get assertion!");
-                    assertionElement = DocumentUtil.getElement(holder.getSamlDocument(), new QName(Objects.requireNonNull(JBossSAMLConstants.ASSERTION.get())));
+                    assertionElement = AssertionUtil.getAssertionElement(holder);
                 }
 
                 // Validate the response Issuer

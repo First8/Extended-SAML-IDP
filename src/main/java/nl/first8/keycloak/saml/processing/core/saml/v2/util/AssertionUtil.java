@@ -63,6 +63,7 @@ import org.keycloak.saml.processing.core.util.XMLEncryptionUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class AssertionUtil {
 
@@ -552,6 +553,30 @@ public class AssertionUtil {
 
         }
         return responseType.getAssertions().get(0).getAssertion();
+    }
+
+    public static Element getAssertionElement(SAMLDocumentHolder holder) throws ProcessingException {
+        Document doc = holder.getSamlDocument();
+        Element response = doc.getDocumentElement();
+        if (!org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL.getNsUri().get().equals(response.getNamespaceURI())
+            || !org.keycloak.saml.common.constants.JBossSAMLConstants.RESPONSE__PROTOCOL.get().equals(response.getLocalName())) {
+            throw new ProcessingException("No response type.");
+        }
+
+        // get the first assertion in the response
+        NodeList children = response.getChildNodes();
+        for(int i = 0; i < children.getLength(); i++) {
+            Node childNode = children.item(i);
+            if (childNode instanceof Element) {
+                Element childElement = (Element) childNode;
+                if (org.keycloak.saml.common.constants.JBossSAMLConstants.ASSERTION.getNsUri().get().equals(childElement.getNamespaceURI())
+                    && org.keycloak.saml.common.constants.JBossSAMLConstants.ASSERTION.get().equals(childElement.getLocalName())) {
+                    return childElement;
+                }
+            }
+        }
+
+        throw new ProcessingException("No assertion from response.");
     }
 
     public static boolean isAssertionEncrypted(ResponseType responseType) throws ProcessingException {
