@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://auth.testhost.lcl/realms/test-realm/broker/test-alias/endpoint" ID="_response-valid" IssueInstant="2026-10-06T10:00:00Z" Version="2.0">
+    <saml:Issuer>urn:etoegang:HM:00000003271247010000:entities:9113</saml:Issuer>
+    <samlp:Status>
+        <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+    </samlp:Status>
+    <saml:Assertion ID="_assertion-valid" IssueInstant="2026-10-06T10:00:00Z" Version="2.0">
+        <saml:Issuer>urn:etoegang:HM:00000003271247010000:entities:9113</saml:Issuer><dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#"><dsig:SignedInfo><dsig:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><dsig:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><dsig:Reference URI="#_assertion-valid"><dsig:Transforms><dsig:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></dsig:Transforms><dsig:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><dsig:DigestValue>+aT5GzjRdw7Hli0lrIno6xe2DSGFfOCuAx+k96Bp1f0=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo><dsig:SignatureValue>AIRE0J3kVWvZ/NjmLsk2xvd0SZssVgBZNQPZU/h1pru2cvn+izO3GVT8P4J4sPdPBeR6Xr+R+c1LBK2Zl3ostikvQvqMRL8Z216PCmlVWt/gW9XbLW7FTR/Mn9/ZDBrOctN148fwWxhGwm4X1oXJ8ddDXSbUo9VhFQsbOjmCT62goxPR98pNLpeEAR2c5oSuG0hs6b6ErM30+RIgtmShl7v1af9ybOncCapd82xgeGxWI26cn2h0O078Cb7TRa0Hp46dU1ppsHV1fjiPuHYlPOeVCHHCwv3XvW5mONkXOZFCTKg1erkDlFI1EOXJXhMyll1Nedrww0BdJMooNSIwiA==</dsig:SignatureValue><dsig:KeyInfo><dsig:KeyName>fixture-key</dsig:KeyName><dsig:KeyValue><dsig:RSAKeyValue><dsig:Modulus>sjK9SY04b8sKYzqKT0eZxhIyijTC0MRJraEtpAbAjWJLsnhj8kgkxxxr3ZgrfdwGDgIOgrYM/IaY9EP4CrB615yI976wEK+8k58Pq6CWhrwWsmsQ1Q5pWi9eObmRdopwJXdn4xOJrp2EaS2XYsFgXzXMAx0XnJr/5L/gRe02pR/zN7Nblyc9ijhHu1i01Um3WyjaMyATvsgLdqfSZp/OYB0/TI8OA9qKw/E757pG6FqNPObckbwrVXFloQJA0kSpl9NsJtbuLv665kbYilcqoLr1xdfGaGzUW1ZuhyVkxrNPizBw2iNLIosibFol5R0lU+4gpdaIPwS5gcoANaOGxQ==</dsig:Modulus><dsig:Exponent>AQAB</dsig:Exponent></dsig:RSAKeyValue></dsig:KeyValue></dsig:KeyInfo></dsig:Signature>
+        <saml:Subject>
+            <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">9170bd139d9b5e364290187482329e89bcb431ea</saml:NameID>
+        </saml:Subject>
+        <saml:Conditions NotBefore="2026-10-06T09:59:00Z" NotOnOrAfter="2026-10-06T10:05:00Z">
+            <saml:AudienceRestriction>
+                <saml:Audience>https://auth.testhost.lcl/realms/test-realm</saml:Audience>
+            </saml:AudienceRestriction>
+        </saml:Conditions>
+        <saml:AuthnStatement AuthnInstant="2026-10-06T10:00:00Z" SessionIndex="_session-_assertion-valid">
+            <saml:AuthnContext>
+                <saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa3</saml:AuthnContextClassRef>
+            </saml:AuthnContext>
+        </saml:AuthnStatement>
+    </saml:Assertion>
+</samlp:Response>
