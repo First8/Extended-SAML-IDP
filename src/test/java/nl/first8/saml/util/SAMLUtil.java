@@ -1,10 +1,18 @@
 package nl.first8.saml.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -419,16 +427,41 @@ public class SAMLUtil {
      * so signature validation succeeds for TEST_KEY_PAIR-signed responses and fails for others.
      */
     public static String getCorrectPublicKeyCertificateAsBase64() throws OperatorCreationException, CertificateException {
+        return createSelfSignedCertificateAsBase64(TEST_KEY_PAIR);
+    }
+
+    /**
+     * Wraps the key pair's public key in a fresh self-signed X.509 cert (valid from yesterday for a year)
+     * and returns it Base64-encoded. Signature validation only looks at the public key, so the cert's
+     * own validity window never goes stale for fixtures signed long ago.
+     */
+    public static String createSelfSignedCertificateAsBase64(KeyPair keyPair) throws OperatorCreationException, CertificateException {
         X500Name subject = new X500Name("CN=test");
         Date notBefore = new Date(System.currentTimeMillis() - 86_400_000L);
         Date notAfter = new Date(System.currentTimeMillis() + 86_400_000L * 365);
 
         JcaX509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
-            subject, BigInteger.ONE, notBefore, notAfter, subject, TEST_KEY_PAIR.getPublic());
-        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(TEST_KEY_PAIR.getPrivate());
+            subject, BigInteger.ONE, notBefore, notAfter, subject, keyPair.getPublic());
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
         X509Certificate cert = new JcaX509CertificateConverter().getCertificate(builder.build(signer));
 
         return Base64.getEncoder().encodeToString(cert.getEncoded());
+    }
+
+    /**
+     * The fixed key pair in src/test/resources/keys (see the README there). Unlike TEST_KEY_PAIR it is
+     * stable across runs, so it signs the static SAML fixtures in src/test/resources/saml.
+     */
+    public static KeyPair loadFixtureKeyPair() {
+        try (InputStream privateIn = SAMLUtil.class.getClassLoader().getResourceAsStream("keys/private.key");
+             InputStream publicIn = SAMLUtil.class.getClassLoader().getResourceAsStream("keys/public.key")) {
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateIn.readAllBytes()));
+            PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicIn.readAllBytes()));
+            return new KeyPair(publicKey, privateKey);
+        } catch (IOException | GeneralSecurityException e) {
+            throw new IllegalStateException("Could not load keys/private.key and keys/public.key", e);
+        }
     }
 
     private static Status createStatus() {

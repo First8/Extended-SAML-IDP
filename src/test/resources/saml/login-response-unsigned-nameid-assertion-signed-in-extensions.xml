@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Destination="https://auth.testhost.lcl/realms/test-realm/broker/test-alias/endpoint" ID="_response-extensions" IssueInstant="2026-10-06T10:00:00Z" Version="2.0">
+    <saml:Issuer>urn:etoegang:HM:00000003271247010000:entities:9113</saml:Issuer>
+    <samlp:Extensions>
+    <saml:Assertion ID="_assertion-legit" IssueInstant="2026-10-06T10:00:00Z" Version="2.0">
+        <saml:Issuer>urn:etoegang:HM:00000003271247010000:entities:9113</saml:Issuer><dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#"><dsig:SignedInfo><dsig:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><dsig:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><dsig:Reference URI="#_assertion-legit"><dsig:Transforms><dsig:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></dsig:Transforms><dsig:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><dsig:DigestValue>IS38cxZzig1zFuiutBj+UQZk42cCmarKJI2S1S0wAVM=</dsig:DigestValue></dsig:Reference></dsig:SignedInfo><dsig:SignatureValue>F61Z9/YqUUp2I6H8VdiUeaB5Fru5prdNjCSc64F41TViOe1Gr5vEar/wtHM2zZyKm3KuvOYCUq0bzFEFjtX/Iv50ISUWrNvnQh3xuJ2c5laD0R5Z74hfrRePZorKPxj11aVxKnmtw8XHJgPOAKM761YbbJLjlJ2sDPBc9QMwiiXYob9yCEgHBiydfnI9ywIZKt/Hieg+EaQMgHeShl2fWaeDY8wGBTvgJHoSc/eVXzkUIubhksUZHN6uZb3XZ/l5VHXfpsSUcGd7A32JK+EJZQS79HnUxvd+nSVsD4XoKJuNfHfWp0a4QaLbMMoDuqiG7tgas3s6rODDgi2ymwLz9g==</dsig:SignatureValue><dsig:KeyInfo><dsig:KeyName>fixture-key</dsig:KeyName><dsig:KeyValue><dsig:RSAKeyValue><dsig:Modulus>sjK9SY04b8sKYzqKT0eZxhIyijTC0MRJraEtpAbAjWJLsnhj8kgkxxxr3ZgrfdwGDgIOgrYM/IaY9EP4CrB615yI976wEK+8k58Pq6CWhrwWsmsQ1Q5pWi9eObmRdopwJXdn4xOJrp2EaS2XYsFgXzXMAx0XnJr/5L/gRe02pR/zN7Nblyc9ijhHu1i01Um3WyjaMyATvsgLdqfSZp/OYB0/TI8OA9qKw/E757pG6FqNPObckbwrVXFloQJA0kSpl9NsJtbuLv665kbYilcqoLr1xdfGaGzUW1ZuhyVkxrNPizBw2iNLIosibFol5R0lU+4gpdaIPwS5gcoANaOGxQ==</dsig:Modulus><dsig:Exponent>AQAB</dsig:Exponent></dsig:RSAKeyValue></dsig:KeyValue></dsig:KeyInfo></dsig:Signature>
+        <saml:Subject>
+            <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">legit-user</saml:NameID>
+        </saml:Subject>
+        <saml:Conditions NotBefore="2026-10-06T09:59:00Z" NotOnOrAfter="2026-10-06T10:05:00Z">
+            <saml:AudienceRestriction>
+                <saml:Audience>https://auth.testhost.lcl/realms/test-realm</saml:Audience>
+            </saml:AudienceRestriction>
+        </saml:Conditions>
+        <saml:AuthnStatement AuthnInstant="2026-10-06T10:00:00Z" SessionIndex="_session-_assertion-legit">
+            <saml:AuthnContext>
+                <saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa3</saml:AuthnContextClassRef>
+            </saml:AuthnContext>
+        </saml:AuthnStatement>
+    </saml:Assertion>
+    </samlp:Extensions>
+    <samlp:Status>
+        <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+    </samlp:Status>
+    <saml:Assertion ID="_assertion-evil" IssueInstant="2026-10-06T10:00:00Z" Version="2.0">
+        <saml:Issuer>urn:etoegang:HM:00000003271247010000:entities:9113</saml:Issuer>
+        <saml:Subject>
+            <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">evil-user</saml:NameID>
+        </saml:Subject>
+        <saml:Conditions NotBefore="2026-10-06T09:59:00Z" NotOnOrAfter="2026-10-06T10:05:00Z">
+            <saml:AudienceRestriction>
+                <saml:Audience>https://auth.testhost.lcl/realms/test-realm</saml:Audience>
+            </saml:AudienceRestriction>
+        </saml:Conditions>
+        <saml:AuthnStatement AuthnInstant="2026-10-06T10:00:00Z" SessionIndex="_session-_assertion-evil">
+            <saml:AuthnContext>
+                <saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa3</saml:AuthnContextClassRef>
+            </saml:AuthnContext>
+        </saml:AuthnStatement>
+    </saml:Assertion>
+</samlp:Response>

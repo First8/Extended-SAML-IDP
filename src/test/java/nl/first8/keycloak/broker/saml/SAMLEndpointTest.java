@@ -2,11 +2,15 @@ package nl.first8.keycloak.broker.saml;
 
 import io.opentelemetry.api.trace.Span;
 import jakarta.ws.rs.core.Response;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.util.stream.Stream;
+import nl.first8.keycloak.dom.saml.v2.protocol.ResponseType;
+import nl.first8.keycloak.saml.SAMLRequestParser;
 import nl.first8.saml.util.SAMLUtil;
 import org.bouncycastle.operator.OperatorCreationException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,6 +24,8 @@ import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.common.Profile;
 import org.keycloak.common.enums.SslRequired;
+import org.keycloak.events.Errors;
+import org.keycloak.events.EventBuilder;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeyManager;
 import org.keycloak.models.KeycloakContext;
@@ -29,15 +35,20 @@ import org.keycloak.models.KeycloakTransactionManager;
 import org.keycloak.models.KeycloakUriInfo;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RealmProvider;
+import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
+import org.keycloak.saml.validators.ConditionsValidator;
 import org.keycloak.saml.validators.DestinationValidator;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.tracing.TracingProvider;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedConstruction;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -146,6 +157,102 @@ class SAMLEndpointTest {
 
         verify(callback, never()).authenticated(any(BrokeredIdentityContext.class));
         verify(loginFormsProvider).setError(eq(Messages.IDENTITY_PROVIDER_INVALID_SIGNATURE), any(Object[].class));
+    }
+
+    @Test
+    public void testHandleLoginResponse_validAssertionSignature() throws Exception {
+        KeycloakSession session = getMockKeycloakSession();
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
+        EventBuilder event = mock(EventBuilder.class);
+
+        Response response = handleLoginResponse("saml/login-response-valid.xml", session, callback, event);
+        assertEquals(Response.Status.Family.REDIRECTION, response.getStatusInfo().getFamily());
+
+        ArgumentCaptor<BrokeredIdentityContext> captor = ArgumentCaptor.forClass(BrokeredIdentityContext.class);
+        verify(callback).authenticated(captor.capture());
+        BrokeredIdentityContext identity = captor.getValue();
+        assertEquals("9170bd139d9b5e364290187482329e89bcb431ea", identity.getId());
+        assertEquals("test-alias.9170bd139d9b5e364290187482329e89bcb431ea", identity.getBrokerUserId());
+        verify(event, never()).error(anyString());
+    }
+
+    @Test
+    public void testHandleLoginResponse_invalidAssertionSignature() throws Exception {
+        KeycloakSession session = getMockKeycloakSession();
+        LoginFormsProvider loginFormsProvider = session.getProvider(LoginFormsProvider.class);
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
+        EventBuilder event = mock(EventBuilder.class);
+
+        // The NameID was changed after signing, so the assertion's digest no longer matches.
+        Response response = handleLoginResponse("saml/login-response-invalid-signature.xml", session, callback, event);
+        assertEquals(Response.Status.Family.CLIENT_ERROR, response.getStatusInfo().getFamily());
+
+        verify(callback, never()).authenticated(any(BrokeredIdentityContext.class));
+        verify(event).error(Errors.INVALID_SIGNATURE);
+        verify(loginFormsProvider).setError(eq(Messages.INVALID_REQUESTER), any(Object[].class));
+    }
+
+    @Test
+    public void testHandleLoginResponse_consumedAssertionUnsignedWhileSignedAssertionInExtensions() throws Exception {
+        KeycloakSession session = getMockKeycloakSession();
+        LoginFormsProvider loginFormsProvider = session.getProvider(LoginFormsProvider.class);
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback = getMockAuthenticationCallback();
+        EventBuilder event = mock(EventBuilder.class);
+
+        // The validly signed assertion (legit-user) sits in samlp:Extensions; the Response's actual
+        // assertion, which carries the NameID that would be consumed (evil-user), has no signature.
+        Response response = handleLoginResponse("saml/login-response-unsigned-nameid-assertion-signed-in-extensions.xml", session, callback, event);
+
+        ArgumentCaptor<BrokeredIdentityContext> captor = ArgumentCaptor.forClass(BrokeredIdentityContext.class);
+        verify(callback, atMost(1)).authenticated(captor.capture());
+        assertTrue(captor.getAllValues().isEmpty(),
+                () -> "Endpoint was fooled: authenticated '" + captor.getValue().getId() + "' from an unsigned assertion");
+        assertEquals(Response.Status.Family.CLIENT_ERROR, response.getStatusInfo().getFamily());
+        verify(event).error(Errors.INVALID_SIGNATURE);
+        verify(loginFormsProvider).setError(eq(Messages.INVALID_REQUESTER), any(Object[].class));
+    }
+
+    /**
+     * Feeds a static SAML Response fixture straight into Binding.handleLoginResponse, skipping the
+     * message-level signature check in handleSamlResponse so the assertion-level checks are what's tested.
+     * The fixtures carry fixed (expired) timestamps, so ConditionsValidator is mocked to always pass.
+     */
+    private Response handleLoginResponse(String fixture, KeycloakSession session,
+                                         UserAuthenticationIdentityProvider.AuthenticationCallback callback,
+                                         EventBuilder event) throws Exception {
+        byte[] xml;
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(fixture)) {
+            assertNotNull(in, "Missing fixture " + fixture);
+            xml = in.readAllBytes();
+        }
+        SAMLDocumentHolder holder = SAMLRequestParser.parseResponseDocument(xml);
+        assertNotNull(holder, "Could not parse fixture " + fixture);
+        ResponseType responseType = (ResponseType) holder.getSamlObject();
+
+        SAMLEndpoint endpoint = new SAMLEndpoint(session, mock(SAMLIdentityProvider.class),
+                getMockConfigForLoginResponseFixtures(), callback, getMockDestinationValidator());
+        // Normally set by Binding.execute(), which this direct call bypasses
+        endpoint.event = event;
+
+        try (MockedConstruction<ConditionsValidator> ignored = mockConstruction(ConditionsValidator.class,
+                (validator, context) -> when(validator.isValid()).thenReturn(true))) {
+            return endpoint.new PostBinding().handleLoginResponse(new String(xml, StandardCharsets.UTF_8), holder, responseType, "relayState", null);
+        }
+    }
+
+    /**
+     * Strictest assertion-signature setup, trusting the fixed key in src/test/resources/keys that signed the
+     * static fixtures (see LoginResponseFixtureGenerator).
+     */
+    private SAMLIdentityProviderConfig getMockConfigForLoginResponseFixtures() throws OperatorCreationException, CertificateException {
+        SAMLIdentityProviderConfig config = mock(SAMLIdentityProviderConfig.class);
+        when(config.getAlias()).thenReturn("test-alias");
+        when(config.isValidateSignature()).thenReturn(true);
+        when(config.isWantAssertionsSigned()).thenReturn(true);
+        when(config.getAllowedClockSkew()).thenReturn(15);
+        when(config.isEnabled()).thenReturn(true);
+        when(config.getSigningCertificates()).thenReturn(new String[]{SAMLUtil.createSelfSignedCertificateAsBase64(SAMLUtil.loadFixtureKeyPair())});
+        return config;
     }
 
     /**
